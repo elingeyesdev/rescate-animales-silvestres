@@ -339,8 +339,23 @@ return [
             'icon' => 'fas fa-fw fa-lock',
         ],
         [
+            'text' => 'Hoja Animal',
+            'url' => 'animal-profiles',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Disposicion',
+            'url' => 'dispositions',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Diagnostico',
+            'url' => 'health-records',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
             'text' => 'animals',
-            'url' => 'admin/animals',
+            'url' => 'animals',
             'icon' => 'fas fa-fw fa-paw',
         ],
         [
