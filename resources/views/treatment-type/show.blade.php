@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('template_title')
-    {{ $treatmentType->name ?? __('Show') . " " . __('Treatment Type') }}
+    {{ $treatmentType->name ?? __('Show') . ' ' . __('Treatment Type') }}
 @endsection
 
 @section('content')
@@ -11,7 +11,7 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="float-left">
-                            <span class="card-title">{{ __('Show') }} Treatment Type</span>
+                            <span class="card-title">{{ __('Show') }} {{ __('Treatment Type') }}</span>
                         </div>
                         <div class="float-right">
                             <a class="btn btn-primary btn-sm" href="{{ route('treatment-types.index') }}"> {{ __('Back') }}</a>

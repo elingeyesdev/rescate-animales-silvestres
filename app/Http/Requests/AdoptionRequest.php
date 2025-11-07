@@ -22,8 +22,10 @@ class AdoptionRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'direccion' => 'string',
-			'detalle' => 'string',
+			'direccion' => 'nullable|string',
+			'detalle' => 'nullable|string',
+			'latitud' => 'nullable|numeric',
+			'longitud' => 'nullable|numeric',
 			'aprobada' => 'required|boolean',
 			'adoptante_id' => 'required',
         ];

@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('template_title')
-    {{ __('Create') }} Center
+    {{ __('Create') }} {{ __('Center') }}
 @endsection
 
 @section('content')
@@ -11,7 +11,7 @@
 
                 <div class="card card-default">
                     <div class="card-header">
-                        <span class="card-title">{{ __('Create') }} Center</span>
+                        <span class="card-title">{{ __('Create') }} {{ __('Center') }}</span>
                     </div>
                     <div class="card-body bg-white">
                         <form method="POST" action="{{ route('centers.store') }}"  role="form" enctype="multipart/form-data">

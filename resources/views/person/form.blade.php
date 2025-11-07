@@ -23,7 +23,11 @@
         </div>
         <div class="form-group mb-2 mb20">
             <label for="es_cuidador" class="form-label">{{ __('Es Cuidador') }}</label>
-            <input type="text" name="es_cuidador" class="form-control @error('es_cuidador') is-invalid @enderror" value="{{ old('es_cuidador', $person?->es_cuidador) }}" id="es_cuidador" placeholder="Es Cuidador">
+            <select name="es_cuidador" id="es_cuidador" class="form-control @error('es_cuidador') is-invalid @enderror">
+                @php($val = (string)old('es_cuidador', $person?->es_cuidador))
+                <option value="0" {{ $val === '0' ? 'selected' : '' }}>No</option>
+                <option value="1" {{ $val === '1' ? 'selected' : '' }}>Sí</option>
+            </select>
             {!! $errors->first('es_cuidador', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
 

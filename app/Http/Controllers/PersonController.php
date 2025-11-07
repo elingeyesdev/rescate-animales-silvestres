@@ -40,7 +40,7 @@ class PersonController extends Controller
         Person::create($request->validated());
 
         return Redirect::route('people.index')
-            ->with('success', 'Person created successfully.');
+            ->with('success', 'Persona creada correctamente.');
     }
 
     /**
@@ -71,7 +71,7 @@ class PersonController extends Controller
         $person->update($request->validated());
 
         return Redirect::route('people.index')
-            ->with('success', 'Person updated successfully');
+            ->with('success', 'Persona actualizada correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -79,6 +79,6 @@ class PersonController extends Controller
         Person::find($id)->delete();
 
         return Redirect::route('people.index')
-            ->with('success', 'Person deleted successfully');
+            ->with('success', 'Persona eliminada correctamente');
     }
 }

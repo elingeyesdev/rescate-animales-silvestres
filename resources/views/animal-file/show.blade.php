@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('template_title')
-    {{ $animalFile->name ?? __('Show') . " " . __('Animal File') }}
+    {{ $animalFile->name ?? __('Show') . ' ' . __('Animal File') }}
 @endsection
 
 @section('content')
@@ -11,7 +11,7 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="float-left">
-                            <span class="card-title">{{ __('Show') }} Animal File</span>
+                            <span class="card-title">{{ __('Show') }} {{ __('Animal File') }}</span>
                         </div>
                         <div class="float-right">
                             <a class="btn btn-primary btn-sm" href="{{ route('animal-files.index') }}"> {{ __('Back') }}</a>

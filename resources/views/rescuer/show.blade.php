@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('template_title')
-    {{ $rescuer->name ?? __('Show') . " " . __('Rescuer') }}
+    {{ $rescuer->name ?? __('Show') . ' ' . __('Rescuer') }}
 @endsection
 
 @section('content')
@@ -11,7 +11,7 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="float-left">
-                            <span class="card-title">{{ __('Show') }} Rescuer</span>
+                            <span class="card-title">{{ __('Show') }} {{ __('Rescuer') }}</span>
                         </div>
                         <div class="float-right">
                             <a class="btn btn-primary btn-sm" href="{{ route('rescuers.index') }}"> {{ __('Back') }}</a>

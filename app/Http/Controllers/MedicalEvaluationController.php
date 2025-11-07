@@ -44,7 +44,7 @@ class MedicalEvaluationController extends Controller
         MedicalEvaluation::create($request->validated());
 
         return Redirect::route('medical-evaluations.index')
-            ->with('success', 'MedicalEvaluation created successfully.');
+            ->with('success', 'Evaluación médica creada correctamente.');
     }
 
     /**
@@ -77,7 +77,7 @@ class MedicalEvaluationController extends Controller
         $medicalEvaluation->update($request->validated());
 
         return Redirect::route('medical-evaluations.index')
-            ->with('success', 'MedicalEvaluation updated successfully');
+            ->with('success', 'Evaluación médica actualizada correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -85,6 +85,6 @@ class MedicalEvaluationController extends Controller
         MedicalEvaluation::find($id)->delete();
 
         return Redirect::route('medical-evaluations.index')
-            ->with('success', 'MedicalEvaluation deleted successfully');
+            ->with('success', 'Evaluación médica eliminada correctamente');
     }
 }

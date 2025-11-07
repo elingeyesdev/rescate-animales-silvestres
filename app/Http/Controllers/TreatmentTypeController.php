@@ -40,7 +40,7 @@ class TreatmentTypeController extends Controller
         TreatmentType::create($request->validated());
 
         return Redirect::route('treatment-types.index')
-            ->with('success', 'TreatmentType created successfully.');
+            ->with('success', 'Tipo de tratamiento creado correctamente.');
     }
 
     /**
@@ -71,7 +71,7 @@ class TreatmentTypeController extends Controller
         $treatmentType->update($request->validated());
 
         return Redirect::route('treatment-types.index')
-            ->with('success', 'TreatmentType updated successfully');
+            ->with('success', 'Tipo de tratamiento actualizado correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -79,6 +79,6 @@ class TreatmentTypeController extends Controller
         TreatmentType::find($id)->delete();
 
         return Redirect::route('treatment-types.index')
-            ->with('success', 'TreatmentType deleted successfully');
+            ->with('success', 'Tipo de tratamiento eliminado correctamente');
     }
 }

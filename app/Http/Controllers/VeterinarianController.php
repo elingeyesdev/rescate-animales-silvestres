@@ -45,7 +45,7 @@ class VeterinarianController extends Controller
         Veterinarian::create($data);
 
         return Redirect::route('veterinarians.index')
-            ->with('success', 'Veterinarian created successfully.');
+            ->with('success', 'Veterinario creado correctamente.');
     }
 
     /**
@@ -80,7 +80,7 @@ class VeterinarianController extends Controller
         $veterinarian->update($data);
 
         return Redirect::route('veterinarians.index')
-            ->with('success', 'Veterinarian updated successfully');
+            ->with('success', 'Veterinario actualizado correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -88,6 +88,6 @@ class VeterinarianController extends Controller
         Veterinarian::find($id)->delete();
 
         return Redirect::route('veterinarians.index')
-            ->with('success', 'Veterinarian deleted successfully');
+            ->with('success', 'Veterinario eliminado correctamente');
     }
 }

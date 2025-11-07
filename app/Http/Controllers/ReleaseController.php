@@ -40,7 +40,7 @@ class ReleaseController extends Controller
         Release::create($request->validated());
 
         return Redirect::route('releases.index')
-            ->with('success', 'Release created successfully.');
+            ->with('success', 'Liberación creada correctamente.');
     }
 
     /**
@@ -71,7 +71,7 @@ class ReleaseController extends Controller
         $release->update($request->validated());
 
         return Redirect::route('releases.index')
-            ->with('success', 'Release updated successfully');
+            ->with('success', 'Liberación actualizada correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -79,6 +79,6 @@ class ReleaseController extends Controller
         Release::find($id)->delete();
 
         return Redirect::route('releases.index')
-            ->with('success', 'Release deleted successfully');
+            ->with('success', 'Liberación eliminada correctamente');
     }
 }

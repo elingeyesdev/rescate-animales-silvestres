@@ -45,7 +45,7 @@ class RescuerController extends Controller
         Rescuer::create($data);
 
         return Redirect::route('rescuers.index')
-            ->with('success', 'Rescuer created successfully.');
+            ->with('success', 'Rescatista creado correctamente.');
     }
 
     /**
@@ -80,7 +80,7 @@ class RescuerController extends Controller
         $rescuer->update($data);
 
         return Redirect::route('rescuers.index')
-            ->with('success', 'Rescuer updated successfully');
+            ->with('success', 'Rescatista actualizado correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -88,6 +88,6 @@ class RescuerController extends Controller
         Rescuer::find($id)->delete();
 
         return Redirect::route('rescuers.index')
-            ->with('success', 'Rescuer deleted successfully');
+            ->with('success', 'Rescatista eliminado correctamente');
     }
 }

@@ -40,7 +40,7 @@ class CareTypeController extends Controller
         CareType::create($request->validated());
 
         return Redirect::route('care-types.index')
-            ->with('success', 'CareType created successfully.');
+            ->with('success', 'Tipo de cuidado creado correctamente.');
     }
 
     /**
@@ -71,7 +71,7 @@ class CareTypeController extends Controller
         $careType->update($request->validated());
 
         return Redirect::route('care-types.index')
-            ->with('success', 'CareType updated successfully');
+            ->with('success', 'Tipo de cuidado actualizado correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -79,6 +79,6 @@ class CareTypeController extends Controller
         CareType::find($id)->delete();
 
         return Redirect::route('care-types.index')
-            ->with('success', 'CareType deleted successfully');
+            ->with('success', 'Tipo de cuidado eliminado correctamente');
     }
 }

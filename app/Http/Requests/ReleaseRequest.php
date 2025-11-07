@@ -21,10 +21,17 @@ class ReleaseRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-			'direccion' => 'string',
-			'detalle' => 'string',
-			'aprobada' => 'required|boolean',
+        $rules = [
+			'direccion' => 'nullable|string',
+			'detalle' => 'nullable|string',
+			'latitud' => 'nullable|numeric',
+			'longitud' => 'nullable|numeric',
         ];
+        if (in_array($this->method(), ['PUT','PATCH'])) {
+            $rules['aprobada'] = 'required|boolean';
+        } else {
+            $rules['aprobada'] = 'nullable|boolean';
+        }
+        return $rules;
     }
 }

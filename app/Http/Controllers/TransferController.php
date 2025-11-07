@@ -43,7 +43,7 @@ class TransferController extends Controller
         Transfer::create($request->validated());
 
         return Redirect::route('transfers.index')
-            ->with('success', 'Transfer created successfully.');
+            ->with('success', 'Transferencia creada correctamente.');
     }
 
     /**
@@ -75,7 +75,7 @@ class TransferController extends Controller
         $transfer->update($request->validated());
 
         return Redirect::route('transfers.index')
-            ->with('success', 'Transfer updated successfully');
+            ->with('success', 'Transferencia actualizada correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -83,6 +83,6 @@ class TransferController extends Controller
         Transfer::find($id)->delete();
 
         return Redirect::route('transfers.index')
-            ->with('success', 'Transfer deleted successfully');
+            ->with('success', 'Transferencia eliminada correctamente');
     }
 }

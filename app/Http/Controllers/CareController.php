@@ -44,7 +44,7 @@ class CareController extends Controller
         Care::create($request->validated());
 
         return Redirect::route('cares.index')
-            ->with('success', 'Care created successfully.');
+            ->with('success', 'Cuidado creado correctamente.');
     }
 
     /**
@@ -77,7 +77,7 @@ class CareController extends Controller
         $care->update($request->validated());
 
         return Redirect::route('cares.index')
-            ->with('success', 'Care updated successfully');
+            ->with('success', 'Cuidado actualizado correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -85,6 +85,6 @@ class CareController extends Controller
         Care::find($id)->delete();
 
         return Redirect::route('cares.index')
-            ->with('success', 'Care deleted successfully');
+            ->with('success', 'Cuidado eliminado correctamente');
     }
 }

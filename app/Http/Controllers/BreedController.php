@@ -42,7 +42,7 @@ class BreedController extends Controller
         Breed::create($request->validated());
 
         return Redirect::route('breeds.index')
-            ->with('success', 'Breed created successfully.');
+            ->with('success', 'Raza creada correctamente.');
     }
 
     /**
@@ -74,7 +74,7 @@ class BreedController extends Controller
         $breed->update($request->validated());
 
         return Redirect::route('breeds.index')
-            ->with('success', 'Breed updated successfully');
+            ->with('success', 'Raza actualizada correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -82,7 +82,7 @@ class BreedController extends Controller
         Breed::find($id)->delete();
 
         return Redirect::route('breeds.index')
-            ->with('success', 'Breed deleted successfully');
+            ->with('success', 'Raza eliminada correctamente');
     }
 
     /**

@@ -41,7 +41,7 @@ class AdoptionController extends Controller
         Adoption::create($request->validated());
 
         return Redirect::route('adoptions.index')
-            ->with('success', 'Adoption created successfully.');
+            ->with('success', 'Adopción creada correctamente.');
     }
 
     /**
@@ -72,7 +72,7 @@ class AdoptionController extends Controller
         $adoption->update($request->validated());
 
         return Redirect::route('adoptions.index')
-            ->with('success', 'Adoption updated successfully');
+            ->with('success', 'Adopción actualizada exitosamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -80,6 +80,6 @@ class AdoptionController extends Controller
         Adoption::find($id)->delete();
 
         return Redirect::route('adoptions.index')
-            ->with('success', 'Adoption deleted successfully');
+            ->with('success', 'Adopción eliminada correctamente');
     }
 }

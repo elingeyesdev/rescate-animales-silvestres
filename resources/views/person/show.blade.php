@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('template_title')
-    {{ $person->name ?? __('Show') . " " . __('Person') }}
+    {{ $person->name ?? __('Show') . ' ' . __('Person') }}
 @endsection
 
 @section('content')
@@ -11,7 +11,7 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="float-left">
-                            <span class="card-title">{{ __('Show') }} Person</span>
+                            <span class="card-title">{{ __('Show') }} {{ __('Person') }}</span>
                         </div>
                         <div class="float-right">
                             <a class="btn btn-primary btn-sm" href="{{ route('people.index') }}"> {{ __('Back') }}</a>
@@ -21,8 +21,8 @@
                     <div class="card-body bg-white">
                         
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Usuario Id:</strong>
-                                    {{ $person->usuario_id }}
+                                    <strong>Email:</strong>
+                                    {{ $person->user?->email ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Nombre:</strong>
@@ -38,7 +38,7 @@
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Es Cuidador:</strong>
-                                    {{ $person->es_cuidador }}
+                                    {{ (int)$person->es_cuidador === 1 ? 'Sí' : 'No' }}
                                 </div>
 
                     </div>

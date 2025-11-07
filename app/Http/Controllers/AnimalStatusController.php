@@ -40,7 +40,7 @@ class AnimalStatusController extends Controller
         AnimalStatus::create($request->validated());
 
         return Redirect::route('animal-statuses.index')
-            ->with('success', 'AnimalStatus created successfully.');
+            ->with('success', 'Estado creado correctamente.');
     }
 
     /**
@@ -71,7 +71,7 @@ class AnimalStatusController extends Controller
         $animalStatus->update($request->validated());
 
         return Redirect::route('animal-statuses.index')
-            ->with('success', 'AnimalStatus updated successfully');
+            ->with('success', 'Estado de Animal actualizado exitosamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -79,6 +79,6 @@ class AnimalStatusController extends Controller
         AnimalStatus::find($id)->delete();
 
         return Redirect::route('animal-statuses.index')
-            ->with('success', 'AnimalStatus deleted successfully');
+            ->with('success', 'Estado eliminado correctamente');
     }
 }

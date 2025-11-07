@@ -48,8 +48,9 @@ window.initMapWithGeolocation = function initMapWithGeolocation(opts) {
     // If there is an existing value, place marker there
     if (initLat && initLon) setMarker(initLat, initLon, true);
 
-    // Prefer navigator.geolocation with high accuracy
-    if (navigator.geolocation) {
+    // Prefer navigator.geolocation with high accuracy only when no initial coords
+    if (!initLat || !initLon) {
+      if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const lat = pos.coords.latitude.toFixed(6);
@@ -64,10 +65,11 @@ window.initMapWithGeolocation = function initMapWithGeolocation(opts) {
             },
             { enableHighAccuracy: true, timeout: 7000 }
         );
-    } else {
+      } else {
         map.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true, timeout: 5000 })
-            .on('locationfound', (e) => setMarker(e.latitude.toFixed(6), e.longitude.toFixed(6), true))
-            .on('locationerror', () => map.setView([start.lat, start.lon], start.zoom));
+          .on('locationfound', (e) => setMarker(e.latitude.toFixed(6), e.longitude.toFixed(6), true))
+          .on('locationerror', () => map.setView([start.lat, start.lon], start.zoom));
+      }
     }
 
     map.on('click', (e) => setMarker(e.latlng.lat.toFixed(6), e.latlng.lng.toFixed(6)));

@@ -40,7 +40,7 @@ class SpeciesController extends Controller
         Species::create($request->validated());
 
         return Redirect::route('species.index')
-            ->with('success', 'Species created successfully.');
+            ->with('success', 'Especie creada correctamente.');
     }
 
     /**
@@ -71,7 +71,7 @@ class SpeciesController extends Controller
         $species->update($request->validated());
 
         return Redirect::route('species.index')
-            ->with('success', 'Species updated successfully');
+            ->with('success', 'Especie actualizada correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -79,6 +79,6 @@ class SpeciesController extends Controller
         Species::find($id)->delete();
 
         return Redirect::route('species.index')
-            ->with('success', 'Species deleted successfully');
+            ->with('success', 'Especie eliminada correctamente');
     }
 }

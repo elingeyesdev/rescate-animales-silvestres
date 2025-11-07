@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('template_title')
-    Cares
+    {{ __('Cares') }}
 @endsection
 
 @section('content')
@@ -60,7 +60,7 @@
                                                     <a class="btn btn-sm btn-success" href="{{ route('cares.edit', $care->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('¿Estás seguro de querer eliminar?') ? this.closest('form').submit() : false;"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
                                                 </form>
                                             </td>
                                         </tr>

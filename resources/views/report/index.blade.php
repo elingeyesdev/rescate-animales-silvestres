@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('template_title')
-    Reports
+    {{ __('Reports') }}
 @endsection
 
 @section('content')
@@ -34,15 +34,12 @@
                             <table class="table table-striped table-hover">
                                 <thead class="thead">
                                     <tr>
-                                        <th>No</th>
-                                        
-								<th >Reportante</th>
-								<th >Aprobado</th>
-								<th >Imagen</th>
+                                    <th>No</th>
+                                    <th >Reportante</th>
+                                    <th >Aprobado</th>
+                                    <th >Imagen</th>
 									<th >Observaciones</th>
 									<th >Cantidad Animales</th>
-
-                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -66,7 +63,7 @@
                                                     <a class="btn btn-sm btn-success" href="{{ route('reports.edit', $report->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('¿Estás seguro de querer eliminar?') ? this.closest('form').submit() : false;"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
                                                 </form>
                                             </td>
                                         </tr>

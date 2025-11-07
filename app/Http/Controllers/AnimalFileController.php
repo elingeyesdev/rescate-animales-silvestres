@@ -59,7 +59,7 @@ class AnimalFileController extends Controller
         AnimalFile::create($data);
 
         return Redirect::route('animal-files.index')
-            ->with('success', 'AnimalFile created successfully.');
+            ->with('success', 'Hoja Animal creada correctamente.');
     }
 
     /**
@@ -104,7 +104,7 @@ class AnimalFileController extends Controller
         $animalFile->update($data);
 
         return Redirect::route('animal-files.index')
-            ->with('success', 'AnimalFile updated successfully');
+            ->with('success', 'Hoja de Animal actualizada exitosamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -112,6 +112,6 @@ class AnimalFileController extends Controller
         AnimalFile::find($id)->delete();
 
         return Redirect::route('animal-files.index')
-            ->with('success', 'AnimalFile deleted successfully');
+            ->with('success', 'Hoja Animal eliminada correctamente');
     }
 }

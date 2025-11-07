@@ -2,15 +2,15 @@
     <div class="col-md-12">
         
         <div class="form-group mb-2 mb20">
-            <label for="direccion" class="form-label">{{ __('Direccion') }}</label>
-            <input type="text" name="direccion" class="form-control @error('direccion') is-invalid @enderror" value="{{ old('direccion', $adoption?->direccion) }}" id="direccion" placeholder="Direccion">
-            {!! $errors->first('direccion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
-        <div class="form-group mb-2 mb20">
             <label class="form-label">{{ __('Ubicación (clic en el mapa)') }}</label>
             <div id="adoption_map" style="height: 300px; border-radius: 4px;"></div>
             <input type="hidden" name="latitud" id="latitud" value="{{ old('latitud', $adoption?->latitud) }}">
             <input type="hidden" name="longitud" id="longitud" value="{{ old('longitud', $adoption?->longitud) }}">
+        </div>
+        <div class="form-group mb-2 mb20">
+            <label for="direccion" class="form-label">{{ __('Direccion') }}</label>
+            <input type="text" name="direccion" class="form-control @error('direccion') is-invalid @enderror" value="{{ old('direccion', $adoption?->direccion) }}" id="direccion" placeholder="Direccion">
+            {!! $errors->first('direccion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
             <label for="detalle" class="form-label">{{ __('Detalle') }}</label>
@@ -50,8 +50,9 @@ document.addEventListener('DOMContentLoaded', function () {
         mapId: 'adoption_map',
         latInputId: 'latitud',
         lonInputId: 'longitud',
+        dirInputId: 'direccion',
         start: { lat: -17.7833, lon: -63.1821, zoom: 13 },
-        enableReverseGeocode: false,
+        enableReverseGeocode: true,
     });
 });
 </script>
