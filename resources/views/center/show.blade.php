@@ -1,4 +1,5 @@
 @extends('adminlte::page')
+
 @section('template_title')
     {{ $center->name ?? __('Show') . " " . __('Center') }}
 @endsection
@@ -24,28 +25,20 @@
                                     {{ $center->nombre }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Telefono:</strong>
-                                    {{ $center->telefono }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Longitud:</strong>
-                                    {{ $center->longitud }}
+                                    <strong>Direccion:</strong>
+                                    {{ $center->direccion }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Latitud:</strong>
                                     {{ $center->latitud }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Direccion:</strong>
-                                    {{ $center->direccion }}
+                                    <strong>Longitud:</strong>
+                                    {{ $center->longitud }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Capacidad Maxima:</strong>
-                                    {{ $center->capacidad_maxima }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Fecha Creacion:</strong>
-                                    {{ $center->fecha_creacion }}
+                                    <strong>Contacto:</strong>
+                                    {{ $center->contacto }}
                                 </div>
 
                     </div>

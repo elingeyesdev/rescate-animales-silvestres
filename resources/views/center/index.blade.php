@@ -37,12 +37,10 @@
                                         <th>No</th>
                                         
 									<th >Nombre</th>
-									<th >Telefono</th>
-									<th >Longitud</th>
-									<th >Latitud</th>
 									<th >Direccion</th>
-									<th >Capacidad Maxima</th>
-									<th >Fecha Creacion</th>
+									<th >Latitud</th>
+									<th >Longitud</th>
+									<th >Contacto</th>
 
                                         <th></th>
                                     </tr>
@@ -53,12 +51,10 @@
                                             <td>{{ ++$i }}</td>
                                             
 										<td >{{ $center->nombre }}</td>
-										<td >{{ $center->telefono }}</td>
-										<td >{{ $center->longitud }}</td>
-										<td >{{ $center->latitud }}</td>
 										<td >{{ $center->direccion }}</td>
-										<td >{{ $center->capacidad_maxima }}</td>
-										<td >{{ $center->fecha_creacion }}</td>
+										<td >{{ $center->latitud }}</td>
+										<td >{{ $center->longitud }}</td>
+										<td >{{ $center->contacto }}</td>
 
                                             <td>
                                                 <form action="{{ route('centers.destroy', $center->id) }}" method="POST">

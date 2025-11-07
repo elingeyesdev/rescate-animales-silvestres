@@ -1,4 +1,5 @@
 @extends('adminlte::page')
+
 @section('template_title')
     {{ __('Create') }} Center
 @endsection

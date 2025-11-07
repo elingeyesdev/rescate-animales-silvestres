@@ -9,15 +9,14 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @property $id
  * @property $nombre
- * @property $telefono
- * @property $longitud
- * @property $latitud
  * @property $direccion
- * @property $capacidad_maxima
- * @property $fecha_creacion
+ * @property $latitud
+ * @property $longitud
+ * @property $contacto
  * @property $created_at
  * @property $updated_at
  *
+ * @property Transfer[] $transfers
  * @package App
  * @mixin \Illuminate\Database\Eloquent\Builder
  */
@@ -31,7 +30,15 @@ class Center extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['nombre', 'telefono', 'longitud', 'latitud', 'direccion', 'capacidad_maxima', 'fecha_creacion'];
+    protected $fillable = ['nombre', 'direccion', 'latitud', 'longitud', 'contacto'];
 
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function transfers()
+    {
+        return $this->hasMany(\App\Models\Transfer::class, 'id', 'centro_id');
+    }
+    
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('tipo_id')->constrained('animal_types')->cascadeOnDelete();
             $table->foreignId('reporte_id')->constrained('reports')->cascadeOnDelete();
             $table->foreignId('especie_id')->constrained('species')->cascadeOnDelete();
-            // No FK directa a breeds: la raza se resuelve por la especie
+            $table->string('imagen_url')->nullable();
             $table->unsignedBigInteger('raza_id');
             $table->index(['especie_id', 'raza_id']);
             $table->foreignId('estado_id')->constrained('animal_statuses')->cascadeOnDelete();

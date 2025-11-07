@@ -3,49 +3,48 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Center;
-use App\Models\User;
 
+/**
+ * Class Report
+ *
+ * @property $id
+ * @property $persona_id
+ * @property $aprobado
+ * @property $created_at
+ * @property $updated_at
+ *
+ * @property Person $person
+ * @property AnimalFile[] $animalFiles
+ * @package App
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class Report extends Model
 {
+    
     protected $perPage = 20;
 
-    protected $table = 'reports';
-    protected $primaryKey = 'reporte_id';
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = ['persona_id', 'aprobado'];
 
-    const CREATED_AT = 'fecha_creacion';
-    const UPDATED_AT = 'fecha_actualizacion';
 
-    protected $fillable = [
-        'reportador_id',
-        'cantidad_animales',
-        'longitud',
-        'latitud',
-        'direccion',
-        'centro_id',
-        'aprobado_id',
-        'detalle_aprobado',
-        'fecha_creacion',
-        'fecha_actualizacion',
-    ];
-
-    protected $casts = [
-        'reportador_id' => 'integer',
-        'cantidad_animales' => 'integer',
-        'centro_id' => 'integer',
-        'longitud' => 'float',
-        'latitud' => 'float',
-        'fecha_creacion' => 'date',
-        'fecha_actualizacion' => 'date',
-    ];
-
-    public function center()
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function person()
     {
-        return $this->belongsTo(Center::class, 'centro_id');
+        return $this->belongsTo(\App\Models\Person::class, 'persona_id', 'id');
     }
-
-    public function reportador()
+    
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function animalFiles()
     {
-        return $this->belongsTo(User::class, 'reportador_id');
+        return $this->hasMany(\App\Models\AnimalFile::class, 'id', 'reporte_id');
     }
+    
 }

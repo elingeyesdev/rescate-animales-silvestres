@@ -330,7 +330,7 @@ return [
         
         
         ['header' => 'account_settings'],
-        [
+        /*[
             'text' => 'profile',
             'url' => 'admin/settings',
             'icon' => 'fas fa-fw fa-user',
@@ -339,29 +339,29 @@ return [
             'text' => 'change_password',
             'url' => 'admin/settings',
             'icon' => 'fas fa-fw fa-lock',
-        ],
+        ],*/
         [
             'text' => 'Hoja Animal',
-            'url' => 'animal-profiles',
+            'url' => 'animal-files',
             'icon' => 'fas fa-fw fa-paw',
         ],
         [
-            'text' => 'Disposicion',
-            'url' => 'dispositions',
+            'text' => 'Tratamiento',
+            'url' => 'treatment-types',
             'icon' => 'fas fa-fw fa-paw',
         ],
         [
-            'text' => 'Diagnostico',
-            'url' => 'health-records',
+            'text' => 'Evaluacion Medica',
+            'url' => 'medical-evaluations',
             'icon' => 'fas fa-fw fa-paw',
         ],
         [
-            'text' => 'animales',
-            'url' => 'animals',
+            'text' => 'Adopcion',
+            'url' => 'adoptions',
             'icon' => 'fas fa-fw fa-paw',
         ],
         [
-            'text' => 'centros',
+            'text' => 'Centros',
             'url' => 'centers',
             'icon' => 'fas fa-fw fa-building',
         ],
@@ -369,6 +369,66 @@ return [
             'text' => 'Reportes',
             'url' => 'reports',
             'icon' => 'fas fa-fw fa-file-alt',
+        ],
+        [
+            'text' => 'Transferencias',
+            'url' => 'transfers',
+            'icon' => 'fas fa-fw fa-exchange-alt',
+        ],
+        [
+            'text' => 'Liberacion',
+            'url' => 'releases',
+            'icon' => 'fas fa-fw fa-unlock',
+        ],
+        [
+            'text' => 'Veterinarios',
+            'url' => 'veterinarians',
+            'icon' => 'fas fa-fw fa-user-md',
+        ],
+        [
+            'text' => 'Rescatadores',
+            'url' => 'rescuers',
+            'icon' => 'fas fa-fw fa-user-injured',
+        ],
+        [
+            'text' => 'Especies',
+            'url' => 'species',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Razas',
+            'url' => 'breeds',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Estados',
+            'url' => 'animal-statuses',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Tipos de Animales',
+            'url' => 'animal-types',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Personas',
+            'url' => 'people',
+            'icon' => 'fas fa-fw fa-user',
+        ],
+        [
+            'text' => 'Cuidadores',
+            'url' => 'care-types',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Cuidados',
+            'url' => 'care-types',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Tipos de Cuidado',
+            'url' => 'care-types',
+            'icon' => 'fas fa-fw fa-paw',
         ],
         [
             'text' => 'multilevel',
@@ -425,6 +485,7 @@ return [
             'url' => '#',
         ],
     ],
+
 
     /*
     |--------------------------------------------------------------------------

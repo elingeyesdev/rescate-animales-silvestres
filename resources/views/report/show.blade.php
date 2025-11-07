@@ -21,48 +21,12 @@
                     <div class="card-body bg-white">
                         
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Reporte Id:</strong>
-                                    {{ $report->reporte_id }}
+                                    <strong>Persona Id:</strong>
+                                    {{ $report->persona_id }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Reportador Id:</strong>
-                                    {{ $report->reportador_id }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Cantidad Animales:</strong>
-                                    {{ $report->cantidad_animales }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Longitud:</strong>
-                                    {{ $report->longitud }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Latitud:</strong>
-                                    {{ $report->latitud }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Direccion:</strong>
-                                    {{ $report->direccion }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Centro Id:</strong>
-                                    {{ $report->centro_id }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Aprobado Id:</strong>
-                                    {{ $report->aprobado_id }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Detalle Aprobado:</strong>
-                                    {{ $report->detalle_aprobado }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Fecha Creacion:</strong>
-                                    {{ $report->fecha_creacion }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Fecha Actualizacion:</strong>
-                                    {{ $report->fecha_actualizacion }}
+                                    <strong>Aprobado:</strong>
+                                    {{ $report->aprobado }}
                                 </div>
 
                     </div>
