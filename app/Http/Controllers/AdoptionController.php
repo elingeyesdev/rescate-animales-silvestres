@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Adoption;
+use App\Models\Person;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\AdoptionRequest;
@@ -28,8 +29,8 @@ class AdoptionController extends Controller
     public function create(): View
     {
         $adoption = new Adoption();
-
-        return view('adoption.create', compact('adoption'));
+        $people = Person::orderBy('nombre')->get(['id','nombre']);
+        return view('adoption.create', compact('adoption','people'));
     }
 
     /**
@@ -59,8 +60,8 @@ class AdoptionController extends Controller
     public function edit($id): View
     {
         $adoption = Adoption::find($id);
-
-        return view('adoption.edit', compact('adoption'));
+        $people = Person::orderBy('nombre')->get(['id','nombre']);
+        return view('adoption.edit', compact('adoption','people'));
     }
 
     /**

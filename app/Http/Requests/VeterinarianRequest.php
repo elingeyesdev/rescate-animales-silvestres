@@ -23,7 +23,7 @@ class VeterinarianRequest extends FormRequest
     {
         return [
 			'especialidad' => 'string',
-			'cv_documentado' => 'required|boolean',
+			'cv_documentado' => 'nullable|string',
 			'persona_id' => 'required',
 			'cv' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
         ];

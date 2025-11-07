@@ -7,14 +7,10 @@
             {!! $errors->first('direccion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
-            <label for="latitud" class="form-label">{{ __('Latitud') }}</label>
-            <input type="text" name="latitud" class="form-control @error('latitud') is-invalid @enderror" value="{{ old('latitud', $adoption?->latitud) }}" id="latitud" placeholder="Latitud">
-            {!! $errors->first('latitud', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
-        <div class="form-group mb-2 mb20">
-            <label for="longitud" class="form-label">{{ __('Longitud') }}</label>
-            <input type="text" name="longitud" class="form-control @error('longitud') is-invalid @enderror" value="{{ old('longitud', $adoption?->longitud) }}" id="longitud" placeholder="Longitud">
-            {!! $errors->first('longitud', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            <label class="form-label">{{ __('Ubicación (clic en el mapa)') }}</label>
+            <div id="adoption_map" style="height: 300px; border-radius: 4px;"></div>
+            <input type="hidden" name="latitud" id="latitud" value="{{ old('latitud', $adoption?->latitud) }}">
+            <input type="hidden" name="longitud" id="longitud" value="{{ old('longitud', $adoption?->longitud) }}">
         </div>
         <div class="form-group mb-2 mb20">
             <label for="detalle" class="form-label">{{ __('Detalle') }}</label>
@@ -23,12 +19,21 @@
         </div>
         <div class="form-group mb-2 mb20">
             <label for="aprobada" class="form-label">{{ __('Aprobada') }}</label>
-            <input type="text" name="aprobada" class="form-control @error('aprobada') is-invalid @enderror" value="{{ old('aprobada', $adoption?->aprobada) }}" id="aprobada" placeholder="Aprobada">
+            <select name="aprobada" id="aprobada" class="form-control @error('aprobada') is-invalid @enderror">
+                @php($ap = old('aprobada', $adoption?->aprobada))
+                <option value="0" {{ (string)$ap === '0' ? 'selected' : '' }}>No</option>
+                <option value="1" {{ (string)$ap === '1' ? 'selected' : '' }}>Sí</option>
+            </select>
             {!! $errors->first('aprobada', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
-            <label for="adoptante_id" class="form-label">{{ __('Adoptante Id') }}</label>
-            <input type="text" name="adoptante_id" class="form-control @error('adoptante_id') is-invalid @enderror" value="{{ old('adoptante_id', $adoption?->adoptante_id) }}" id="adoptante_id" placeholder="Adoptante Id">
+            <label for="adoptante_id" class="form-label">{{ __('Adoptante') }}</label>
+            <select name="adoptante_id" id="adoptante_id" class="form-control @error('adoptante_id') is-invalid @enderror">
+                <option value="">Seleccione</option>
+                @foreach(($people ?? []) as $p)
+                    <option value="{{ $p->id }}" {{ (string)old('adoptante_id', $adoption?->adoptante_id) === (string)$p->id ? 'selected' : '' }}>{{ $p->nombre }}</option>
+                @endforeach
+            </select>
             {!! $errors->first('adoptante_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
 
@@ -37,3 +42,16 @@
         <button type="submit" class="btn btn-primary">{{ __('Submit') }}</button>
     </div>
 </div>
+
+@include('partials.leaflet')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    window.initMapWithGeolocation({
+        mapId: 'adoption_map',
+        latInputId: 'latitud',
+        lonInputId: 'longitud',
+        start: { lat: -17.7833, lon: -63.1821, zoom: 13 },
+        enableReverseGeocode: false,
+    });
+});
+</script>

@@ -2,6 +2,16 @@
     <div class="col-md-12">
         
         <div class="form-group mb-2 mb20">
+            <label for="persona_id" class="form-label">{{ __('Persona') }}</label>
+            <select name="persona_id" id="persona_id" class="form-control @error('persona_id') is-invalid @enderror">
+                <option value="">Seleccione</option>
+                @foreach(($people ?? []) as $p)
+                    <option value="{{ $p->id }}" {{ (string)old('persona_id', $veterinarian?->persona_id) === (string)$p->id ? 'selected' : '' }}>{{ $p->nombre }}</option>
+                @endforeach
+            </select>
+            {!! $errors->first('persona_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        </div>
+        <div class="form-group mb-2 mb20">
             <label for="especialidad" class="form-label">{{ __('Especialidad') }}</label>
             <input type="text" name="especialidad" class="form-control @error('especialidad') is-invalid @enderror" value="{{ old('especialidad', $veterinarian?->especialidad) }}" id="especialidad" placeholder="Especialidad">
             {!! $errors->first('especialidad', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
@@ -26,16 +36,7 @@
                 <div class="mt-2"><a href="{{ asset('storage/' . $veterinarian->cv_path) }}" target="_blank">{{ __('Ver CV actual') }}</a></div>
             @endif
         </div>
-        <div class="form-group mb-2 mb20">
-            <label for="persona_id" class="form-label">{{ __('Persona') }}</label>
-            <select name="persona_id" id="persona_id" class="form-control @error('persona_id') is-invalid @enderror">
-                <option value="">Seleccione</option>
-                @foreach(($people ?? []) as $p)
-                    <option value="{{ $p->id }}" {{ (string)old('persona_id', $veterinarian?->persona_id) === (string)$p->id ? 'selected' : '' }}>{{ $p->nombre }}</option>
-                @endforeach
-            </select>
-            {!! $errors->first('persona_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
+        
 
     </div>
     <div class="col-md-12 mt20 mt-2">

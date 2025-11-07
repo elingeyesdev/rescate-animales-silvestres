@@ -21,12 +21,12 @@
                     <div class="card-body bg-white">
                         
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Hoja Animal Id:</strong>
-                                    {{ $care->hoja_animal_id }}
+                                    <strong>Animal:</strong>
+                                    {{ $care->animalFile?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Tipo Cuidado Id:</strong>
-                                    {{ $care->tipo_cuidado_id }}
+                                    <strong>Tipo de Cuidado:</strong>
+                                    {{ $care->careType?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Descripcion:</strong>
@@ -34,7 +34,7 @@
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Fecha:</strong>
-                                    {{ $care->fecha }}
+                                    {{ $care->fecha ? \Carbon\Carbon::parse($care->fecha)->format('d-m-Y') : '-' }}
                                 </div>
 
                     </div>

@@ -49,10 +49,10 @@
                                             
 									<td >{{ $rescuer->person?->nombre }}</td>
 									<td >
-                                                @if($rescuer->cv_path)
-                                                    <a href="{{ asset('storage/' . $rescuer->cv_path) }}" target="_blank">Ver CV</a>
+                                                @if($rescuer->cv_documentado)
+                                                    <a href="{{ asset('storage/' . $rescuer->cv_documentado) }}" target="_blank">Ver CV</a>
                                                 @else
-                                                    {{ (int)$rescuer->cv_documentado === 1 ? 'Sí' : 'No' }}
+                                                    -
                                                 @endif
                                             </td>
 

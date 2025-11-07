@@ -21,12 +21,16 @@
                     <div class="card-body bg-white">
                         
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Persona Id:</strong>
-                                    {{ $rescuer->persona_id }}
+                                    <strong>Persona:</strong>
+                                    {{ $rescuer->person?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Cv Documentado:</strong>
-                                    {{ $rescuer->cv_documentado }}
+                                    <strong>CV:</strong>
+                                    @if($rescuer->cv_documentado)
+                                        <a href="{{ asset('storage/' . $rescuer->cv_documentado) }}" target="_blank">Ver CV</a>
+                                    @else
+                                        -
+                                    @endif
                                 </div>
 
                     </div>

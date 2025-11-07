@@ -41,7 +41,7 @@
 									<th >Longitud</th>
 									<th >Detalle</th>
 									<th >Aprobada</th>
-									<th >Adoptante Id</th>
+								<th >Adoptante</th>
 
                                         <th></th>
                                     </tr>
@@ -55,8 +55,8 @@
 										<td >{{ $adoption->latitud }}</td>
 										<td >{{ $adoption->longitud }}</td>
 										<td >{{ $adoption->detalle }}</td>
-										<td >{{ $adoption->aprobada }}</td>
-										<td >{{ $adoption->adoptante_id }}</td>
+									<td >{{ (int)$adoption->aprobada === 1 ? 'Sí' : 'No' }}</td>
+									<td >{{ $adoption->adopter?->nombre ?? $adoption->adoptante_id }}</td>
 
                                             <td>
                                                 <form action="{{ route('adoptions.destroy', $adoption->id) }}" method="POST">

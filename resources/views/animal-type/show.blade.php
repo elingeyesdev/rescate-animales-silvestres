@@ -22,15 +22,15 @@
                         
                                 <div class="form-group mb-2 mb20">
                                     <strong>Nombre:</strong>
-                                    {{ $animalType->nombre }}
+                                    {{ $animalType->nombre ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Permite Adopcion:</strong>
-                                    {{ $animalType->permite_adopcion }}
+                                    {{ (int)$animalType->permite_adopcion === 1 ? 'Sí' : 'No' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Permite Liberacion:</strong>
-                                    {{ $animalType->permite_liberacion }}
+                                    {{ (int)$animalType->permite_liberacion === 1 ? 'Sí' : 'No' }}
                                 </div>
 
                     </div>

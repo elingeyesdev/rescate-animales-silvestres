@@ -40,7 +40,7 @@ class RescuerController extends Controller
     {
         $data = $request->validated();
         if ($request->hasFile('cv')) {
-            $data['cv_path'] = $request->file('cv')->store('cv', 'public');
+            $data['cv_documentado'] = $request->file('cv')->store('cv', 'public');
         }
         Rescuer::create($data);
 
@@ -75,7 +75,7 @@ class RescuerController extends Controller
     {
         $data = $request->validated();
         if ($request->hasFile('cv')) {
-            $data['cv_path'] = $request->file('cv')->store('cv', 'public');
+            $data['cv_documentado'] = $request->file('cv')->store('cv', 'public');
         }
         $rescuer->update($data);
 

@@ -25,12 +25,16 @@
                                     {{ $veterinarian->especialidad }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Cv Documentado:</strong>
-                                    {{ $veterinarian->cv_documentado }}
+                                    <strong>CV:</strong>
+                                    @if($veterinarian->cv_documentado)
+                                        <a href="{{ asset('storage/' . $veterinarian->cv_documentado) }}" target="_blank">Ver CV</a>
+                                    @else
+                                        -
+                                    @endif
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Persona Id:</strong>
-                                    {{ $veterinarian->persona_id }}
+                                    <strong>Persona:</strong>
+                                    {{ $veterinarian->person?->nombre ?? '-' }}
                                 </div>
 
                     </div>

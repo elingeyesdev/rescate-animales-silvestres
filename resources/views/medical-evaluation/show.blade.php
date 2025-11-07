@@ -21,20 +21,20 @@
                     <div class="card-body bg-white">
                         
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Tratamiento Id:</strong>
-                                    {{ $medicalEvaluation->tratamiento_id }}
+                                    <strong>Tratamiento:</strong>
+                                    {{ $medicalEvaluation->treatmentType?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Descripcion:</strong>
                                     {{ $medicalEvaluation->descripcion }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Fecha:</strong>
-                                    {{ $medicalEvaluation->fecha }}
+                                    <strong>Fecha Revisión:</strong>
+                                    {{ $medicalEvaluation->fecha ? \Carbon\Carbon::parse($medicalEvaluation->fecha)->format('d-m-Y') : '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Veterinario Id:</strong>
-                                    {{ $medicalEvaluation->veterinario_id }}
+                                    <strong>Veterinario:</strong>
+                                    {{ $medicalEvaluation->veterinarian?->person?->nombre ?? '-' }}
                                 </div>
 
                     </div>

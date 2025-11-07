@@ -40,7 +40,7 @@ class VeterinarianController extends Controller
     {
         $data = $request->validated();
         if ($request->hasFile('cv')) {
-            $data['cv_path'] = $request->file('cv')->store('cv', 'public');
+            $data['cv_documentado'] = $request->file('cv')->store('cv', 'public');
         }
         Veterinarian::create($data);
 
@@ -75,7 +75,7 @@ class VeterinarianController extends Controller
     {
         $data = $request->validated();
         if ($request->hasFile('cv')) {
-            $data['cv_path'] = $request->file('cv')->store('cv', 'public');
+            $data['cv_documentado'] = $request->file('cv')->store('cv', 'public');
         }
         $veterinarian->update($data);
 

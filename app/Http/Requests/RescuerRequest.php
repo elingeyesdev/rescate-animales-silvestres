@@ -23,7 +23,7 @@ class RescuerRequest extends FormRequest
     {
         return [
 			'persona_id' => 'required',
-			'cv_documentado' => 'required|boolean',
+			'cv_documentado' => 'nullable|string',
 			'cv' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
         ];
     }

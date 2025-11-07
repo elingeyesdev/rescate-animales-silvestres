@@ -50,10 +50,10 @@
                                             
 										<td >{{ $veterinarian->especialidad }}</td>
 									<td >
-                                                @if($veterinarian->cv_path)
-                                                    <a href="{{ asset('storage/' . $veterinarian->cv_path) }}" target="_blank">Ver CV</a>
+                                                @if($veterinarian->cv_documentado)
+                                                    <a href="{{ asset('storage/' . $veterinarian->cv_documentado) }}" target="_blank">Ver CV</a>
                                                 @else
-                                                    {{ (int)$veterinarian->cv_documentado === 1 ? 'Sí' : 'No' }}
+                                                    -
                                                 @endif
                                             </td>
 									<td >{{ $veterinarian->person?->nombre }}</td>

@@ -38,11 +38,11 @@
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Aprobada:</strong>
-                                    {{ $adoption->aprobada }}
+                                    {{ (int)$adoption->aprobada === 1 ? 'Sí' : 'No' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Adoptante Id:</strong>
-                                    {{ $adoption->adoptante_id }}
+                                    <strong>Adoptante:</strong>
+                                    {{ $adoption->adopter?->nombre ?? '-' }}
                                 </div>
 
                     </div>

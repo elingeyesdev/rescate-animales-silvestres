@@ -22,43 +22,47 @@
                         
                                 <div class="form-group mb-2 mb20">
                                     <strong>Nombre:</strong>
-                                    {{ $animalFile->nombre }}
+                                    {{ $animalFile->nombre ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Sexo:</strong>
-                                    {{ $animalFile->sexo }}
+                                    {{ $animalFile->sexo ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Tipo Id:</strong>
-                                    {{ $animalFile->tipo_id }}
+                                    <strong>Tipo:</strong>
+                                    {{ $animalFile->animalType?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Reporte Id:</strong>
-                                    {{ $animalFile->reporte_id }}
+                                    <strong>Reporte:</strong>
+                                    {{ $animalFile->reporte_id ? '#' . $animalFile->reporte_id : '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Especie Id:</strong>
-                                    {{ $animalFile->especie_id }}
+                                    <strong>Especie:</strong>
+                                    {{ $animalFile->species?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Imagen Url:</strong>
-                                    {{ $animalFile->imagen_url }}
+                                    <strong>Imagen:</strong>
+                                    @if($animalFile->imagen_url)
+                                        <div><img src="{{ asset('storage/' . $animalFile->imagen_url) }}" alt="img" style="max-height:180px;"></div>
+                                    @else
+                                        <span>-</span>
+                                    @endif
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Raza Id:</strong>
-                                    {{ $animalFile->raza_id }}
+                                    <strong>Raza:</strong>
+                                    {{ $animalFile->breed?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Estado Id:</strong>
-                                    {{ $animalFile->estado_id }}
+                                    <strong>Estado:</strong>
+                                    {{ $animalFile->animalStatus?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Adopcion Id:</strong>
-                                    {{ $animalFile->adopcion_id }}
+                                    <strong>Adopción:</strong>
+                                    {{ $animalFile->adopcion_id ? '#' . $animalFile->adopcion_id : '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Liberacion Id:</strong>
-                                    {{ $animalFile->liberacion_id }}
+                                    <strong>Liberación:</strong>
+                                    {{ $animalFile->liberacion_id ? '#' . $animalFile->liberacion_id : '-' }}
                                 </div>
 
                     </div>

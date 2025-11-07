@@ -42,4 +42,9 @@ class Adoption extends Model
         return $this->hasMany(\App\Models\AnimalFile::class, 'id', 'adopcion_id');
     }
     
+    public function adopter()
+    {
+        return $this->belongsTo(\App\Models\Person::class, 'adoptante_id', 'id');
+    }
+    
 }

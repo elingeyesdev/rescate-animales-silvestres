@@ -28,7 +28,7 @@ class Rescuer extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['persona_id', 'cv_documentado', 'cv_path'];
+    protected $fillable = ['persona_id', 'cv_documentado'];
 
 
     /**

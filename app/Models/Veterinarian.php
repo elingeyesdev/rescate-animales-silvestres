@@ -29,7 +29,7 @@ class Veterinarian extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['especialidad', 'cv_documentado', 'persona_id', 'cv_path'];
+    protected $fillable = ['especialidad', 'cv_documentado', 'persona_id'];
 
 
     /**

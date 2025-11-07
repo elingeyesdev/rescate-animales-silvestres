@@ -21,12 +21,12 @@
                     <div class="card-body bg-white">
                         
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Especie Id:</strong>
-                                    {{ $breed->especie_id }}
+                                    <strong>Especie:</strong>
+                                    {{ $breed->species?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Nombre:</strong>
-                                    {{ $breed->nombre }}
+                                    {{ $breed->nombre ?: '-' }}
                                 </div>
 
                     </div>
