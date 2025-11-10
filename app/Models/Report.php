@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property $updated_at
  *
  * @property Person $person
- * @property AnimalFile[] $animalFiles
+ * @property Animal[] $animals
  * @package App
  * @mixin \Illuminate\Database\Eloquent\Builder
  */
@@ -47,7 +47,22 @@ class Report extends Model
      */
     public function animalFiles()
     {
-        return $this->hasMany(\App\Models\AnimalFile::class, 'id', 'reporte_id');
+        // Compatibilidad: obtener animal_files a través de animals (report -> animals -> animal_files)
+        return $this->hasManyThrough(
+            \App\Models\AnimalFile::class,
+            \App\Models\Animal::class,
+            'reporte_id',   // Foreign key on animals referencing reports.id
+            'animal_id',    // Foreign key on animal_files referencing animals.id
+            'id',           // Local key on reports
+            'id'            // Local key on animals
+        );
     }
     
+    /**
+     * Animales relacionados (reporte tiene muchos animales)
+     */
+    public function animals()
+    {
+        return $this->hasMany(\App\Models\Animal::class, 'reporte_id', 'id');
+    }
 }

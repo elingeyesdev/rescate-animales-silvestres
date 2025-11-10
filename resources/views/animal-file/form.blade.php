@@ -2,19 +2,16 @@
     <div class="col-md-12">
         
         <div class="form-group mb-2 mb20">
-            <label for="nombre" class="form-label">{{ __('Nombre') }}</label>
-            <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre', $animalFile?->nombre) }}" id="nombre" placeholder="Nombre">
-            {!! $errors->first('nombre', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
-        <div class="form-group mb-2 mb20">
-            <label for="sexo" class="form-label">{{ __('Sexo') }}</label>
-            <select name="sexo" id="sexo" class="form-control @error('sexo') is-invalid @enderror">
-                @php($current = old('sexo', $animalFile?->sexo))
-                @foreach(['Hembra','Macho','Desconocido'] as $opt)
-                    <option value="{{ $opt }}" {{ $current === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+            <label for="animal_id" class="form-label">{{ __('Animal') }}</label>
+            <select name="animal_id" id="animal_id" class="form-control @error('animal_id') is-invalid @enderror">
+                <option value="">{{ __('Seleccione') }}</option>
+                @foreach(($animals ?? []) as $a)
+                    <option value="{{ $a->id }}" {{ (string)old('animal_id', $animalFile?->animal_id) === (string)$a->id ? 'selected' : '' }}>
+                        #{{ $a->id }} {{ $a->nombre ? '- ' . $a->nombre : '' }}
+                    </option>
                 @endforeach
             </select>
-            {!! $errors->first('sexo', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            {!! $errors->first('animal_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
             <label for="tipo_id" class="form-label">{{ __('Tipo de Animal') }}</label>
@@ -26,16 +23,7 @@
             </select>
             {!! $errors->first('tipo_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
-        <div class="form-group mb-2 mb20">
-            <label for="reporte_id" class="form-label">{{ __('Reporte') }}</label>
-            <select name="reporte_id" id="reporte_id" class="form-control @error('reporte_id') is-invalid @enderror">
-                <option value="">Seleccione</option>
-                @foreach(($reports ?? []) as $r)
-                    <option value="{{ $r->id }}" {{ (string)old('reporte_id', $animalFile?->reporte_id) === (string)$r->id ? 'selected' : '' }}>#{{ $r->id }}</option>
-                @endforeach
-            </select>
-            {!! $errors->first('reporte_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
+        
         <div class="form-group mb-2 mb20">
             <label for="especie_id" class="form-label">{{ __('Especie') }}</label>
             <select name="especie_id" id="especie_id" class="form-control @error('especie_id') is-invalid @enderror">

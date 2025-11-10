@@ -36,7 +36,7 @@
                                     <tr>
                                         <th>No</th>
                                         
-                                    <th >Nombre</th>
+                                    <th >Nombre del animal</th>
                                     <th >Sexo</th>
                                     <th >Tipo</th>
                                     <th >Reporte</th>
@@ -55,10 +55,10 @@
                                         <tr>
                                             <td>{{ ++$i }}</td>
                                             
-                                            <td >{{ $animalFile->nombre }}</td>
-                                            <td >{{ $animalFile->sexo }}</td>
+                                            <td >{{ $animalFile->animal?->nombre }}</td>
+                                            <td >{{ $animalFile->animal?->sexo }}</td>
                                             <td >{{ $animalFile->animalType?->nombre }}</td>
-                                            <td >{{ $animalFile->reporte_id ? '#' . $animalFile->reporte_id : '' }}</td>
+                                            <td >{{ $animalFile->animal?->report?->id ? '#' . $animalFile->animal?->report?->id : '' }}</td>
                                             <td >{{ $animalFile->species?->nombre }}</td>
                                             <td >
                                                 @if($animalFile->imagen_url)

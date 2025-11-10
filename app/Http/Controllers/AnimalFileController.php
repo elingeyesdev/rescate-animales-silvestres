@@ -7,6 +7,7 @@ use App\Models\AnimalType;
 use App\Models\Species;
 use App\Models\AnimalStatus;
 use App\Models\Report;
+use App\Models\Animal;
 use App\Models\Breed;
 use App\Models\Adoption;
 use App\Models\Release;
@@ -23,7 +24,7 @@ class AnimalFileController extends Controller
      */
     public function index(Request $request): View
     {
-        $animalFiles = AnimalFile::with(['animalType','species','animalStatus','breed','report','adoption','release'])
+        $animalFiles = AnimalFile::with(['animalType','species','animalStatus','breed','animal.report','adoption','release'])
             ->paginate();
 
         return view('animal-file.index', compact('animalFiles'))
@@ -39,11 +40,11 @@ class AnimalFileController extends Controller
         $animalTypes = AnimalType::orderBy('nombre')->get(['id','nombre']);
         $species = Species::orderBy('nombre')->get(['id','nombre']);
         $animalStatuses = AnimalStatus::orderBy('nombre')->get(['id','nombre']);
-        $reports = Report::where('aprobado', 1)->orderByDesc('id')->get(['id']);
+        $animals = Animal::orderByDesc('id')->get(['id','nombre']);
         $adoptions = Adoption::orderByDesc('id')->get(['id']);
         $releases = Release::orderByDesc('id')->get(['id']);
 
-        return view('animal-file.create', compact('animalFile','animalTypes','species','animalStatuses','reports','adoptions','releases'));
+        return view('animal-file.create', compact('animalFile','animalTypes','species','animalStatuses','animals','adoptions','releases'));
     }
 
     /**
@@ -81,14 +82,14 @@ class AnimalFileController extends Controller
         $animalTypes = AnimalType::orderBy('nombre')->get(['id','nombre']);
         $species = Species::orderBy('nombre')->get(['id','nombre']);
         $animalStatuses = AnimalStatus::orderBy('nombre')->get(['id','nombre']);
-        $reports = Report::where('aprobado', 1)->orderByDesc('id')->get(['id']);
+        $animals = Animal::orderByDesc('id')->get(['id','nombre']);
         $adoptions = Adoption::orderByDesc('id')->get(['id']);
         $releases = Release::orderByDesc('id')->get(['id']);
         $breeds = $animalFile?->especie_id
             ? Breed::where('especie_id', $animalFile->especie_id)->orderBy('nombre')->get(['id','nombre'])
             : collect();
 
-        return view('animal-file.edit', compact('animalFile','animalTypes','species','animalStatuses','reports','adoptions','releases','breeds'));
+        return view('animal-file.edit', compact('animalFile','animalTypes','species','animalStatuses','animals','adoptions','releases','breeds'));
     }
 
     /**

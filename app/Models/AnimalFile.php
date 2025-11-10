@@ -8,10 +8,8 @@ use Illuminate\Database\Eloquent\Model;
  * Class AnimalFile
  *
  * @property $id
- * @property $nombre
- * @property $sexo
+ * @property $animal_id
  * @property $tipo_id
- * @property $reporte_id
  * @property $especie_id
  * @property $imagen_url
  * @property $raza_id
@@ -25,7 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property Species $species
  * @property AnimalStatus $animalStatus
  * @property Release $release
- * @property Report $report
+ * @property Animal $animal
  * @property AnimalType $animalType
  * @property Care[] $cares
  * @package App
@@ -41,7 +39,7 @@ class AnimalFile extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['nombre', 'sexo', 'tipo_id', 'reporte_id', 'especie_id', 'imagen_url', 'raza_id', 'estado_id', 'adopcion_id', 'liberacion_id'];
+    protected $fillable = ['animal_id', 'tipo_id', 'especie_id', 'imagen_url', 'raza_id', 'estado_id', 'adopcion_id', 'liberacion_id'];
 
 
     /**
@@ -77,11 +75,11 @@ class AnimalFile extends Model
     }
     
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * Animal asociado (animal_files -> animals)
      */
-    public function report()
+    public function animal()
     {
-        return $this->belongsTo(\App\Models\Report::class, 'reporte_id', 'id');
+        return $this->belongsTo(\App\Models\Animal::class, 'animal_id', 'id');
     }
     
     /**

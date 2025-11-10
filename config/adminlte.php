@@ -340,8 +340,23 @@ return [
             'icon' => 'fas fa-fw fa-file-alt',
         ],
         [
-            'text' => 'Hoja Animal',
+            'text' => 'Animales',
+            'url' => 'animals',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Hojas de Animales',
             'url' => 'animal-files',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Estados de Animales',
+            'url' => 'animal-statuses',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Tipos de Animales',
+            'url' => 'animal-types',
             'icon' => 'fas fa-fw fa-paw',
         ],
         [
@@ -354,34 +369,26 @@ return [
             'url' => 'breeds',
             'icon' => 'fas fa-fw fa-paw',
         ],
-        [
-            'text' => 'Estados',
-            'url' => 'animal-statuses',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        [
-            'text' => 'Tipos de Animales',
-            'url' => 'animal-types',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
+        
         ['header' => 'DIAGNOSTICO'],
-        [
-            'text' => 'Tratamiento',
-            'url' => 'treatment-types',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        [
-            'text' => 'Evaluacion Medica',
-            'url' => 'medical-evaluations',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
         [
             'text' => 'Veterinarios',
             'url' => 'veterinarians',
             'icon' => 'fas fa-fw fa-user-md',
         ],
         [
-            'text' => 'Cuidados',
+            'text' => 'Tipos de Tratamiento',
+            'url' => 'treatment-types',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Evaluaciones Médicas',
+            'url' => 'medical-evaluations',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        
+        [
+            'text' => 'Cuidados de Animales',
             'url' => 'cares',
             'icon' => 'fas fa-fw fa-paw',
         ],
@@ -392,39 +399,42 @@ return [
         ],
         ['header' => 'DISPOSICION'],
         [
-            'text' => 'Adopcion',
-            'url' => 'adoptions',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        [
             'text' => 'Centros',
             'url' => 'centers',
             'icon' => 'fas fa-fw fa-building',
         ],
-        
+        [
+            'text' => 'Rescatistas',
+            'url' => 'rescuers',
+            'icon' => 'fas fa-fw fa-user-injured',
+        ],
         [
             'text' => 'Transferencias',
             'url' => 'transfers',
             'icon' => 'fas fa-fw fa-exchange-alt',
         ],
         [
-            'text' => 'Liberacion',
+            'text' => 'Adopciones',
+            'url' => 'adoptions',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Liberaciones',
             'url' => 'releases',
             'icon' => 'fas fa-fw fa-unlock',
         ],
         
-        [
-            'text' => 'Rescatistas',
-            'url' => 'rescuers',
-            'icon' => 'fas fa-fw fa-user-injured',
-        ],
         ['header' => 'ADMINISTRACION'],
         [
             'text' => 'Personas',
             'url' => 'people',
             'icon' => 'fas fa-fw fa-user',
         ],
-        
+        /*[
+            'text' => 'Usuarios',
+            'url' => 'users',
+            'icon' => 'fas fa-fw fa-user',
+        ],*/
         /*[
             'text' => 'multilevel',
             'icon' => 'fas fa-fw fa-share',
