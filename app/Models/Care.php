@@ -30,7 +30,7 @@ class Care extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['hoja_animal_id', 'tipo_cuidado_id', 'descripcion', 'fecha'];
+    protected $fillable = ['hoja_animal_id', 'tipo_cuidado_id', 'descripcion', 'fecha', 'imagen_url'];
 
 
     /**

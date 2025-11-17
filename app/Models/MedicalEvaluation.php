@@ -30,7 +30,7 @@ class MedicalEvaluation extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['tratamiento_id', 'descripcion', 'fecha', 'veterinario_id'];
+    protected $fillable = ['tratamiento_id', 'descripcion', 'fecha', 'veterinario_id', 'imagen_url'];
 
 
     /**

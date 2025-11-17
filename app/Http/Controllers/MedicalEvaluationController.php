@@ -6,6 +6,7 @@ use App\Models\MedicalEvaluation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\MedicalEvaluationRequest;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use App\Models\TreatmentType;
@@ -41,7 +42,12 @@ class MedicalEvaluationController extends Controller
      */
     public function store(MedicalEvaluationRequest $request): RedirectResponse
     {
-        MedicalEvaluation::create($request->validated());
+        $data = $request->validated();
+        if ($request->hasFile('imagen')) {
+            $path = $request->file('imagen')->store('evidencias/medical-evaluations', 'public');
+            $data['imagen_url'] = Storage::disk('public')->url($path);
+        }
+        MedicalEvaluation::create($data);
 
         return Redirect::route('medical-evaluations.index')
             ->with('success', 'Evaluación médica creada correctamente.');
@@ -74,7 +80,12 @@ class MedicalEvaluationController extends Controller
      */
     public function update(MedicalEvaluationRequest $request, MedicalEvaluation $medicalEvaluation): RedirectResponse
     {
-        $medicalEvaluation->update($request->validated());
+        $data = $request->validated();
+        if ($request->hasFile('imagen')) {
+            $path = $request->file('imagen')->store('evidencias/medical-evaluations', 'public');
+            $data['imagen_url'] = Storage::disk('public')->url($path);
+        }
+        $medicalEvaluation->update($data);
 
         return Redirect::route('medical-evaluations.index')
             ->with('success', 'Evaluación médica actualizada correctamente');

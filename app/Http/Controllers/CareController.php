@@ -8,6 +8,7 @@ use App\Models\CareType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\CareRequest;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
@@ -48,7 +49,12 @@ class CareController extends Controller
      */
     public function store(CareRequest $request): RedirectResponse
     {
-        Care::create($request->validated());
+        $data = $request->validated();
+        if ($request->hasFile('imagen')) {
+            $path = $request->file('imagen')->store('evidencias/cares', 'public');
+            $data['imagen_url'] = Storage::disk('public')->url($path);
+        }
+        Care::create($data);
 
         return Redirect::route('cares.index')
             ->with('success', 'Cuidado creado correctamente.');
@@ -88,7 +94,12 @@ class CareController extends Controller
      */
     public function update(CareRequest $request, Care $care): RedirectResponse
     {
-        $care->update($request->validated());
+        $data = $request->validated();
+        if ($request->hasFile('imagen')) {
+            $path = $request->file('imagen')->store('evidencias/cares', 'public');
+            $data['imagen_url'] = Storage::disk('public')->url($path);
+        }
+        $care->update($data);
 
         return Redirect::route('cares.index')
             ->with('success', 'Cuidado actualizado correctamente');

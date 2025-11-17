@@ -31,6 +31,16 @@
             <input type="date" name="fecha" class="form-control @error('fecha') is-invalid @enderror" value="{{ old('fecha', $care?->fecha) }}" id="fecha">
             {!! $errors->first('fecha', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
+        <div class="form-group mb-2 mb20">
+            <label for="imagen" class="form-label">{{ __('Imagen (opcional)') }}</label>
+            <input type="file" name="imagen" id="imagen" class="form-control @error('imagen') is-invalid @enderror" accept="image/*">
+            {!! $errors->first('imagen', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            @if(!empty($care?->imagen_url))
+                <div class="mt-2">
+                    <img src="{{ $care->imagen_url }}" alt="Imagen cuidado" style="max-height:120px;">
+                </div>
+            @endif
+        </div>
 
     </div>
     <div class="col-md-12 mt20 mt-2">
