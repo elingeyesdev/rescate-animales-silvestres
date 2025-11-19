@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict tzpCz564aJLYJG1Nr9Hu9hqqvn6kdOMNfQeRUdHvrCkoOxEcOsatguNJnOnLBCx
+\restrict 58Lbl83JXbf5luUNU135Wda3GUDPB5hApeVjqgQsVPltdpBW0amu4GwRX5NF4RG
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -36,7 +36,8 @@ CREATE TABLE public.adoptions (
     aprobada boolean DEFAULT false NOT NULL,
     adoptante_id bigint NOT NULL,
     created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    updated_at timestamp(0) without time zone,
+    animal_file_id bigint
 );
 
 
@@ -60,6 +61,39 @@ ALTER SEQUENCE public.adoptions_id_seq OWNED BY public.adoptions.id;
 
 
 --
+-- Name: animal_histories; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.animal_histories (
+    id bigint NOT NULL,
+    animal_file_id bigint NOT NULL,
+    changed_at timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    observaciones json NOT NULL,
+    valores_antiguos json,
+    valores_nuevos json
+);
+
+
+--
+-- Name: animal_file_history_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.animal_file_history_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: animal_file_history_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.animal_file_history_id_seq OWNED BY public.animal_histories.id;
+
+
+--
 -- Name: animal_files; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -70,8 +104,6 @@ CREATE TABLE public.animal_files (
     imagen_url character varying(255),
     raza_id bigint NOT NULL,
     estado_id bigint NOT NULL,
-    adopcion_id bigint,
-    liberacion_id bigint,
     created_at timestamp(0) without time zone,
     updated_at timestamp(0) without time zone,
     animal_id bigint
@@ -292,7 +324,8 @@ CREATE TABLE public.cares (
     descripcion text,
     fecha date,
     created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    updated_at timestamp(0) without time zone,
+    imagen_url character varying(255)
 );
 
 
@@ -447,7 +480,8 @@ CREATE TABLE public.medical_evaluations (
     fecha date,
     veterinario_id bigint NOT NULL,
     created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    updated_at timestamp(0) without time zone,
+    imagen_url character varying(255)
 );
 
 
@@ -559,7 +593,8 @@ CREATE TABLE public.releases (
     longitud numeric(10,7),
     aprobada boolean DEFAULT false NOT NULL,
     created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    updated_at timestamp(0) without time zone,
+    animal_file_id bigint
 );
 
 
@@ -629,7 +664,9 @@ CREATE TABLE public.rescuers (
     persona_id bigint NOT NULL,
     created_at timestamp(0) without time zone,
     updated_at timestamp(0) without time zone,
-    cv_documentado character varying(255)
+    cv_documentado character varying(255),
+    aprobado boolean,
+    motivo_revision text
 );
 
 
@@ -703,11 +740,11 @@ ALTER SEQUENCE public.species_id_seq OWNED BY public.species.id;
 
 CREATE TABLE public.transfers (
     id bigint NOT NULL,
-    rescatista_id bigint NOT NULL,
     centro_id bigint NOT NULL,
     observaciones character varying(255),
     created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    updated_at timestamp(0) without time zone,
+    persona_id bigint NOT NULL
 );
 
 
@@ -805,7 +842,9 @@ CREATE TABLE public.veterinarians (
     persona_id bigint NOT NULL,
     created_at timestamp(0) without time zone,
     updated_at timestamp(0) without time zone,
-    cv_documentado character varying(255)
+    cv_documentado character varying(255),
+    aprobado boolean,
+    motivo_revision text
 );
 
 
@@ -840,6 +879,13 @@ ALTER TABLE ONLY public.adoptions ALTER COLUMN id SET DEFAULT nextval('public.ad
 --
 
 ALTER TABLE ONLY public.animal_files ALTER COLUMN id SET DEFAULT nextval('public.animal_files_id_seq'::regclass);
+
+
+--
+-- Name: animal_histories id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.animal_histories ALTER COLUMN id SET DEFAULT nextval('public.animal_file_history_id_seq'::regclass);
 
 
 --
@@ -983,11 +1029,27 @@ ALTER TABLE ONLY public.veterinarians ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: adoptions adoptions_animal_file_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adoptions
+    ADD CONSTRAINT adoptions_animal_file_id_unique UNIQUE (animal_file_id);
+
+
+--
 -- Name: adoptions adoptions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adoptions
     ADD CONSTRAINT adoptions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: animal_histories animal_file_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.animal_histories
+    ADD CONSTRAINT animal_file_history_pkey PRIMARY KEY (id);
 
 
 --
@@ -1135,6 +1197,14 @@ ALTER TABLE ONLY public.people
 
 
 --
+-- Name: releases releases_animal_file_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.releases
+    ADD CONSTRAINT releases_animal_file_id_unique UNIQUE (animal_file_id);
+
+
+--
 -- Name: releases releases_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1215,6 +1285,13 @@ ALTER TABLE ONLY public.veterinarians
 
 
 --
+-- Name: animal_file_history_animal_file_id_changed_at_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX animal_file_history_animal_file_id_changed_at_index ON public.animal_histories USING btree (animal_file_id, changed_at);
+
+
+--
 -- Name: animal_files_especie_id_raza_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1243,11 +1320,19 @@ CREATE INDEX sessions_user_id_index ON public.sessions USING btree (user_id);
 
 
 --
--- Name: animal_files animal_files_adopcion_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: adoptions adoptions_animal_file_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.animal_files
-    ADD CONSTRAINT animal_files_adopcion_id_foreign FOREIGN KEY (adopcion_id) REFERENCES public.adoptions(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.adoptions
+    ADD CONSTRAINT adoptions_animal_file_id_foreign FOREIGN KEY (animal_file_id) REFERENCES public.animal_files(id) ON DELETE CASCADE;
+
+
+--
+-- Name: animal_histories animal_file_history_animal_file_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.animal_histories
+    ADD CONSTRAINT animal_file_history_animal_file_id_foreign FOREIGN KEY (animal_file_id) REFERENCES public.animal_files(id) ON DELETE CASCADE;
 
 
 --
@@ -1272,14 +1357,6 @@ ALTER TABLE ONLY public.animal_files
 
 ALTER TABLE ONLY public.animal_files
     ADD CONSTRAINT animal_files_estado_id_foreign FOREIGN KEY (estado_id) REFERENCES public.animal_statuses(id) ON DELETE CASCADE;
-
-
---
--- Name: animal_files animal_files_liberacion_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.animal_files
-    ADD CONSTRAINT animal_files_liberacion_id_foreign FOREIGN KEY (liberacion_id) REFERENCES public.releases(id) ON DELETE SET NULL;
 
 
 --
@@ -1347,6 +1424,14 @@ ALTER TABLE ONLY public.people
 
 
 --
+-- Name: releases releases_animal_file_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.releases
+    ADD CONSTRAINT releases_animal_file_id_foreign FOREIGN KEY (animal_file_id) REFERENCES public.animal_files(id) ON DELETE CASCADE;
+
+
+--
 -- Name: reports reports_persona_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1371,11 +1456,11 @@ ALTER TABLE ONLY public.transfers
 
 
 --
--- Name: transfers transfers_rescatista_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: transfers transfers_persona_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.transfers
-    ADD CONSTRAINT transfers_rescatista_id_foreign FOREIGN KEY (rescatista_id) REFERENCES public.rescuers(id) ON DELETE CASCADE;
+    ADD CONSTRAINT transfers_persona_id_foreign FOREIGN KEY (persona_id) REFERENCES public.people(id) ON DELETE CASCADE;
 
 
 --
@@ -1390,13 +1475,13 @@ ALTER TABLE ONLY public.veterinarians
 -- PostgreSQL database dump complete
 --
 
-\unrestrict tzpCz564aJLYJG1Nr9Hu9hqqvn6kdOMNfQeRUdHvrCkoOxEcOsatguNJnOnLBCx
+\unrestrict 58Lbl83JXbf5luUNU135Wda3GUDPB5hApeVjqgQsVPltdpBW0amu4GwRX5NF4RG
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict lcXo3JNTMzDBcbBxeHE1iPIgywYbybhqXcVoc5jTEFDcdgSzen9fbLJ9tcNfh7I
+\restrict mVfJDql6rSqSOgvqoTKW5xAT6j7xO9hXx5Naz9WBov5u2dVUIStcMmCdmhXLyKv
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -1444,6 +1529,13 @@ COPY public.migrations (id, migration, batch) FROM stdin;
 24	2025_11_10_000023_create_animals_table	1
 25	2025_11_10_000024_move_nombre_sexo_to_animals_and_update_animal_files	1
 26	2025_11_10_000025_move_report_relation_to_animals	1
+27	2025_11_12_000026_update_transfers_link_to_people	2
+28	2025_11_12_000027_create_animal_file_history_and_trigger	2
+29	2025_11_12_000028_create_animal_histories_table	2
+30	2025_11_12_000029_add_imagen_url_to_cares_and_medical_evaluations	2
+31	2025_11_12_000030_move_outcomes_to_adoptions_and_releases	2
+32	2025_11_12_000031_update_animal_histories_columns	3
+33	2025_11_19_000032_add_approval_fields_to_rescuers_and_veterinarians	4
 \.
 
 
@@ -1451,12 +1543,12 @@ COPY public.migrations (id, migration, batch) FROM stdin;
 -- Name: migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.migrations_id_seq', 26, true);
+SELECT pg_catalog.setval('public.migrations_id_seq', 33, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict lcXo3JNTMzDBcbBxeHE1iPIgywYbybhqXcVoc5jTEFDcdgSzen9fbLJ9tcNfh7I
+\unrestrict mVfJDql6rSqSOgvqoTKW5xAT6j7xO9hXx5Naz9WBov5u2dVUIStcMmCdmhXLyKv
 
