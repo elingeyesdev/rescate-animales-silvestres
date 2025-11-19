@@ -31,21 +31,14 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->middleware('auth')->name('home');
-
+Route::get('breeds/by-species/{species}', [BreedController::class, 'bySpecies'])->name('breeds.bySpecies');
 Route::resource('centers', CenterController::class);
-
-Route::resource('animals', AnimalController::class)->middleware('auth'); // proteger animales
-
+Route::resource('animals', AnimalController::class)->middleware('auth');
 Route::resource('animal-profiles', AnimalProfileController::class);
-
 Route::resource('dispositions', DispositionController::class);
-
 Route::resource('health-records', HealthRecordController::class);
-
 Route::resource('reports', ReportController::class)->middleware('auth');
-
 Route::resource('animal-types', AnimalTypeController::class);
-
 Route::resource('adoptions', AdoptionController::class);
 Route::resource('animal-statuses', AnimalStatusController::class);
 Route::resource('care-types', CareTypeController::class);
@@ -54,7 +47,6 @@ Route::resource('animal-files', AnimalFileController::class);
 Route::resource('people', PersonController::class);
 Route::resource('species', SpeciesController::class);
 Route::resource('breeds', BreedController::class);
-Route::get('breeds/by-species/{species}', [BreedController::class, 'bySpecies'])->name('breeds.bySpecies');
 Route::resource('releases', ReleaseController::class);
 Route::resource('veterinarians', VeterinarianController::class);
 Route::resource('medical-evaluations', MedicalEvaluationController::class);
