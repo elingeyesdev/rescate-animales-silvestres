@@ -11,32 +11,26 @@
 
                 <div class="card card-default">
                     <div class="card-header">
-                        <span class="card-title">{{ __('Registrar Alimentación (Care + CareFeeding + History)') }}</span>
+                        <span class="card-title">{{ __('Registrar Alimentación') }}</span>
                     </div>
-                    <div class="card-body bg-white">
-                        <div class="callout callout-warning">
-                            <h5 class="mb-1"><i class="fas fa-utensils"></i> {{ __('Proceso transaccional de alimentación') }}</h5>
-                            <p class="mb-0">{{ __('Selecciona la Hoja y parámetros de alimentación; se registrará el cuidado y quedará en el historial.') }}</p>
-                        </div>
-                        <form method="POST" action="{{ route('animal-feeding-transactions.store') }}" role="form">
-                            @csrf
-
+                    <form method="POST" action="{{ route('animal-feeding-transactions.store') }}" role="form">
+                        @csrf
+                        <div class="card-body bg-white">
                             <div class="row padding-1 p-1">
-                                <div class="col-md-12">
-                                    <div class="form-group mb-2 mb20">
+                                <div class="col-md-4">
+                                    <div class="form-group mb-1">
                                         <label for="animal_file_id" class="form-label">{{ __('Hoja de Animal') }}</label>
                                         <select name="animal_file_id" id="animal_file_id" class="form-control @error('animal_file_id') is-invalid @enderror">
                                             <option value="">{{ __('Seleccione') }}</option>
                                             @foreach(($animalFiles ?? []) as $af)
-                                                <option value="{{ $af->id }}" {{ (string)old('animal_file_id') === (string)$af->id ? 'selected' : '' }}>
-                                                    #{{ $af->id }} {{ $af->animal?->nombre ? '- ' . $af->animal->nombre : '' }}
-                                                </option>
+                                                <option value="{{ $af->id }}" {{ (string)old('animal_file_id') === (string)$af->id ? 'selected' : '' }}>#{{ $af->id }} {{ $af->animal?->nombre ? '- ' . $af->animal->nombre : '' }}</option>
                                             @endforeach
                                         </select>
                                         {!! $errors->first('animal_file_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                     </div>
-
-                                    <div class="form-group mb-2 mb20">
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-1">
                                         <label for="feeding_type_id" class="form-label">{{ __('Tipo de Alimentación') }}</label>
                                         <select name="feeding_type_id" id="feeding_type_id" class="form-control @error('feeding_type_id') is-invalid @enderror">
                                             <option value="">{{ __('Seleccione') }}</option>
@@ -46,9 +40,10 @@
                                         </select>
                                         {!! $errors->first('feeding_type_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                     </div>
-
-                                    <div class="form-group mb-2 mb20">
-                                        <label for="feeding_frequency_id" class="form-label">{{ __('Frecuencia de Alimentación') }}</label>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-1">
+                                        <label for="feeding_frequency_id" class="form-label">{{ __('Frecuencia') }}</label>
                                         <select name="feeding_frequency_id" id="feeding_frequency_id" class="form-control @error('feeding_frequency_id') is-invalid @enderror">
                                             <option value="">{{ __('Seleccione') }}</option>
                                             @foreach(($feedingFrequencyOptions ?? []) as $id => $name)
@@ -57,9 +52,11 @@
                                         </select>
                                         {!! $errors->first('feeding_frequency_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                     </div>
+                                </div>
 
-                                    <div class="form-group mb-2 mb20">
-                                        <label for="feeding_portion_id" class="form-label">{{ __('Porción de Alimentación') }}</label>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-1">
+                                        <label for="feeding_portion_id" class="form-label">{{ __('Porción') }}</label>
                                         <select name="feeding_portion_id" id="feeding_portion_id" class="form-control @error('feeding_portion_id') is-invalid @enderror">
                                             <option value="">{{ __('Seleccione') }}</option>
                                             @foreach(($feedingPortionOptions ?? []) as $id => $name)
@@ -68,36 +65,44 @@
                                         </select>
                                         {!! $errors->first('feeding_portion_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                     </div>
-
-                                    <div class="form-group mb-2 mb20">
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-1">
                                         <label for="fecha" class="form-label">{{ __('Fecha') }}</label>
                                         <input type="datetime-local" name="fecha" id="fecha" class="form-control @error('fecha') is-invalid @enderror" value="{{ old('fecha') }}">
                                         {!! $errors->first('fecha', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                     </div>
-
-                                    <div class="form-group mb-2 mb20">
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="form-group mb-1">
                                         <label for="descripcion" class="form-label">{{ __('Descripción del Cuidado') }}</label>
                                         <input type="text" name="descripcion" id="descripcion" class="form-control @error('descripcion') is-invalid @enderror" value="{{ old('descripcion') }}">
                                         {!! $errors->first('descripcion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                     </div>
+                                </div>
 
-                                    <div class="form-group mb-2 mb20">
+                                <div class="col-md-12">
+                                    <div class="form-group mb-2">
                                         <label for="observaciones" class="form-label">{{ __('Observaciones (Historial)') }}</label>
                                         <textarea name="observaciones" id="observaciones" class="form-control @error('observaciones') is-invalid @enderror" rows="2">{{ old('observaciones') }}</textarea>
                                         {!! $errors->first('observaciones', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                     </div>
                                 </div>
-
-                                <div class="col-md-12 mt20 mt-2">
-                                    <button type="submit" class="btn btn-primary">{{ __('Guardar transacción') }}</button>
-                                </div>
                             </div>
-                        </form>
-                    </div>
+                        </div>
+                        <div class="card-footer" style="position: sticky; bottom: 0; background: #fff; z-index: 10;">
+                            <a href="{{ route('care-feedings.index') }}" class="btn btn-secondary">{{ __('Cancelar') }}</a>
+                            <button type="submit" class="btn btn-primary">{{ __('Guardar') }}</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </section>
+<style>
+.row.padding-1 .form-group{width:48%;display:inline-block;vertical-align:top;margin-right:2%}
+@media (max-width: 768px){.row.padding-1 .form-group{width:100%;margin-right:0}}
+</style>
 @endsection
 
 
