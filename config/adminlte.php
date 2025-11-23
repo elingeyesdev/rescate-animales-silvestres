@@ -616,6 +616,16 @@ return [
                 ],
             ],
         ],
+        'ConfirmDelete' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'js',
+                    'asset' => true,
+                    'location' => 'js/confirm-delete.js',
+                ],
+            ],
+        ],
     ],
 
     /*

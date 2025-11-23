@@ -86,5 +86,4 @@
             </div>
         </div>
     </div>
-@include('partials.confirm-delete')
 @endsection
