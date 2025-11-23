@@ -13,7 +13,7 @@
                     <div class="card-header">
                         <span class="card-title">{{ __('Registrar Animal') }}</span>
                     </div>
-                    <form method="POST" action="{{ route('animal-transactions.store') }}" role="form" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('animal-records.store') }}" role="form" enctype="multipart/form-data">
                         @csrf
                         <div class="card-body bg-white pb-1 pt-2">
                             <div class="row">

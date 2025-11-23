@@ -28,6 +28,7 @@ use App\Http\Controllers\FeedingFrequencyController;
 use App\Http\Controllers\FeedingPortionController;
 use App\Http\Controllers\Transactions\AnimalTransactionalController;
 use App\Http\Controllers\Transactions\AnimalFeedingTransactionalController;
+use App\Http\Controllers\Transactions\AnimalMedicalEvaluationTransactionalController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AnimalHistoryController;
 
@@ -65,13 +66,8 @@ Route::resource('feeding-types', FeedingTypeController::class);
 Route::resource('feeding-frequencies', FeedingFrequencyController::class);
 Route::resource('feeding-portions', FeedingPortionController::class);
 
-// Transaccionales
-Route::get('animal-records/create', [AnimalTransactionalController::class, 'create'])->name('animal-transactions.create')->middleware('auth');
-Route::post('animal-records', [AnimalTransactionalController::class, 'store'])->name('animal-transactions.store')->middleware('auth');
-
-// Transaccional de alimentación
-Route::get('animal-feeding-records/create', [AnimalFeedingTransactionalController::class, 'create'])->name('animal-feeding-transactions.create')->middleware('auth');
-Route::post('animal-feeding-records', [AnimalFeedingTransactionalController::class, 'store'])->name('animal-feeding-transactions.store')->middleware('auth');
-
-// Historial de animales (solo lectura)
+//Transaccionales
+Route::resource('animal-records', AnimalTransactionalController::class)->middleware('auth');
+Route::resource('animal-feeding-records', AnimalFeedingTransactionalController::class)->middleware('auth');
+Route::resource('medical-evaluation-transactions', AnimalMedicalEvaluationTransactionalController::class)->middleware('auth');
 Route::resource('animal-histories', AnimalHistoryController::class)->only(['index','show'])->middleware('auth');

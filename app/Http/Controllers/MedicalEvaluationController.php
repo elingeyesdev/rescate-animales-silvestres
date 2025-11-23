@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\MedicalEvaluationRequest;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use App\Models\TreatmentType;
@@ -43,6 +44,10 @@ class MedicalEvaluationController extends Controller
     public function store(MedicalEvaluationRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        // Fecha por defecto: hoy según timezone de la app (UTC-4 configurado)
+        if (empty($data['fecha'])) {
+            $data['fecha'] = Carbon::now()->toDateString();
+        }
         if ($request->hasFile('imagen')) {
             $path = $request->file('imagen')->store('evidencias/medical-evaluations', 'public');
             // Guardar ruta relativa; la vista resolverá URL pública

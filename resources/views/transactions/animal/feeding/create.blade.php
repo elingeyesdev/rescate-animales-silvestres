@@ -13,7 +13,7 @@
                     <div class="card-header">
                         <span class="card-title">{{ __('Registrar Alimentación') }}</span>
                     </div>
-                    <form method="POST" action="{{ route('animal-feeding-transactions.store') }}" role="form">
+                    <form method="POST" action="{{ route('animal-feeding-records.store') }}" role="form">
                         @csrf
                         <div class="card-body bg-white">
                             <div class="row padding-1 p-1">

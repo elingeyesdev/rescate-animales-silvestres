@@ -30,7 +30,7 @@ class MedicalEvaluation extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['tratamiento_id', 'descripcion', 'fecha', 'veterinario_id', 'imagen_url'];
+    protected $fillable = ['tratamiento_id', 'descripcion', 'fecha', 'veterinario_id', 'animal_file_id', 'imagen_url'];
 
 
     /**
@@ -48,5 +48,15 @@ class MedicalEvaluation extends Model
     {
         return $this->belongsTo(\App\Models\Veterinarian::class, 'veterinario_id', 'id');
     }
+    
+    /**
+     * Hoja de Animal asociada a la evaluación.
+     */
+    public function animalFile()
+    {
+        return $this->belongsTo(\App\Models\AnimalFile::class, 'animal_file_id', 'id');
+    }
+    
+    // Nota: no se define relación directa de FK para animal_file_id por decisión de negocio.
     
 }

@@ -360,6 +360,11 @@ return [
             'icon' => 'fas fa-fw fa-history',
         ],
         [
+            'text' => 'Registrar Evaluación Médica (Transaccional)',
+            'url' => 'medical-evaluation-transactions/create',
+            'icon' => 'fas fa-fw fa-stethoscope',
+        ],
+        [
             'text' => 'Hojas de Animales',
             'url' => 'animal-files',
             'icon' => 'fas fa-fw fa-paw',
