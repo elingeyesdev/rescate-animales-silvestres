@@ -17,7 +17,9 @@
         <select name="tipo_id" id="tipo_id" class="form-control @error('tipo_id') is-invalid @enderror">
             <option value="">Seleccione</option>
             @foreach(($animalTypes ?? []) as $t)
-                <option value="{{ $t->id }}" {{ (string)old('tipo_id', $animalFile?->tipo_id) === (string)$t->id ? 'selected' : '' }}>{{ $t->nombre }}</option>
+                @if(!Str::contains(mb_strtolower($t->nombre), 'domést'))
+                    <option value="{{ $t->id }}" {{ (string)old('tipo_id', $animalFile?->tipo_id) === (string)$t->id ? 'selected' : '' }}>{{ $t->nombre }}</option>
+                @endif
             @endforeach
         </select>
         {!! $errors->first('tipo_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
@@ -36,18 +38,12 @@
 
     <div class="form-group mb-2">
         <label for="imagen" class="form-label">{{ __('Imagen') }}</label>
-        <div class="input-group">
-            <div class="custom-file">
-                <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
-                <label class="custom-file-label" for="imagen">{{ __('Elegir imagen') }}</label>
-            </div>
-        </div>
+        <input type="file" accept="image/*" name="imagen" class="form-control @error('imagen') is-invalid @enderror" id="imagen">
         {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
-        @if(!empty($animalFile?->imagen_url))
-            <div class="mt-2">
-                <img src="{{ asset('storage/' . $animalFile->imagen_url) }}" alt="Imagen" style="max-height: 120px;"/>
-            </div>
-        @endif
+        @php($initialImg = !empty($animalFile?->imagen_url) ? asset('storage/' . $animalFile->imagen_url) : null)
+        <div class="mt-2">
+            <img id="preview-animalfile-imagen" src="{{ $initialImg }}" alt="Imagen" style="max-height: 120px; {{ empty($initialImg) ? 'display:none;' : '' }}"/>
+        </div>
     </div>
 
     <div class="form-group mb-2">
@@ -68,7 +64,7 @@
         <select name="estado_id" id="estado_id" class="form-control @error('estado_id') is-invalid @enderror">
             <option value="">Seleccione</option>
             @foreach(($animalStatuses ?? []) as $st)
-                <option value="{{ $st->id }}" {{ (string)old('estado_id', $animalFile?->estado_id) === (string)$st->id ? 'selected' : '' }}>{{ $st->nombre }}</option>
+                <option value="{{ $st->id }}" {{ (string)old('estado_id', $animalFile?->estado_id) === (string)$st->id || ((!old('estado_id', $animalFile?->estado_id)) && empty($animalFile?->estado_id) && mb_strtolower($st->nombre) === 'en atención') ? 'selected' : '' }}>{{ $st->nombre }}</option>
             @endforeach
         </select>
         {!! $errors->first('estado_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
@@ -84,11 +80,16 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const input = document.getElementById('imagen');
-    input?.addEventListener('change', function(){
-        const fileName = this.files && this.files[0] ? this.files[0].name : '{{ __('Elegir imagen') }}';
-        const label = this.nextElementSibling;
-        if (label) label.textContent = fileName;
-    });
+    const img = document.getElementById('preview-animalfile-imagen');
+    if (input && img) {
+        input.addEventListener('change', function(){
+            const file = this.files && this.files[0] ? this.files[0] : null;
+            if (file && file.type.startsWith('image/')) {
+                img.src = URL.createObjectURL(file);
+                img.style.display = '';
+            }
+        });
+    }
 });
 </script>
 
@@ -106,13 +107,22 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await resp.json();
             razaSelect.innerHTML = '<option value="">Seleccione</option>';
             const selected = '{{ old('raza_id', $animalFile?->raza_id) }}';
+            let hasUnknown = false;
             data.forEach(b => {
+                const nameLower = String(b.nombre || '').toLowerCase();
+                if (nameLower.includes('desconoc')) hasUnknown = true;
                 const opt = document.createElement('option');
                 opt.value = b.id;
                 opt.textContent = b.nombre;
                 if (String(selected) === String(b.id)) opt.selected = true;
                 razaSelect.appendChild(opt);
             });
+            if (!hasUnknown) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Desconocido (no definido)';
+                razaSelect.appendChild(opt);
+            }
         } catch (e) {
             razaSelect.innerHTML = '<option value="">Error al cargar</option>';
         }

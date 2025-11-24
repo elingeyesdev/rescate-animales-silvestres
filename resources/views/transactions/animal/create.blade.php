@@ -54,8 +54,8 @@
 
                                         <div class="form-group mt-2">
                                             <label for="llegaron_cantidad" class="form-label">{{ __('Cantidad llegada (confirmación)') }}</label>
-                                            <input type="number" min="1" class="form-control" id="llegaron_cantidad" name="llegaron_cantidad" value="{{ old('llegaron_cantidad', 1) }}" style="max-width: 160px;">
-                                            <small class="text-muted">{{ __('Use este campo para doble verificación de cuántos animales llegaron de este reporte.') }}</small>
+                                            <input type="number" min="1" class="form-control" id="llegaron_cantidad" name="llegaron_cantidad" value="{{ old('llegaron_cantidad', 1) }}" style="max-width: 200px;">
+                                            <small class="text-muted">{{ __('Ingrese la cantidad de animales que efectivamente llegaron de este hallazgo (para confirmar disponibilidad).') }}</small>
                                         </div>
                                     </div>
                                 </div>

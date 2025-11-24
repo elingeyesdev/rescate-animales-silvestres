@@ -20,12 +20,7 @@
 
         <div class="form-group mb-2 mb20">
             <label for="imagen" class="form-label">{{ __('Imagen') }}</label>
-            <div class="input-group">
-                <div class="custom-file">
-                    <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
-                    <label class="custom-file-label" for="imagen">{{ __('Elegir imagen') }}</label>
-                </div>
-            </div>
+            <input type="file" accept="image/*" name="imagen" class="form-control @error('imagen') is-invalid @enderror" id="imagen">
             {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
             @if(!empty($report?->imagen_url))
                 <div class="mt-2">
@@ -36,7 +31,7 @@
 
         <div class="form-group mb-2 mb20">
             <label for="observaciones" class="form-label">{{ __('Observaciones') }}</label>
-            <input type="text" name="observaciones" class="form-control @error('observaciones') is-invalid @enderror" value="{{ old('observaciones', $report?->observaciones) }}" id="observaciones" placeholder="Observaciones">
+            <textarea name="observaciones" class="form-control @error('observaciones') is-invalid @enderror" id="observaciones" rows="3" placeholder="Observaciones">{{ old('observaciones', $report?->observaciones) }}</textarea>
             {!! $errors->first('observaciones', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
@@ -49,8 +44,8 @@
         <div class="form-group mb-2 mb20">
             <label class="form-label">{{ __('Ubicación (clic en el mapa)') }}</label>
             <div class="row">
-                <div class="col-12 col-md-6">
-                    <div id="mapid" style="height: 300px; border-radius: 4px;"></div>
+                <div class="col-12">
+                    <div id="mapid" style="height: 360px; border-radius: 4px;"></div>
                 </div>
             </div>
             <input type="hidden" name="latitud" id="latitud" value="{{ old('latitud') }}">

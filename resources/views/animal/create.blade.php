@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-    <section class="content container-fluid">
+    <section class="content container-fluid mt-3">
         <div class="row">
             <div class="col-md-12">
 
@@ -17,7 +17,11 @@
                         <form method="POST" action="{{ route('animals.store') }}"  role="form" enctype="multipart/form-data">
                             @csrf
 
-                            @include('animal.form')
+                            @include('animal.form', [
+                                            'animal' => $animal ?? null,
+                                            'reports' => $reports ?? [],
+                                            'animalStatuses' => (\App\Models\AnimalStatus::orderBy('nombre')->get())
+                                        ])
 
                         </form>
                     </div>

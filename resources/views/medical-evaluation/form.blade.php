@@ -1,4 +1,4 @@
-<div class="row padding-1 p-1">
+<div class="row padding-1 p-1 ">
     <div class="col-md-12">
         
         <div class="form-group mb-2 mb20">
@@ -23,25 +23,48 @@
         </div>
         <div class="form-group mb-2 mb20">
             <label for="veterinario_id" class="form-label">{{ __('Veterinario') }}</label>
-            <select name="veterinario_id" id="veterinario_id" class="form-control @error('veterinario_id') is-invalid @enderror">
-                <option value="">Seleccione</option>
+            <select name="veterinario_id" id="veterinario_id" class="form-control @error('veterinario_id') is-invalid @enderror" aria-describedby="vet_specialty_hint">
+                <option value="">{{ __('Seleccione') }}</option>
                 @foreach(($veterinarians ?? []) as $v)
-                    <option value="{{ $v->id }}" {{ (string)old('veterinario_id', $medicalEvaluation?->veterinario_id) === (string)$v->id ? 'selected' : '' }}>{{ $v->person->nombre ?? ('#'.$v->id) }}</option>
+                    <option value="{{ $v->id }}" data-especialidad="{{ $v->especialidad }}" {{ (string)old('veterinario_id', $medicalEvaluation?->veterinario_id) === (string)$v->id ? 'selected' : '' }}>{{ $v->person->nombre ?? ('#'.$v->id) }}@if($v->especialidad) ({{ $v->especialidad }}) @endif</option>
                 @endforeach
             </select>
+            <small id="vet_specialty_hint" class="form-text text-muted"></small>
+            <div id="vet_selected_summary" class="form-text text-muted"></div>
             {!! $errors->first('veterinario_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        </div>
+        @php
+            $rep = $medicalEvaluation?->animalFile?->animal?->report ?? null;
+            $arriveStatus = $medicalEvaluation?->animalFile?->animalStatus?->nombre ?? null;
+            $foundImg = $rep?->imagen_url ?? null;
+            $prevText = $rep?->observaciones ?? null;
+        @endphp
+        <div class="form-group mb-2 mb20">
+            <label class="form-label">{{ __('Estado anterior (reporte)') }}</label>
+            <div>{{ $prevText ?? '-' }}</div>
+        </div>
+        <div class="form-group mb-2 mb20">
+            <label class="form-label">{{ __('Estado al llegar (hoja)') }}</label>
+            <div>{{ $arriveStatus ?? '-' }}</div>
+        </div>
+        <div class="form-group mb-2 mb20">
+            <label class="form-label">{{ __('Imagen de llegada') }}</label>
+            @if($foundImg)
+                <div class="mt-2">
+                    <a href="{{ asset('storage/' . $foundImg) }}" target="_blank" rel="noopener">
+                        <img src="{{ asset('storage/' . $foundImg) }}" alt="Imagen de llegada" style="max-height:120px;">
+                    </a>
+                </div>
+            @else
+                -
+            @endif
         </div>
         <div class="form-group mb-2 mb20">
             <label for="imagen" class="form-label">{{ __('Imagen (opcional)') }}</label>
-            <div class="custom-file">
-                <input type="file" name="imagen" id="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" accept="image/*">
-                <label class="custom-file-label" for="imagen">{{ __('Seleccionar imagen') }}</label>
-            </div>
+            <input type="file" accept="image/*" name="imagen" class="form-control @error('imagen') is-invalid @enderror" id="imagen">
             {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
             @php
-                $initialEvalSrc = !empty($medicalEvaluation?->imagen_url)
-                    ? asset('storage/' . $medicalEvaluation->imagen_url)
-                    : null;
+                $initialEvalSrc = !empty($medicalEvaluation?->imagen_url) ? asset('storage/' . $medicalEvaluation->imagen_url) : null;
             @endphp
             <div class="mt-2">
                 <img id="preview-eval-imagen" src="{{ $initialEvalSrc }}" alt="Imagen evaluación" style="max-height:120px; {{ empty($initialEvalSrc) ? 'display:none;' : '' }}">
@@ -55,16 +78,50 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var input = document.getElementById('imagen');
-    var img = document.getElementById('preview-eval-imagen');
-    if (input && img) {
-        input.addEventListener('change', function () {
-            if (this.files && this.files[0] && this.files[0].type.startsWith('image/')) {
-                var url = URL.createObjectURL(this.files[0]);
-                img.src = url;
-                img.style.display = '';
-            }
-        });
+  var input = document.getElementById('imagen');
+  var img = document.getElementById('preview-eval-imagen');
+  var currentObjectURL = null;
+  if (input && img) {
+    input.addEventListener('change', function () {
+      var file = this.files && this.files[0];
+      if (file && file.type && file.type.startsWith('image/')) {
+        if (currentObjectURL) {
+          URL.revokeObjectURL(currentObjectURL);
+        }
+        currentObjectURL = URL.createObjectURL(file);
+        img.src = currentObjectURL;
+        img.style.display = '';
+      } else {
+        if (currentObjectURL) {
+          URL.revokeObjectURL(currentObjectURL);
+          currentObjectURL = null;
+        }
+        img.removeAttribute('src');
+        img.style.display = 'none';
+      }
+    });
+  }
+  var vetSel = document.getElementById('veterinario_id');
+  var hint = document.getElementById('vet_specialty_hint');
+  var summary = document.getElementById('vet_selected_summary');
+  var updateHint = function () {
+    var opt = vetSel && vetSel.selectedOptions && vetSel.selectedOptions[0];
+    var esp = opt ? (opt.getAttribute('data-especialidad') || '') : '';
+    if (hint) {
+      hint.textContent = esp ? ('Especialidad: ' + esp) : '';
     }
+  };
+  var updateSummary = function () {
+    var opt = vetSel && vetSel.selectedOptions && vetSel.selectedOptions[0];
+    var name = opt ? (opt.textContent || '') : '';
+    if (summary) {
+      summary.textContent = name ? ('Seleccionado: ' + name) : '';
+    }
+  };
+  if (vetSel) {
+    vetSel.addEventListener('change', function () { updateHint(); updateSummary(); });
+    updateHint();
+    updateSummary();
+  }
 });
 </script>

@@ -42,7 +42,9 @@
                                             </div>
                                             <div class="col-md-4 text-right">
                                                 @if(!empty($t['image_url']))
-                                                    <img src="{{ asset('storage/' . $t['image_url']) }}" alt="Imagen" style="max-height: 140px; width: auto;">
+                                                    <a href="{{ asset('storage/' . $t['image_url']) }}" target="_blank" rel="noopener">
+                                                        <img src="{{ asset('storage/' . $t['image_url']) }}" alt="Imagen" style="max-height: 200px; width: auto;">
+                                                    </a>
                                                 @endif
                                             </div>
                                         </div>

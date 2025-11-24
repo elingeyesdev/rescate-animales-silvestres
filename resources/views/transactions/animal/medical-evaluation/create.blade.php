@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-    <section class="content container-fluid">
+    <section class="content container-fluid mt-3">
         <div class="row">
             <div class="col-md-12">
                 <div class="card card-default">
@@ -20,15 +20,36 @@
                                 <div class="col-md-12">
                                     <div class="form-group mb-2 mb20">
                                         <label for="animal_file_id" class="form-label">{{ __('Hoja de Animal') }}</label>
-                                        <select name="animal_file_id" id="animal_file_id" class="form-control @error('animal_file_id') is-invalid @enderror">
+                                        <select name="animal_file_id" id="animal_file_id" class="form-control @error('animal_file_id') is-invalid @enderror" aria-describedby="arrival_info_hint">
                                             <option value="">{{ __('Seleccione') }}</option>
                                             @foreach(($animalFiles ?? []) as $af)
-                                                <option value="{{ $af->id }}" {{ (string)old('animal_file_id') === (string)$af->id ? 'selected' : '' }}>
+                                                <option value="{{ $af->id }}" 
+                                                    data-estado="{{ $af->animalStatus?->nombre }}"
+                                                    data-rep-img="{{ $af->animal?->report?->imagen_url }}"
+                                                    data-rep-obs="{{ $af->animal?->report?->observaciones }}"
+                                                    {{ (string)old('animal_file_id') === (string)$af->id ? 'selected' : '' }}>
                                                     #{{ $af->id }} {{ $af->animal?->nombre ? '- ' . $af->animal->nombre : '' }}
                                                 </option>
                                             @endforeach
                                         </select>
+                                        <small id="arrival_info_hint" class="form-text text-muted"></small>
                                         {!! $errors->first('animal_file_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+                                    </div>
+                                    <div class="form-group mb-2 mb20">
+                                        <label class="form-label">{{ __('Estado anterior (reporte)') }}</label>
+                                        <div id="prev_report_text">-</div>
+                                    </div>
+                                    <div class="form-group mb-2 mb20">
+                                        <label class="form-label">{{ __('Imagen de llegada (reporte)') }}</label>
+                                        <div class="mt-2">
+                                            <a id="arrival_img_link" href="#" target="_blank" rel="noopener" style="display:none;">
+                                                <img id="arrival_img" src="" alt="Imagen de llegada" style="max-height:120px;">
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-2 mb20">
+                                        <label class="form-label">{{ __('Estado al llegar (hoja)') }}</label>
+                                        <div id="arrival_status_text">-</div>
                                     </div>
 
                                     <div class="row">
@@ -47,14 +68,15 @@
                                         <div class="col-md-6">
                                             <div class="form-group mb-2 mb20">
                                                 <label for="veterinario_id" class="form-label">{{ __('Veterinario') }}</label>
-                                                <select name="veterinario_id" id="veterinario_id" class="form-control @error('veterinario_id') is-invalid @enderror">
+                                                <select name="veterinario_id" id="veterinario_id" class="form-control @error('veterinario_id') is-invalid @enderror" aria-describedby="vet_tx_specialty_hint">
                                                     <option value="">{{ __('Seleccione') }}</option>
                                                     @foreach(($veterinarians ?? []) as $v)
-                                                        <option value="{{ $v->id }}" {{ (string)old('veterinario_id') === (string)$v->id ? 'selected' : '' }}>
-                                                            #{{ $v->id }} {{ $v->person?->nombre ?? '' }}
+                                                        <option value="{{ $v->id }}" data-especialidad="{{ $v->especialidad }}" {{ (string)old('veterinario_id') === (string)$v->id ? 'selected' : '' }}>
+                                                            #{{ $v->id }} {{ $v->person?->nombre ?? '' }}@if($v->especialidad) ({{ $v->especialidad }}) @endif
                                                         </option>
                                                     @endforeach
                                                 </select>
+                                                <small id="vet_tx_specialty_hint" class="form-text text-muted"></small>
                                                 {!! $errors->first('veterinario_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                             </div>
                                         </div>
@@ -76,13 +98,11 @@
                                         <div class="col-md-6">
                                             <div class="form-group mb-2 mb20">
                                                 <label for="imagen" class="form-label">{{ __('Evidencia (imagen)') }}</label>
-                                                <div class="custom-file">
-                                                    <div class="custom-file">
-                                                        <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
-                                                        <label class="custom-file-label" for="imagen">{{ __('Seleccionar imagen') }}</label>
-                                                    </div>
-                                                </div>
+                                                <input type="file" accept="image/*" name="imagen" class="form-control @error('imagen') is-invalid @enderror" id="imagen">
                                                 {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
+                                                <div class="mt-2">
+                                                    <img id="tx-preview-eval-imagen" src="" alt="Evidencia seleccionada" style="max-height:120px; display:none;">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -97,12 +117,59 @@
 
                                     <script>
                                     document.addEventListener('DOMContentLoaded', function () {
-                                        const input = document.getElementById('imagen');
-                                        input?.addEventListener('change', function(){
-                                            const fileName = this.files && this.files[0] ? this.files[0].name : '{{ __('Seleccionar imagen') }}';
-                                            const label = this.nextElementSibling;
-                                            if (label) label.textContent = fileName;
-                                        });
+                                      let currentObjectURL = null;
+                                      const input = document.getElementById('imagen');
+                                      const preview = document.getElementById('tx-preview-eval-imagen');
+                                      input?.addEventListener('change', function(){
+                                        const file = this.files && this.files[0];
+                                        if (file && file.type && file.type.startsWith('image/')) {
+                                          if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
+                                          currentObjectURL = URL.createObjectURL(file);
+                                          if (preview) {
+                                            preview.src = currentObjectURL;
+                                            preview.style.display = '';
+                                          }
+                                        } else {
+                                          if (currentObjectURL) { URL.revokeObjectURL(currentObjectURL); currentObjectURL = null; }
+                                          if (preview) { preview.removeAttribute('src'); preview.style.display = 'none'; }
+                                        }
+                                      });
+
+                                      const vetSel = document.getElementById('veterinario_id');
+                                      const vetHint = document.getElementById('vet_tx_specialty_hint');
+                                      function updateVetHint(){
+                                        const opt = vetSel?.selectedOptions?.[0];
+                                        const esp = opt ? (opt.getAttribute('data-especialidad') || '') : '';
+                                        if (vetHint) vetHint.textContent = esp ? ('Especialidad: ' + esp) : '';
+                                      }
+                                      vetSel?.addEventListener('change', updateVetHint);
+                                      updateVetHint();
+
+                                      const afSel = document.getElementById('animal_file_id');
+                                      const prevText = document.getElementById('prev_report_text');
+                                      const arrText = document.getElementById('arrival_status_text');
+                                      const imgLink = document.getElementById('arrival_img_link');
+                                      const img = document.getElementById('arrival_img');
+                                      function updateArrival(){
+                                        const opt = afSel?.selectedOptions?.[0];
+                                        if (!opt) return;
+                                        const repObs = opt.getAttribute('data-rep-obs') || '';
+                                        const estado = opt.getAttribute('data-estado') || '';
+                                        const repImg = opt.getAttribute('data-rep-img') || '';
+                                        if (prevText) prevText.textContent = repObs || '-';
+                                        if (arrText) arrText.textContent = estado || '-';
+                                        if (repImg) {
+                                          const url = '{{ asset('storage') }}/' + repImg;
+                                          imgLink.style.display = '';
+                                          imgLink.href = url;
+                                          img.src = url;
+                                        } else {
+                                          imgLink.style.display = 'none';
+                                          img.removeAttribute('src');
+                                        }
+                                      }
+                                      afSel?.addEventListener('change', updateArrival);
+                                      updateArrival();
                                     });
                                     </script>
 
