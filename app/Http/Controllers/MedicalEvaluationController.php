@@ -20,7 +20,7 @@ class MedicalEvaluationController extends Controller
      */
     public function index(Request $request): View
     {
-        $medicalEvaluations = MedicalEvaluation::with(['treatmentType','veterinarian.person'])->paginate();
+        $medicalEvaluations = MedicalEvaluation::with(['treatmentType','veterinarian.person','animalFile.animal'])->paginate();
 
         return view('medical-evaluation.index', compact('medicalEvaluations'))
             ->with('i', ($request->input('page', 1) - 1) * $medicalEvaluations->perPage());

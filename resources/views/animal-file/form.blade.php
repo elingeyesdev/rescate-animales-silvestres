@@ -51,7 +51,7 @@
     </div>
 
     <div class="form-group mb-2">
-        <label for="raza_id" class="form-label">{{ __('Raza') }}</label>
+        <label for="raza_id" class="form-label">{{ __('Raza (Opcional)') }}</label>
         <select name="raza_id" id="raza_id" class="form-control @error('raza_id') is-invalid @enderror">
             <option value="">Seleccione especie primero</option>
             @isset($breeds)

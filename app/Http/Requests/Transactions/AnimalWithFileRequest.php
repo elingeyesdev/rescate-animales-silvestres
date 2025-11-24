@@ -29,7 +29,7 @@ class AnimalWithFileRequest extends FormRequest
             'tipo_id' => 'required|exists:animal_types,id',
             'especie_id' => 'required|exists:species,id',
             'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-            'raza_id' => 'required|exists:breeds,id',
+            'raza_id' => 'nullable|exists:breeds,id',
             'estado_id' => 'required|exists:animal_statuses,id',
         ];
     }

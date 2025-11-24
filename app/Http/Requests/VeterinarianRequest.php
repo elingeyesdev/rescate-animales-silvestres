@@ -25,7 +25,7 @@ class VeterinarianRequest extends FormRequest
 			'especialidad' => 'string',
 			'cv_documentado' => 'nullable|string',
 			'persona_id' => 'required',
-			'cv' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+			'cv' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,webp|max:5120',
             'aprobado' => 'nullable|boolean',
             'motivo_revision' => 'nullable|string',
         ];

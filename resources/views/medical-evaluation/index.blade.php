@@ -40,6 +40,7 @@
 								<th >Descripcion</th>
 								<th >Fecha Revisión</th>
 								<th >Veterinario</th>
+								<th >Animal</th>
 
                                         <th></th>
                                     </tr>
@@ -53,6 +54,7 @@
 									<td >{{ $medicalEvaluation->descripcion }}</td>
 									<td >{{ $medicalEvaluation->fecha ? \Carbon\Carbon::parse($medicalEvaluation->fecha)->format('d-m-Y') : '' }}</td>
 									<td >{{ $medicalEvaluation->veterinarian?->person?->nombre }}</td>
+									<td >{{ $medicalEvaluation->animalFile?->animal?->nombre ?? '-' }}</td>
 
                                             <td>
                                                 <form action="{{ route('medical-evaluations.destroy', $medicalEvaluation->id) }}" method="POST">

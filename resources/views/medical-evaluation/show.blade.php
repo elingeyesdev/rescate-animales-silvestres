@@ -37,6 +37,10 @@
                                     {{ $medicalEvaluation->veterinarian?->person?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
+                                    <strong>Animal:</strong>
+                                    {{ $medicalEvaluation->animalFile?->animal?->nombre ?? '-' }}
+                                </div>
+                                <div class="form-group mb-2 mb20">
                                     <strong>Imagen:</strong>
                                     @if(!empty($medicalEvaluation?->imagen_url))
                                         <div class="mt-2">

@@ -17,9 +17,9 @@
             {!! $errors->first('especialidad', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
-            <label for="cv" class="form-label">{{ __('Archivo CV (PDF/DOC)') }}</label>
+            <label for="cv" class="form-label">{{ __('Archivo CV (PDF/DOC o Imagen)') }}</label>
             <div class="custom-file">
-                <input type="file" name="cv" accept=".pdf,.doc,.docx" class="custom-file-input @error('cv') is-invalid @enderror" id="cv">
+                <input type="file" name="cv" accept=".pdf,.doc,.docx,image/*" class="custom-file-input @error('cv') is-invalid @enderror" id="cv">
                 <label class="custom-file-label" for="cv">{{ __('Seleccionar archivo') }}</label>
             </div>
             {!! $errors->first('cv', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}

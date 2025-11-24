@@ -12,9 +12,9 @@
             {!! $errors->first('persona_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
-            <label for="cv" class="form-label">{{ __('Archivo CV (PDF/DOC)') }}</label>
+            <label for="cv" class="form-label">{{ __('Archivo CV (PDF/DOC o Imagen)') }}</label>
             <div class="custom-file">
-                <input type="file" name="cv" accept=".pdf,.doc,.docx" class="custom-file-input @error('cv') is-invalid @enderror" id="cv">
+                <input type="file" name="cv" accept=".pdf,.doc,.docx,image/*" class="custom-file-input @error('cv') is-invalid @enderror" id="cv">
                 <label class="custom-file-label" for="cv">{{ __('Seleccionar archivo') }}</label>
             </div>
             {!! $errors->first('cv', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
@@ -25,13 +25,27 @@
         <script>
         document.addEventListener('DOMContentLoaded', function () {
             const input = document.getElementById('cv');
+            const preview = document.getElementById('cv_preview_img');
             input?.addEventListener('change', function(){
                 const fileName = this.files && this.files[0] ? this.files[0].name : '{{ __('Seleccionar archivo') }}';
                 const label = this.nextElementSibling;
                 if (label) label.textContent = fileName;
+                if (preview) {
+                    const file = this.files && this.files[0] ? this.files[0] : null;
+                    if (file && file.type && file.type.startsWith('image/')) {
+                        preview.src = URL.createObjectURL(file);
+                        preview.style.display = 'inline-block';
+                    } else {
+                        preview.src = '';
+                        preview.style.display = 'none';
+                    }
+                }
             });
         });
         </script>
+        <div class="mt-2">
+            <img id="cv_preview_img" src="" alt="Vista previa" style="display:none; max-height: 80px; border: 1px solid #ddd; padding: 2px;"/>
+        </div>
 
         <div class="form-group mb-2 mb20">
             <label for="aprobado" class="form-label">{{ __('Aprobado') }}</label>

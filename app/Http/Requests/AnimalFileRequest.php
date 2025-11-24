@@ -27,7 +27,7 @@ class AnimalFileRequest extends FormRequest
 			'especie_id' => 'required',
 			'imagen_url' => 'nullable|string',
 			'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-			'raza_id' => 'required',
+			'raza_id' => 'nullable|exists:breeds,id',
 			'estado_id' => 'required',
         ];
     }

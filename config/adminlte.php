@@ -321,8 +321,6 @@ return [
             'can' => 'manage-blog',
         ],
         
-        
-        
         ['header' => 'ANIMALES'],
         /*[
             'text' => 'profile',
@@ -339,9 +337,14 @@ return [
             'url' => 'reports',
             'icon' => 'fas fa-fw fa-file-alt',
         ],
-        [
+        /*[
             'text' => 'Animales',
             'url' => 'animals',
+            'icon' => 'fas fa-fw fa-paw',
+        ],*/
+        [
+            'text' => 'Hojas de Animales',
+            'url' => 'animal-files',
             'icon' => 'fas fa-fw fa-paw',
         ],
         [
@@ -349,11 +352,7 @@ return [
             'url' => 'animal-histories',
             'icon' => 'fas fa-fw fa-history',
         ],
-        [
-            'text' => 'Hojas de Animales',
-            'url' => 'animal-files',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
+        
         [
             'text' => 'Estados de Animales',
             'url' => 'animal-statuses',
@@ -413,12 +412,12 @@ return [
             'icon' => 'fas fa-fw fa-paw',
         ],
         [
-            'text' => 'Frecuencias de Alimentación',
+            'text' => 'Frecuencia',
             'url' => 'feeding-frequencies',
             'icon' => 'fas fa-fw fa-paw',
         ],
         [
-            'text' => 'Porciones de Alimentación',
+            'text' => 'Porción de Alimentación',
             'url' => 'feeding-portions',
             'icon' => 'fas fa-fw fa-paw',
         ],
