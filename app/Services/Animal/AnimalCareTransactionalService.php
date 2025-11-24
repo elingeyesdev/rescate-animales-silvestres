@@ -22,11 +22,11 @@ class AnimalCareTransactionalService
 		try {
 			$animalFile = AnimalFile::findOrFail($data['animal_file_id']);
 
-			$careData = [
+            $careData = [
 				'hoja_animal_id' => $animalFile->id,
 				'tipo_cuidado_id' => $data['tipo_cuidado_id'],
 				'descripcion' => $data['descripcion'] ?? null,
-				'fecha' => isset($data['fecha']) ? Carbon::parse($data['fecha']) : Carbon::now(),
+                'fecha' => Carbon::now(),
 			];
 
 			if ($image) {
@@ -36,7 +36,7 @@ class AnimalCareTransactionalService
 
 			$care = Care::create($careData);
 
-			AnimalHistory::create([
+            AnimalHistory::create([
 				'animal_file_id' => $animalFile->id,
 				'valores_antiguos' => null,
 				'valores_nuevos' => [
@@ -47,9 +47,7 @@ class AnimalCareTransactionalService
 						'tipo_cuidado_id' => $care->tipo_cuidado_id,
 					],
 				],
-				'observaciones' => [
-					'texto' => $data['observaciones'] ?? 'Registro de cuidado',
-				],
+                'observaciones' => null,
 			]);
 
 			DB::commit();

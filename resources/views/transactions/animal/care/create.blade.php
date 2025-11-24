@@ -41,13 +41,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6">
-                                    <div class="form-group mb-2 mb20">
-                                        <label for="fecha" class="form-label">{{ __('Fecha') }}</label>
-                                        <input type="datetime-local" name="fecha" id="fecha" class="form-control @error('fecha') is-invalid @enderror" value="{{ old('fecha') }}">
-                                        {!! $errors->first('fecha', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-                                    </div>
-                                </div>
+                                <!-- Fecha: se asigna automáticamente por el sistema -->
                                 <div class="col-md-6">
                                     <div class="form-group mb-2 mb20">
                                         <label for="imagen" class="form-label">{{ __('Evidencia (imagen)') }}</label>
@@ -67,13 +61,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-12">
-                                    <div class="form-group mb-2 mb20">
-                                        <label for="observaciones" class="form-label">{{ __('Observaciones (Historial)') }}</label>
-                                        <textarea name="observaciones" id="observaciones" class="form-control @error('observaciones') is-invalid @enderror" rows="2">{{ old('observaciones') }}</textarea>
-                                        {!! $errors->first('observaciones', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-                                    </div>
-                                </div>
+                                <!-- Observaciones: no necesarias en transaccional -->
                             </div>
                         </div>
                         <div class="card-footer">

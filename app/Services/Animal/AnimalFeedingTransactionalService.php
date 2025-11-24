@@ -38,7 +38,7 @@ class AnimalFeedingTransactionalService
 				'hoja_animal_id' => $animalFile->id,
 				'tipo_cuidado_id' => $careTypeId,
 				'descripcion' => $data['descripcion'] ?? ('Registro de alimentación del animal #' . ($animalFile->animal?->id ?? $animalFile->id)),
-				'fecha' => isset($data['fecha']) ? Carbon::parse($data['fecha']) : Carbon::now(),
+				'fecha' => Carbon::now(),
 			]);
 
 			$careFeeding = CareFeeding::create([

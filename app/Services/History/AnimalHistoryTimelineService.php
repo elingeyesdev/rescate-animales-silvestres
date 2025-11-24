@@ -4,6 +4,7 @@ namespace App\Services\History;
 
 use App\Models\AnimalHistory;
 use App\Models\AnimalStatus;
+use App\Models\CareType;
 use App\Models\FeedingFrequency;
 use App\Models\FeedingPortion;
 use App\Models\FeedingType;
@@ -13,6 +14,10 @@ use App\Models\Care;
 use App\Models\MedicalEvaluation;
 use App\Models\Person;
 use App\Models\Center;
+use App\Models\AnimalType;
+use App\Models\Species;
+use App\Models\Report;
+use App\Models\AnimalFile as AnimalFileModel;
 use Illuminate\Support\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -62,7 +67,10 @@ class AnimalHistoryTimelineService
 			$item = [
 				'id' => $h->id,
 				'changed_at' => trim(($changedDate ?? '') . ($changedTime ? ' '.$changedTime : '')),
-				'title' => 'Actualización de historial',
+				'changed_at_label' => ($changedDate || $changedTime)
+					? trim('Fecha: '.($changedDate ?? '-') . '    ' . 'Hora: '.($changedTime ?? '-'))
+					: null,
+				'title' => 'Actualización',
 				'details' => [],
 			];
 
@@ -70,26 +78,43 @@ class AnimalHistoryTimelineService
 			$new = $h->valores_nuevos ?? [];
 			$imageUrl = null;
 
-			// Línea estándar de fecha y hora
-			if ($changedDate || $changedTime) {
+			// Reporte (hallazgo)
+			if (!empty($new['report'])) {
+				$item['title'] = 'Reporte de hallazgo';
+				$rp = $new['report'];
+				$personName = isset($rp['persona_id']) ? (Person::find($rp['persona_id'])->nombre ?? ('#'.$rp['persona_id'])) : null;
+				// imagen desde reporte si existe
+				if (!empty($rp['id'])) {
+					$reportModel = Report::find($rp['id']);
+					if ($reportModel && $reportModel->imagen_url) {
+						$imageUrl = $reportModel->imagen_url;
+					}
+				}
 				$item['details'][] = [
-					'label' => 'Fecha/Hora',
-					'value' => trim('Fecha: '.($changedDate ?? '-') . '    ' . 'Hora: '.($changedTime ?? '-')),
+					'label' => 'Detalle',
+					'value' => implode(' | ', array_filter([
+						isset($rp['id']) ? ('#'.$rp['id']) : null,
+						$personName ? ('Reportado por: '.$personName) : null,
+						!empty($rp['direccion']) ? ('Dirección: '.$rp['direccion']) : null,
+						(isset($rp['latitud']) && isset($rp['longitud'])) ? ('GPS: '.$rp['latitud'].','.$rp['longitud']) : null,
+					])),
 				];
 			}
 
 			// Cambio de estado
 			if (!empty($new['estado'])) {
+				$item['title'] = 'Cambio de estado';
 				$oldName = isset($old['estado']['id']) ? ($statuses[$old['estado']['id']]->nombre ?? ('#'.$old['estado']['id'])) : ($old['estado']['nombre'] ?? null);
 				$newName = isset($new['estado']['id']) ? ($statuses[$new['estado']['id']]->nombre ?? ('#'.$new['estado']['id'])) : ($new['estado']['nombre'] ?? null);
 				$item['details'][] = [
-					'label' => 'Estado',
+					'label' => 'Detalle',
 					'value' => trim(($oldName ? $oldName.' → ' : '') . ($newName ?? '')),
 				];
 			}
 
 			// Evaluación médica
 			if (!empty($new['evaluacion_medica'])) {
+				$item['title'] = 'Evaluación Médica';
 				$em = $new['evaluacion_medica'];
 				$trat = isset($em['tratamiento_id']) ? ($treatments[$em['tratamiento_id']]->nombre ?? ('#'.$em['tratamiento_id'])) : null;
 				$vet = isset($em['veterinario_id']) ? ($vets[$em['veterinario_id']]->person->nombre ?? ('#'.$em['veterinario_id'])) : null;
@@ -101,7 +126,7 @@ class AnimalHistoryTimelineService
 					}
 				}
 				$item['details'][] = [
-					'label' => 'Evaluación Médica',
+					'label' => 'Detalle',
 					'value' => implode(' | ', array_filter([
 						$trat ? ('Tratamiento: '.$trat) : null,
 						$vet ? ('Veterinario: '.$vet) : null,
@@ -111,6 +136,7 @@ class AnimalHistoryTimelineService
 
 			// Cuidado genérico
 			if (!empty($new['care'])) {
+				$item['title'] = 'Cuidado';
 				$care = $new['care'];
 				// intentar obtener imagen desde el cuidado
 				if (!empty($care['id'])) {
@@ -121,11 +147,11 @@ class AnimalHistoryTimelineService
 				}
 				$careTypeText = null;
 				if (!empty($care['tipo_cuidado_id'])) {
-					// resolución perezosa: traer nombre desde DB solo si aparece en el historial (evita otro catálogo)
-					$careTypeText = 'Tipo: #'.$care['tipo_cuidado_id'];
+					$ct = CareType::find($care['tipo_cuidado_id']);
+					$careTypeText = $ct ? ('Tipo: '.$ct->nombre) : ('Tipo: #'.$care['tipo_cuidado_id']);
 				}
 				$item['details'][] = [
-					'label' => 'Cuidado',
+					'label' => 'Detalle',
 					'value' => implode(' | ', array_filter([
 						!empty($care['descripcion']) ? $care['descripcion'] : null,
 						$careTypeText,
@@ -135,6 +161,7 @@ class AnimalHistoryTimelineService
 
 			// Cuidado de alimentación
 			if (!empty($new['care_feeding'])) {
+				$item['title'] = 'Alimentación';
 				$cf = $new['care_feeding'];
 				$tipo = isset($cf['feeding_type_id']) ? ($feedTypes[$cf['feeding_type_id']]->nombre ?? ('#'.$cf['feeding_type_id'])) : null;
 				$freq = isset($cf['feeding_frequency_id']) ? ($feedFreqs[$cf['feeding_frequency_id']]->nombre ?? ('#'.$cf['feeding_frequency_id'])) : null;
@@ -144,7 +171,7 @@ class AnimalHistoryTimelineService
 					$portion = $p ? ($p->cantidad.' '.$p->unidad) : ('#'.$cf['feeding_portion_id']);
 				}
 				$item['details'][] = [
-					'label' => 'Alimentación',
+					'label' => 'Detalle',
 					'value' => implode(' | ', array_filter([
 						$tipo ? ('Tipo: '.$tipo) : null,
 						$freq ? ('Frecuencia: '.$freq) : null,
@@ -155,11 +182,12 @@ class AnimalHistoryTimelineService
 
 			// Traslado
 			if (!empty($new['transfer'])) {
+				$item['title'] = 'Traslado';
 				$tr = $new['transfer'];
 				$personName = isset($tr['persona_id']) ? (Person::find($tr['persona_id'])->nombre ?? ('#'.$tr['persona_id'])) : null;
 				$centerName = isset($tr['centro_id']) ? (Center::find($tr['centro_id'])->nombre ?? ('#'.$tr['centro_id'])) : null;
 				$item['details'][] = [
-					'label' => 'Traslado',
+					'label' => 'Detalle',
 					'value' => implode(' | ', array_filter([
 						$personName ? ('Persona: '.$personName) : null,
 						$centerName ? ('Centro: '.$centerName) : null,
@@ -167,6 +195,45 @@ class AnimalHistoryTimelineService
 						!empty($tr['observaciones']) ? ('Obs: '.$tr['observaciones']) : null,
 					])),
 				];
+			}
+
+			// Creación de Hoja de Vida / Animal
+			if (!empty($new['animal']) || !empty($new['animal_file'])) {
+				if (!empty($new['animal'])) {
+					$item['title'] = 'Animal';
+					$an = $new['animal'];
+					$item['details'][] = [
+						'label' => 'Detalle',
+						'value' => implode(' | ', array_filter([
+							!empty($an['nombre']) ? ('Nombre: '.$an['nombre']) : null,
+							!empty($an['sexo']) ? ('Sexo: '.$an['sexo']) : null,
+							isset($an['id']) ? ('#'.$an['id']) : null,
+						])),
+					];
+				}
+				if (!empty($new['animal_file'])) {
+					$item['title'] = 'Creación de Hoja de Vida';
+					$af = $new['animal_file'];
+					// imagen de hoja de vida si existe
+					if (!empty($af['id'])) {
+						$afModel = AnimalFileModel::find($af['id']);
+						if ($afModel && $afModel->imagen_url) {
+							$imageUrl = $afModel->imagen_url;
+						}
+					}
+					$estadoName = isset($af['estado_id']) ? (AnimalStatus::find($af['estado_id'])->nombre ?? ('#'.$af['estado_id'])) : null;
+					$tipoName = isset($af['tipo_id']) ? (AnimalType::find($af['tipo_id'])->nombre ?? ('#'.$af['tipo_id'])) : null;
+					$espName = isset($af['especie_id']) ? (Species::find($af['especie_id'])->nombre ?? ('#'.$af['especie_id'])) : null;
+					$item['details'][] = [
+						'label' => 'Detalle',
+						'value' => implode(' | ', array_filter([
+							isset($af['id']) ? ('#'.$af['id']) : null,
+							$estadoName ? ('Estado: '.$estadoName) : null,
+							$tipoName ? ('Tipo: '.$tipoName) : null,
+							$espName ? ('Especie: '.$espName) : null,
+						])),
+					];
+				}
 			}
 
 			// Observaciones

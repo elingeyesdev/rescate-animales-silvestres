@@ -23,12 +23,9 @@ class TransferRequest extends FormRequest
     {
         return [
             'persona_id' => 'required|exists:people,id',
-			'centro_id' => 'required|exists:centers,id',
-			'observaciones' => 'nullable|string',
-            'primer_traslado' => 'required|boolean',
-            'animal_id' => 'nullable|exists:animals,id|required_if:primer_traslado,0',
-            'latitud' => 'nullable|numeric|required_if:primer_traslado,1',
-            'longitud' => 'nullable|numeric|required_if:primer_traslado,1',
+            'animal_id' => 'required|exists:animals,id',
+            'centro_id' => 'required|exists:centers,id',
+            'observaciones' => 'nullable|string',
         ];
     }
 }

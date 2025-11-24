@@ -26,11 +26,7 @@
             <input type="text" name="descripcion" class="form-control @error('descripcion') is-invalid @enderror" value="{{ old('descripcion', $care?->descripcion) }}" id="descripcion" placeholder="Descripcion">
             {!! $errors->first('descripcion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
-        <div class="form-group mb-2 mb20">
-            <label for="fecha" class="form-label">{{ __('Fecha') }}</label>
-            <input type="date" name="fecha" class="form-control @error('fecha') is-invalid @enderror" value="{{ old('fecha', $care?->fecha) }}" id="fecha">
-            {!! $errors->first('fecha', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
+        <!-- Fecha: se asigna automáticamente por el sistema -->
         <div class="form-group mb-2 mb20">
             <label for="imagen" class="form-label">{{ __('Imagen (opcional)') }}</label>
             <div class="custom-file">

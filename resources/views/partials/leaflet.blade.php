@@ -26,8 +26,9 @@ window.initMapWithGeolocation = function initMapWithGeolocation(opts) {
     ], (initLat && initLon) ? 15 : start.zoom);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
     let marker = null;
+    let userLocked = false; // si el usuario fija manualmente la posición, no sobrescribir con geolocalización
 
-    function setMarker(lat, lon, setView = false) {
+    function setMarker(lat, lon, setView = false, fromUser = false) {
         if (marker) map.removeLayer(marker);
         marker = L.marker([lat, lon]).addTo(map);
         if (setView) map.setView([lat, lon], 16);
@@ -42,6 +43,11 @@ window.initMapWithGeolocation = function initMapWithGeolocation(opts) {
                     if (dirText) dirText.textContent = display;
                 })
                 .catch(() => { if (dirText) dirText.textContent = ''; });
+        }
+        if (fromUser && watchId !== null) {
+            try { navigator.geolocation.clearWatch(watchId); } catch (e) {}
+            watchId = null;
+            userLocked = true;
         }
     }
 
@@ -59,13 +65,14 @@ window.initMapWithGeolocation = function initMapWithGeolocation(opts) {
             setTimeout(() => map.invalidateSize(), 150);
 
             // Reiniciar watch
-            if (navigator.geolocation) {
+            if (!userLocked && navigator.geolocation) {
                 if (watchId !== null) navigator.geolocation.clearWatch(watchId);
                 watchId = navigator.geolocation.watchPosition(
                     (pos) => {
+                        if (userLocked) return;
                         const lat = pos.coords.latitude.toFixed(6);
                         const lon = pos.coords.longitude.toFixed(6);
-                        setMarker(lat, lon, true);
+                        setMarker(lat, lon, true, false);
                     },
                     () => {},
                     {
@@ -85,9 +92,10 @@ window.initMapWithGeolocation = function initMapWithGeolocation(opts) {
     if (navigator.geolocation) {
         watchId = navigator.geolocation.watchPosition(
             (pos) => {
+                if (userLocked) return;
                 const lat = pos.coords.latitude.toFixed(6);
                 const lon = pos.coords.longitude.toFixed(6);
-                setMarker(lat, lon, false);
+                setMarker(lat, lon, false, false);
             },
             () => {},
             {
@@ -121,7 +129,7 @@ window.initMapWithGeolocation = function initMapWithGeolocation(opts) {
       }
     }
 
-    map.on('click', (e) => setMarker(e.latlng.lat.toFixed(6), e.latlng.lng.toFixed(6)));
+    map.on('click', (e) => setMarker(e.latlng.lat.toFixed(6), e.latlng.lng.toFixed(6), true, true));
     return map;
 }
 

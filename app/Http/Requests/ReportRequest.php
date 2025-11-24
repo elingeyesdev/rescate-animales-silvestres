@@ -29,6 +29,8 @@ class ReportRequest extends FormRequest
 			'latitud' => 'nullable|numeric',
 			'longitud' => 'nullable|numeric',
 			'direccion' => 'nullable|string',
+            'traslado_inmediato' => 'nullable|boolean',
+            'centro_id' => 'nullable|exists:centers,id|required_if:traslado_inmediato,1',
         ];
 
         if (in_array($this->method(), ['PUT','PATCH'])) {

@@ -39,7 +39,7 @@ class TransferController extends Controller
     {
         $transfer = new Transfer();
         $rescuers = Rescuer::with('person')->where('aprobado', true)->orderBy('id')->get();
-        $centers = Center::orderBy('nombre')->get(['id','nombre']);
+        $centers = Center::orderBy('nombre')->get(['id','nombre','latitud','longitud']);
         $animals = Animal::orderByDesc('id')->get(['id','nombre']);
         $people = \App\Models\Person::orderBy('nombre')->get(['id','nombre']);
         return view('transfer.create', compact('transfer','rescuers','centers','animals','people'));
@@ -87,12 +87,12 @@ class TransferController extends Controller
     {
         $last = \App\Models\Transfer::where('animal_id', $animal->id)->orderByDesc('id')->first();
         $currentCenter = $last?->center;
-        $centers = Center::orderBy('nombre')->get(['id','nombre']);
+        $centers = Center::orderBy('nombre')->get(['id','nombre','latitud','longitud']);
         $destinations = $centers->when($currentCenter, function ($c) use ($currentCenter) {
             return $c->where('id', '!=', $currentCenter->id);
         })->values();
         return response()->json([
-            'current' => $currentCenter ? ['id' => $currentCenter->id, 'nombre' => $currentCenter->nombre] : null,
+            'current' => $currentCenter ? ['id' => $currentCenter->id, 'nombre' => $currentCenter->nombre, 'latitud' => $currentCenter->latitud, 'longitud' => $currentCenter->longitud] : null,
             'destinations' => $destinations,
         ]);
     }

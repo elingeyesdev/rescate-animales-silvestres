@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
         lonInputId: 'longitud',
         start: { lat: -17.7833, lon: -63.1821, zoom: 13 },
         enableReverseGeocode: true,
-        addressInputId: 'direccion',
+        dirInputId: 'direccion',
     });
 });
 </script>

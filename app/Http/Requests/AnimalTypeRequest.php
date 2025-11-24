@@ -39,8 +39,11 @@ class AnimalTypeRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($v) {
-            if ($this->boolean('permite_adopcion') && $this->boolean('permite_liberacion')) {
-                $v->errors()->add('permite_liberacion', 'No puede permitir adopción y liberación al mismo tiempo.');
+			$adop = $this->boolean('permite_adopcion');
+            $lib = $this->boolean('permite_liberacion');
+            // Debe ser exactamente una en 1 y la otra en 0 (XOR)
+            if ($adop === $lib) {
+                $v->errors()->add('permite_liberacion', 'Debe seleccionar exactamente una opción: adopción o liberación, no ambas ni ninguna.');
             }
         });
     }

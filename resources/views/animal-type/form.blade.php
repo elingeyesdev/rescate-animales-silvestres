@@ -41,12 +41,40 @@
             const libSi = document.getElementById('permite_liberacion_si');
             const libNo = document.getElementById('permite_liberacion_no');
 
-            function syncRadios() {
-                if (adopSi.checked) { libNo.checked = true; }
-                if (libSi.checked) { adopNo.checked = true; }
+            function enforcePairing(from) {
+                // Regla: exactamente uno en "Sí" y el otro en "No"
+                if (from === 'adopSi' && adopSi.checked) {
+                    libNo.checked = true;
+                } else if (from === 'adopNo' && adopNo.checked) {
+                    libSi.checked = true;
+                } else if (from === 'libSi' && libSi.checked) {
+                    adopNo.checked = true;
+                } else if (from === 'libNo' && libNo.checked) {
+                    adopSi.checked = true;
+                }
+                // Si por alguna razón quedan ambos en No o ambos en Sí, forzar adopción = Sí, liberación = No
+                if ((adopNo.checked && libNo.checked) || (adopSi.checked && libSi.checked)) {
+                    adopSi.checked = true;
+                    libNo.checked = true;
+                }
             }
-            adopSi?.addEventListener('change', syncRadios);
-            libSi?.addEventListener('change', syncRadios);
+
+            // Eventos
+            adopSi?.addEventListener('change', () => enforcePairing('adopSi'));
+            adopNo?.addEventListener('change', () => enforcePairing('adopNo'));
+            libSi?.addEventListener('change', () => enforcePairing('libSi'));
+            libNo?.addEventListener('change', () => enforcePairing('libNo'));
+
+            // Estado inicial: si nada está marcado o ambos están en el mismo valor, fijar adopción = Sí, liberación = No
+            const noneChecked = !(adopSi.checked || adopNo.checked || libSi.checked || libNo.checked);
+            const sameChoice = (adopSi.checked && libSi.checked) || (adopNo.checked && libNo.checked);
+            if (noneChecked || sameChoice) {
+                adopSi.checked = true;
+                libNo.checked = true;
+            } else {
+                // Asegurar consistencia por si solo un lado fue seteado
+                enforcePairing(null);
+            }
         });
         </script>
 

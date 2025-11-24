@@ -24,8 +24,7 @@ class FeedingProcessRequest extends FormRequest
             'feeding_frequency_id' => 'required|exists:feeding_frequencies,id',
             'feeding_portion_id' => 'required|exists:feeding_portions,id',
             'descripcion' => 'nullable|string',
-            'fecha' => 'nullable|date',
-            'observaciones' => 'nullable|string',
+			// fecha y observaciones se gestionan automáticamente en el servidor
         ];
     }
 }

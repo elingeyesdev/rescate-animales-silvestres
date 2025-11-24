@@ -11,49 +11,33 @@
             </select>
             {!! $errors->first('persona_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
-        
+
         <div class="form-group mb-2 mb20">
-            <label for="primer_traslado" class="form-label d-block">{{ __('¿Es primer traslado?') }}</label>
-            @php($isFirst = old('primer_traslado', (string)($transfer?->primer_traslado ?? '1')))
-            <select name="primer_traslado" id="primer_traslado" class="form-control @error('primer_traslado') is-invalid @enderror" style="max-width: 220px;">
-                <option value="1" {{ (string)$isFirst === '1' ? 'selected' : '' }}>Sí</option>
-                <option value="0" {{ (string)$isFirst === '0' ? 'selected' : '' }}>No</option>
-            </select>
-            {!! $errors->first('primer_traslado', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
-        <div class="form-group mb-2 mb20" id="animal_wrap">
-            <label for="animal_id" class="form-label">{{ __('Animal (si no es primer traslado)') }}</label>
+            <label for="animal_id" class="form-label">{{ __('Animal') }}</label>
             <select name="animal_id" id="animal_id" class="form-control @error('animal_id') is-invalid @enderror">
                 <option value="">{{ __('Seleccione') }}</option>
                 @foreach(($animals ?? []) as $a)
                     <option value="{{ $a->id }}" {{ (string)old('animal_id', $transfer?->animal_id) === (string)$a->id ? 'selected' : '' }}>
-                        #{{ $a->id }} {{ $a->nombre ? '- ' . $a->nombre : '' }}
+                        #{{ $a->id }} {{ $a->name ?? $a->nombre }}
                     </option>
                 @endforeach
             </select>
             {!! $errors->first('animal_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-            <small class="text-muted d-block mt-1">{{ __('Si es “Sí” en primer traslado, no es necesario seleccionar animal.') }}</small>
         </div>
+
         <div class="form-group mb-2 mb20" id="current_center_wrap" style="display:none;">
             <label class="form-label">{{ __('Centro actual del animal') }}</label>
             <div id="current_center_name" class="form-control-plaintext"></div>
         </div>
-        <div class="form-group mb-2 mb20" id="map_wrap">
-            <label class="form-label">{{ __('Ubicación (primer traslado)') }}</label>
-            <div id="transfer_map" style="height: 280px; border-radius: 4px;"></div>
-            <input type="hidden" name="latitud" id="t_lat" value="{{ old('latitud', $transfer?->latitud) }}">
-            <input type="hidden" name="longitud" id="t_lon" value="{{ old('longitud', $transfer?->longitud) }}">
+
+        <div class="form-group mb-2 mb20" id="centers_map_wrap" style="display:none;">
+            <label class="form-label">{{ __('Seleccione el centro de destino en el mapa') }}</label>
+            <div id="centers_map" style="height: 280px; border-radius: 4px; margin-bottom: 8px;"></div>
+            <input type="hidden" name="centro_id" id="centro_id" value="{{ old('centro_id', $transfer?->centro_id) }}">
+            <div id="centers_legend" class="small text-muted"></div>
+            {!! $errors->first('centro_id', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
         </div>
-        <div class="form-group mb-2 mb20" id="center_wrap">
-            <label for="centro_id" class="form-label">{{ __('Centro de destino') }}</label>
-            <select name="centro_id" id="centro_id" class="form-control @error('centro_id') is-invalid @enderror">
-                <option value="">{{ __('Seleccione') }}</option>
-                @foreach(($centers ?? []) as $c)
-                    <option value="{{ $c->id }}" {{ (string)old('centro_id', $transfer?->centro_id) === (string)$c->id ? 'selected' : '' }}>{{ $c->nombre }}</option>
-                @endforeach
-            </select>
-            {!! $errors->first('centro_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
+
         <div class="form-group mb-2 mb20">
             <label for="observaciones" class="form-label">{{ __('Observaciones') }}</label>
             <input type="text" name="observaciones" class="form-control @error('observaciones') is-invalid @enderror" value="{{ old('observaciones', $transfer?->observaciones) }}" id="observaciones" placeholder="Observaciones">
@@ -65,63 +49,83 @@
         <button type="submit" class="btn btn-primary">{{ __('Submit') }}</button>
     </div>
 </div>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const selFirst = document.getElementById('primer_traslado');
-    const animalSel = document.getElementById('animal_id');
-    const mapWrap = document.getElementById('map_wrap');
-    const currentWrap = document.getElementById('current_center_wrap');
-    const currentName = document.getElementById('current_center_name');
-    const animalWrap = document.getElementById('animal_wrap');
-    function toggleAnimal() {
-        const isFirst = selFirst && String(selFirst.value) === '1';
-        if (animalSel) {
-            animalSel.disabled = isFirst;
-        }
-        if (animalWrap) animalWrap.style.display = isFirst ? 'none' : '';
-        if (mapWrap) mapWrap.style.display = isFirst ? '' : 'none';
-        if (currentWrap) currentWrap.style.display = isFirst ? 'none' : '';
-
-        if (!isFirst) {
-            const id = animalSel?.value;
-            if (id) {
-                fetch('{{ route('transfers.currentCenter', ['animal' => 'ID']) }}'.replace('ID', id))
-                    .then(r => r.json())
-                    .then(data => {
-                        if (currentName) currentName.textContent = data.current ? ('#'+data.current.id+' '+data.current.nombre) : '{{ __('Sin centro registrado') }}';
-                        const centerSel = document.getElementById('centro_id');
-                        if (centerSel && data.destinations) {
-                            const current = centerSel.value;
-                            centerSel.innerHTML = '<option value="">{{ __('Seleccione') }}</option>';
-                            data.destinations.forEach(c => {
-                                const opt = document.createElement('option');
-                                opt.value = c.id;
-                                opt.textContent = c.nombre;
-                                if (String(current) === String(c.id)) opt.selected = true;
-                                centerSel.appendChild(opt);
-                            });
-                        }
-                    })
-                    .catch(() => {});
-            }
-        }
-    }
-    selFirst?.addEventListener('change', toggleAnimal);
-    animalSel?.addEventListener('change', function () {
-        if (selFirst && String(selFirst.value) === '0') toggleAnimal();
-    });
-    toggleAnimal();
-});
-</script>
 @include('partials.leaflet')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    window.initMapWithGeolocation({
-        mapId: 'transfer_map',
-        latInputId: 't_lat',
-        lonInputId: 't_lon',
-        start: { lat: -17.7833, lon: -63.1821, zoom: 13 },
-        enableReverseGeocode: true
-    });
+    const animalSel = document.getElementById('animal_id');
+    const currentWrap = document.getElementById('current_center_wrap');
+    const currentName = document.getElementById('current_center_name');
+    const centersWrap = document.getElementById('centers_map_wrap');
+    const centersMapEl = document.getElementById('centers_map');
+    const centersLegend = document.getElementById('centers_legend');
+    const centerInput = document.getElementById('centro_id');
+
+    let centersMap = null;
+
+    function renderCentersMap(destinations, current) {
+        centersWrap.style.display = '';
+        if (!centersMap) {
+            centersMap = L.map('centers_map').setView([ -17.7833, -63.1821 ], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(centersMap);
+        }
+        // clear existing markers by resetting the map layer
+        centersMap.eachLayer(function (layer) {
+            if (layer instanceof L.Marker) centersMap.removeLayer(layer);
+        });
+        centersLegend.innerHTML = '';
+
+        if (current && current.latitud && current.longitud) {
+            const cur = L.marker([current.latitud, current.longitud]).addTo(centersMap);
+            cur.bindPopup(`{{ __('Centro actual') }}: <strong>${current.nombre}</strong>`).openPopup();
+            centersMap.setView([current.latitud, current.longitud], 13);
+            currentName.textContent = `#${current.id} ${current.nombre}`;
+            currentWrap.style.display = '';
+        } else {
+            currentWrap.style.display = 'none';
+        }
+
+        destinations.forEach(c => {
+            if (c.latitud && c.longitud) {
+                const m = L.marker([c.latitud, c.longitud]).addTo(centersMap);
+                m.bindPopup(`<strong>${c.nombre}</strong>`);
+                m.on('click', () => {
+                    centerInput.value = c.id;
+                    highlightLegend(c.id);
+                });
+                // legend item
+                const span = document.createElement('span');
+                span.textContent = `#${c.id} ${c.nombre}`;
+                span.style.cursor = 'pointer';
+                span.style.display = 'inline-block';
+                span.style.marginRight = '10px';
+                span.id = `legend_center_${c.id}`;
+                span.onclick = () => { centersMap.setView([c.latitud, c.longitud], 15); centerInput.value = c.id; highlightLegend(c.id); };
+                centersLegend.appendChild(span);
+            }
+        });
+
+        function highlightLegend(id){
+            destinations.forEach(c => {
+                const el = document.getElementById(`legend_center_${c.id}`);
+                if (el) el.style.fontWeight = (String(c.id) === String(id)) ? '700' : '400';
+            });
+        }
+    }
+
+    function onAnimalChange(){
+        const id = animalSel.value;
+        centerInput.value = '';
+        if (!id) { currentName.textContent = ''; currentWrap.style.display = 'none'; centersWrap.style.display = 'none'; return; }
+        fetch('{{ route('transfers.currentCenter', ['animal' => 'ID']) }}'.replace('ID', id))
+            .then(r => r.json())
+            .then(data => {
+                renderCentersMap(data.destinations || [], data.current || null);
+            })
+            .catch(() => { currentWrap.style.display = 'none'; centersWrap.style.display = 'none'; });
+    }
+
+    animalSel?.addEventListener('change', onAnimalChange);
+    // init if preselected
+    if (animalSel && animalSel.value) { onAnimalChange(); }
 });
 </script>

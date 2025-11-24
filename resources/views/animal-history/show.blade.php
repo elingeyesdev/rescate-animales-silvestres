@@ -25,7 +25,7 @@
                                     <div class="card-header">
                                         <div class="d-flex justify-content-between">
                                             <h5 class="card-title mb-0">{{ $t['title'] }}</h5>
-                                            <small class="text-muted">{{ $t['changed_at'] }}</small>
+                                            <small class="text-muted">{{ $t['changed_at_label'] ?? $t['changed_at'] }}</small>
                                         </div>
                                     </div>
                                     <div class="card-body">

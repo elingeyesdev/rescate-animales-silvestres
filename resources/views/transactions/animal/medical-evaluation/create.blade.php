@@ -31,39 +31,60 @@
                                         {!! $errors->first('animal_file_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                     </div>
 
-                                    <div class="form-group mb-2 mb20">
-                                        <label for="tratamiento_id" class="form-label">{{ __('Tipo de Tratamiento') }}</label>
-                                        <select name="tratamiento_id" id="tratamiento_id" class="form-control @error('tratamiento_id') is-invalid @enderror">
-                                            <option value="">{{ __('Seleccione') }}</option>
-                                            @foreach(($treatmentTypes ?? []) as $t)
-                                                <option value="{{ $t->id }}" {{ (string)old('tratamiento_id') === (string)$t->id ? 'selected' : '' }}>{{ $t->nombre }}</option>
-                                            @endforeach
-                                        </select>
-                                        {!! $errors->first('tratamiento_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-2 mb20">
+                                                <label for="tratamiento_id" class="form-label">{{ __('Tipo de Tratamiento') }}</label>
+                                                <select name="tratamiento_id" id="tratamiento_id" class="form-control @error('tratamiento_id') is-invalid @enderror">
+                                                    <option value="">{{ __('Seleccione') }}</option>
+                                                    @foreach(($treatmentTypes ?? []) as $t)
+                                                        <option value="{{ $t->id }}" {{ (string)old('tratamiento_id') === (string)$t->id ? 'selected' : '' }}>{{ $t->nombre }}</option>
+                                                    @endforeach
+                                                </select>
+                                                {!! $errors->first('tratamiento_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-2 mb20">
+                                                <label for="veterinario_id" class="form-label">{{ __('Veterinario') }}</label>
+                                                <select name="veterinario_id" id="veterinario_id" class="form-control @error('veterinario_id') is-invalid @enderror">
+                                                    <option value="">{{ __('Seleccione') }}</option>
+                                                    @foreach(($veterinarians ?? []) as $v)
+                                                        <option value="{{ $v->id }}" {{ (string)old('veterinario_id') === (string)$v->id ? 'selected' : '' }}>
+                                                            #{{ $v->id }} {{ $v->person?->nombre ?? '' }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                {!! $errors->first('veterinario_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div class="form-group mb-2 mb20">
-                                        <label for="veterinario_id" class="form-label">{{ __('Veterinario') }}</label>
-                                        <select name="veterinario_id" id="veterinario_id" class="form-control @error('veterinario_id') is-invalid @enderror">
-                                            <option value="">{{ __('Seleccione') }}</option>
-                                            @foreach(($veterinarians ?? []) as $v)
-                                                <option value="{{ $v->id }}" {{ (string)old('veterinario_id') === (string)$v->id ? 'selected' : '' }}>
-                                                    #{{ $v->id }} {{ $v->person?->nombre ?? '' }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        {!! $errors->first('veterinario_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-                                    </div>
-
-                                    <div class="form-group mb-2 mb20">
-                                        <label for="estado_id" class="form-label">{{ __('Nuevo Estado del Animal') }}</label>
-                                        <select name="estado_id" id="estado_id" class="form-control @error('estado_id') is-invalid @enderror">
-                                            <option value="">{{ __('Seleccione') }}</option>
-                                            @foreach(($statuses ?? []) as $s)
-                                                <option value="{{ $s->id }}" {{ (string)old('estado_id') === (string)$s->id ? 'selected' : '' }}>{{ $s->nombre }}</option>
-                                            @endforeach
-                                        </select>
-                                        {!! $errors->first('estado_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-2 mb20">
+                                                <label for="estado_id" class="form-label">{{ __('Nuevo Estado del Animal') }}</label>
+                                                <select name="estado_id" id="estado_id" class="form-control @error('estado_id') is-invalid @enderror">
+                                                    <option value="">{{ __('Seleccione') }}</option>
+                                                    @foreach(($statuses ?? []) as $s)
+                                                        <option value="{{ $s->id }}" {{ (string)old('estado_id') === (string)$s->id ? 'selected' : '' }}>{{ $s->nombre }}</option>
+                                                    @endforeach
+                                                </select>
+                                                {!! $errors->first('estado_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-2 mb20">
+                                                <label for="imagen" class="form-label">{{ __('Evidencia (imagen)') }}</label>
+                                                <div class="custom-file">
+                                                    <div class="custom-file">
+                                                        <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
+                                                        <label class="custom-file-label" for="imagen">{{ __('Seleccionar imagen') }}</label>
+                                                    </div>
+                                                </div>
+                                                {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {{-- La fecha se asigna automáticamente en el servidor (UTC-4). --}}
@@ -74,14 +95,6 @@
                                         {!! $errors->first('descripcion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                     </div>
 
-                                    <div class="form-group mb-2 mb20">
-                                        <label for="imagen" class="form-label">{{ __('Evidencia (imagen)') }}</label>
-                                        <div class="custom-file">
-                                            <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
-                                            <label class="custom-file-label" for="imagen">{{ __('Seleccionar imagen') }}</label>
-                                        </div>
-                                        {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
-                                    </div>
                                     <script>
                                     document.addEventListener('DOMContentLoaded', function () {
                                         const input = document.getElementById('imagen');
@@ -93,11 +106,7 @@
                                     });
                                     </script>
 
-                                    <div class="form-group mb-2 mb20">
-                                        <label for="observaciones" class="form-label">{{ __('Observaciones (Historial)') }}</label>
-                                        <textarea name="observaciones" id="observaciones" class="form-control @error('observaciones') is-invalid @enderror" rows="2">{{ old('observaciones') }}</textarea>
-                                        {!! $errors->first('observaciones', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-                                    </div>
+                                    <!-- Observaciones: no necesarias en transaccional -->
                                 </div>
 
                                 <div class="col-md-12 mt20 mt-2">

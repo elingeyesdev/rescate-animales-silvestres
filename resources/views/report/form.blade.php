@@ -54,6 +54,22 @@
             <input type="hidden" name="direccion" id="direccion" value="{{ old('direccion') }}">
             <small class="text-muted" id="direccion_text"></small>
         </div>
+
+        <div class="form-group mb-2 mb20">
+            <label for="traslado_inmediato" class="form-label d-block">{{ __('¿Se realizará traslado inmediato?') }}</label>
+            <select name="traslado_inmediato" id="traslado_inmediato" class="form-control @error('traslado_inmediato') is-invalid @enderror" style="max-width:260px;">
+                <option value="0" {{ old('traslado_inmediato','0')=='0'?'selected':'' }}>{{ __('No') }}</option>
+                <option value="1" {{ old('traslado_inmediato')=='1'?'selected':'' }}>{{ __('Sí') }}</option>
+            </select>
+            {!! $errors->first('traslado_inmediato', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        </div>
+        <div class="form-group mb-2 mb20" id="centro_wrap" style="display:none;">
+            <label class="form-label">{{ __('Seleccione el centro de destino en el mapa') }}</label>
+            <div id="centers_map" style="height: 280px; border-radius: 4px; margin-bottom: 8px;"></div>
+            <input type="hidden" name="centro_id" id="centro_id" value="{{ old('centro_id') }}">
+            <div id="centers_legend" class="small text-muted"></div>
+            {!! $errors->first('centro_id', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
+        </div>
         @endif
 
     </div>
@@ -70,7 +86,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const fileName = file ? file.name : '{{ __('Elegir imagen') }}';
         const label = this.nextElementSibling;
         if (label) label.textContent = fileName;
-        // Preview
         let preview = document.getElementById('imagen_preview');
         if (!preview) {
             const container = this.closest('.form-group');
@@ -95,6 +110,7 @@ document.addEventListener('DOMContentLoaded', function () {
 @include('partials.leaflet')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Mapa de ubicación del hallazgo (con geolocalización)
     window.initMapWithGeolocation({
         mapId: 'mapid',
         latInputId: 'latitud',
@@ -103,6 +119,66 @@ document.addEventListener('DOMContentLoaded', function () {
         start: { lat: -17.7833, lon: -63.1821, zoom: 13 },
         enableReverseGeocode: true,
     });
+
+    const sel = document.getElementById('traslado_inmediato');
+    const wrap = document.getElementById('centro_wrap');
+    let centersMap = null;
+    let centersMarkers = [];
+
+    function initCentersMap() {
+        if (centersMap) return;
+        const centersData = @json($centers);
+        centersMap = L.map('centers_map').setView([ -17.7833, -63.1821 ], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(centersMap);
+        const legend = document.getElementById('centers_legend');
+        const selectedInput = document.getElementById('centro_id');
+        centersData.forEach((c) => {
+            if (c.latitud && c.longitud) {
+                const m = L.marker([c.latitud, c.longitud]).addTo(centersMap);
+                m.bindPopup(`<strong>${c.nombre}</strong>`);
+                m.on('click', () => {
+                    selectedInput.value = c.id;
+                    highlightLegend(c.id);
+                });
+                centersMarkers.push({ id: c.id, marker: m });
+            }
+        });
+        // build legend
+        if (legend) {
+            legend.innerHTML = '';
+            centersData.forEach(c => {
+                const span = document.createElement('span');
+                span.textContent = `#${c.id} ${c.nombre}`;
+                span.style.cursor = 'pointer';
+                span.style.display = 'inline-block';
+                span.style.marginRight = '10px';
+                span.onclick = () => {
+                    if (c.latitud && c.longitud) {
+                        centersMap.setView([c.latitud, c.longitud], 15);
+                        document.getElementById('centro_id').value = c.id;
+                        highlightLegend(c.id);
+                    }
+                };
+                span.id = `legend_center_${c.id}`;
+                legend.appendChild(span);
+            });
+        }
+        function highlightLegend(id){
+            centersData.forEach(c => {
+                const el = document.getElementById(`legend_center_${c.id}`);
+                if (el) el.style.fontWeight = (String(c.id) === String(id)) ? '700' : '400';
+            });
+        }
+    }
+
+    function toggle() {
+        if (!sel || !wrap) return;
+        const show = String(sel.value) === '1';
+        wrap.style.display = show ? '' : 'none';
+        if (show) initCentersMap();
+    }
+    sel?.addEventListener('change', toggle);
+    toggle();
 });
 </script>
 @endif

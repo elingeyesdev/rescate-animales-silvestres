@@ -24,6 +24,7 @@ class AnimalWithFileRequest extends FormRequest
             'sexo' => 'required|string|in:Hembra,Macho,Desconocido',
             'descripcion' => 'nullable|string',
             'reporte_id' => 'required|exists:reports,id',
+            'llegaron_cantidad' => 'nullable|integer|min:1',
             // AnimalFile (sin animal_id, se asigna en servicio)
             'tipo_id' => 'required|exists:animal_types,id',
             'especie_id' => 'required|exists:species,id',
