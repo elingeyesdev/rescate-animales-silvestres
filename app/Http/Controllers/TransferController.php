@@ -60,13 +60,14 @@ class TransferController extends Controller
             ->when(!empty($firstReportIds), fn($q) => $q->whereNotIn('id', $firstReportIds))
             ->orderByDesc('id')
             ->take(12)
-            ->get(['id','persona_id','condicion_inicial_id','aprobado','created_at']);
+            ->get(['id','persona_id','condicion_inicial_id','aprobado','created_at','direccion','imagen_url']);
         $centers = Center::orderBy('nombre')->get(['id','nombre','latitud','longitud']);
         $people = Person::orderBy('nombre')->get(['id','nombre']);
         $animals = Animal::orderByDesc('id')->get(['id','nombre']);
+        $animalFiles = \App\Models\AnimalFile::with(['animal:id,nombre'])->orderByDesc('id')->get(['id','animal_id','imagen_url']);
         $transfer = new Transfer();
 
-        return view('transfer.index', compact('transfers','reportsFirst','centers','people','animals','transfer'))
+        return view('transfer.index', compact('transfers','reportsFirst','centers','people','animals','animalFiles','transfer'))
             ->with('i', ($request->input('page', 1) - 1) * $transfers->perPage());
     }
 
@@ -119,6 +120,10 @@ class TransferController extends Controller
                     ->with('success', 'Primer traslado registrado correctamente.');
             }
             // Modo traslado interno (entre centros) usando animal_id
+            // Derivar animal_id desde animal_file_id si corresponde
+            if (empty($data['animal_id']) && !empty($data['animal_file_id'])) {
+                $data['animal_id'] = \App\Models\AnimalFile::where('id', $data['animal_file_id'])->value('animal_id');
+            }
             $personId = $data['persona_id'] ?? Person::where('usuario_id', Auth::id())->value('id');
             $payload = array_merge($data, [
                 'persona_id' => $personId,

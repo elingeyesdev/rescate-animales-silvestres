@@ -28,6 +28,7 @@ class TransferRequest extends FormRequest
             'report_id' => 'nullable|exists:reports,id',
             'persona_id' => 'required_without:report_id|nullable|exists:people,id',
             'animal_id' => 'required_without:report_id|nullable|exists:animals,id',
+            'animal_file_id' => 'nullable|exists:animal_files,id',
             'centro_id' => 'required|exists:centers,id',
             'observaciones' => 'nullable|string',
         ];

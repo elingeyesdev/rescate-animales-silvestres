@@ -13,16 +13,17 @@
         </div>
 
         <div class="form-group mb-2 mb20">
-            <label for="animal_id" class="form-label">{{ __('Animal') }}</label>
-            <select name="animal_id" id="animal_id" class="form-control @error('animal_id') is-invalid @enderror">
+            <label for="animal_file_id" class="form-label">{{ __('Hoja del animal') }}</label>
+            <select name="animal_file_id" id="animal_file_id" class="form-control @error('animal_file_id') is-invalid @enderror">
                 <option value="">{{ __('Seleccione') }}</option>
-                @foreach(($animals ?? []) as $a)
-                    <option value="{{ $a->id }}" {{ (string)old('animal_id', $transfer?->animal_id) === (string)$a->id ? 'selected' : '' }}>
-                        #{{ $a->id }} {{ $a->name ?? $a->nombre }}
+                @foreach(($animalFiles ?? []) as $af)
+                    <option value="{{ $af->id }}" data-animal-id="{{ $af->animal_id }}" {{ (string)old('animal_file_id') === (string)$af->id ? 'selected' : '' }}>
+                        #{{ $af->id }} {{ $af->animal?->nombre ?? '' }} (Animal #{{ $af->animal_id }})
                     </option>
                 @endforeach
             </select>
-            {!! $errors->first('animal_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            {!! $errors->first('animal_file_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            <input type="hidden" name="animal_id" id="animal_id" value="{{ old('animal_id', $transfer?->animal_id) }}">
         </div>
 
         <div class="form-group mb-2 mb20" id="current_center_wrap" style="display:none;">
@@ -52,13 +53,14 @@
 @include('partials.leaflet')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const animalSel = document.getElementById('animal_id');
+    const animalFileSel = document.getElementById('animal_file_id');
     const currentWrap = document.getElementById('current_center_wrap');
     const currentName = document.getElementById('current_center_name');
     const centersWrap = document.getElementById('centers_map_wrap');
     const centersMapEl = document.getElementById('centers_map');
     const centersLegend = document.getElementById('centers_legend');
     const centerInput = document.getElementById('centro_id');
+    const hiddenAnimalId = document.getElementById('animal_id');
 
     let centersMap = null;
 
@@ -113,7 +115,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function onAnimalChange(){
-        const id = animalSel.value;
+        const sel = animalFileSel;
+        const id = sel?.selectedOptions?.[0]?.getAttribute('data-animal-id') || '';
+        if (hiddenAnimalId) hiddenAnimalId.value = id || '';
         centerInput.value = '';
         if (!id) { currentName.textContent = ''; currentWrap.style.display = 'none'; centersWrap.style.display = 'none'; return; }
         const url = new URL('{{ route('transfers.index') }}', window.location.origin);
@@ -127,8 +131,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(() => { currentWrap.style.display = 'none'; centersWrap.style.display = 'none'; });
     }
 
-    animalSel?.addEventListener('change', onAnimalChange);
+    animalFileSel?.addEventListener('change', onAnimalChange);
     // init if preselected
-    if (animalSel && animalSel.value) { onAnimalChange(); }
+    if (animalFileSel && animalFileSel.value) { onAnimalChange(); }
 });
 </script>
