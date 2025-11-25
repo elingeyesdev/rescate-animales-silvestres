@@ -29,6 +29,12 @@ class AnimalMedicalEvaluationTransactionalService
 				'animal_file_id' => $animalFile->id,
 				'tratamiento_id' => $data['tratamiento_id'],
 				'descripcion' => $data['descripcion'] ?? null,
+				'diagnostico' => $data['diagnostico'] ?? null,
+				'peso' => $data['peso'] ?? null,
+				'temperatura' => $data['temperatura'] ?? null,
+				'tratamiento_texto' => $data['tratamiento_texto'] ?? null,
+				'recomendacion' => $data['recomendacion'] ?? null,
+				'apto_traslado' => $data['apto_traslado'] ?? null,
 				'fecha' => Carbon::now()->toDateString(),
 				'veterinario_id' => $data['veterinario_id'],
 			];
@@ -40,37 +46,48 @@ class AnimalMedicalEvaluationTransactionalService
 
 			$medicalEvaluation = MedicalEvaluation::create($evalData);
 
-			// Actualizar estado del animal en hoja de vida
-			$oldStatus = [
-				'id' => $animalFile->estado_id,
-				'nombre' => $animalFile->animalStatus?->nombre,
-			];
-
-			$newStatusModel = AnimalStatus::findOrFail($data['estado_id']);
-			$animalFile->update(['estado_id' => $newStatusModel->id]);
+			// Actualizar estado del animal en hoja de vida (opcional)
+			$oldStatus = null;
+			$newStatusModel = null;
+			if (!empty($data['estado_id'])) {
+				$oldStatus = [
+					'id' => $animalFile->estado_id,
+					'nombre' => $animalFile->animalStatus?->nombre,
+				];
+				$newStatusModel = AnimalStatus::findOrFail($data['estado_id']);
+				$animalFile->update(['estado_id' => $newStatusModel->id]);
+			}
 
 			// Historial
-			AnimalHistory::create([
+			$historyData = [
 				'animal_file_id' => $animalFile->id,
-				'valores_antiguos' => [
-					'estado' => $oldStatus,
-				],
+				'valores_antiguos' => null,
 				'valores_nuevos' => [
-					'estado' => [
-						'id' => $newStatusModel->id,
-						'nombre' => $newStatusModel->nombre,
-					],
 					'evaluacion_medica' => [
 						'id' => $medicalEvaluation->id,
 						'tratamiento_id' => $medicalEvaluation->tratamiento_id,
+						'tratamiento_texto' => $medicalEvaluation->tratamiento_texto,
 						'veterinario_id' => $medicalEvaluation->veterinario_id,
 						'fecha' => (string) $medicalEvaluation->fecha,
+						'diagnostico' => $medicalEvaluation->diagnostico,
+						'peso' => $medicalEvaluation->peso,
+						'temperatura' => $medicalEvaluation->temperatura,
+						'recomendacion' => $medicalEvaluation->recomendacion,
+						'apto_traslado' => $medicalEvaluation->apto_traslado,
 					],
 				],
 				'observaciones' => [
 					'texto' => $data['observaciones'] ?? 'Evaluación médica y actualización de estado',
 				],
-			]);
+			];
+			if ($oldStatus && $newStatusModel) {
+				$historyData['valores_antiguos'] = ['estado' => $oldStatus];
+				$historyData['valores_nuevos']['estado'] = [
+					'id' => $newStatusModel->id,
+					'nombre' => $newStatusModel->nombre,
+				];
+			}
+			AnimalHistory::create($historyData);
 
 			DB::commit();
 

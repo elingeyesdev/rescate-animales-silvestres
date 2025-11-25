@@ -437,11 +437,11 @@ return [
             'url' => 'transfers',
             'icon' => 'fas fa-fw fa-exchange-alt',
         ],
-        [
+        /*[
             'text' => 'Adopciones',
             'url' => 'adoptions',
             'icon' => 'fas fa-fw fa-paw',
-        ],
+        ],*/
         [
             'text' => 'Liberaciones',
             'url' => 'releases',
