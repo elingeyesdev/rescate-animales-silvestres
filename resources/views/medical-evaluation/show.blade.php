@@ -30,7 +30,7 @@
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Fecha Revisión:</strong>
-                                    {{ $medicalEvaluation->fecha ? \Carbon\Carbon::parse($medicalEvaluation->fecha)->format('d-m-Y') : '-' }}
+                                    {{ $medicalEvaluation->fecha ? \Carbon\Carbon::parse($medicalEvaluation->fecha)->format('d/m/Y') : '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Estado de salud anterior:</strong>

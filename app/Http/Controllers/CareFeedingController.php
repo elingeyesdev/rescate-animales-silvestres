@@ -34,7 +34,7 @@ class CareFeedingController extends Controller
         $careFeeding = new CareFeeding();
 
 		$careOptions = Care::orderByDesc('id')->get()->mapWithKeys(function (Care $care) {
-			$label = 'Cuidado #'.$care->id.(isset($care->fecha) ? ' - '.$care->fecha : '');
+			$label = 'Cuidado N°'.$care->id.(isset($care->fecha) ? ' - '.$care->fecha : '');
 			return [$care->id => $label];
 		});
 		$feedingTypeOptions = FeedingType::orderBy('nombre')->pluck('nombre', 'id');
@@ -81,7 +81,8 @@ class CareFeedingController extends Controller
         $careFeeding = CareFeeding::find($id);
 
 		$careOptions = Care::orderByDesc('id')->get()->mapWithKeys(function (Care $care) {
-			$label = 'Cuidado #'.$care->id.(isset($care->fecha) ? ' - '.$care->fecha : '');
+			$label = 'Cuidado №
+'.$care->id.(isset($care->fecha) ? ' - '.$care->fecha : '');
 			return [$care->id => $label];
 		});
 		$feedingTypeOptions = FeedingType::orderBy('nombre')->pluck('nombre', 'id');

@@ -44,7 +44,7 @@
                                         <td>{{ ++$i }}</td>
                                         <td>#{{ $h->animal_file_id }}</td>
                                         <td>{{ $h->animalFile?->animal?->nombre ?? '-' }}</td>
-                                        <td>{{ $h->changed_at ? \Carbon\Carbon::parse($h->changed_at)->format('d-m-Y H:i') : '' }}</td>
+                                        <td>{{ $h->changed_at ? \Carbon\Carbon::parse($h->changed_at)->format('d/m/Y H:i') : '' }}</td>
                                         <td>
                                             @php
                                                 $desc = data_get($h->valores_nuevos, 'care.descripcion');

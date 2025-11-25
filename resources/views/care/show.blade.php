@@ -34,7 +34,7 @@
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Fecha:</strong>
-                                    {{ $care->fecha ? \Carbon\Carbon::parse($care->fecha)->format('d-m-Y') : '-' }}
+                                    {{ $care->fecha ? \Carbon\Carbon::parse($care->fecha)->format('d/m/Y') : '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Imagen:</strong>

@@ -78,7 +78,7 @@ class AnimalHistoryTimelineService
 		$timeline = [];
 		foreach ($all as $h) {
 			$changed = $h->changed_at ? Carbon::parse($h->changed_at) : null;
-			$changedDate = $changed ? $changed->format('d-m-Y') : null;
+			$changedDate = $changed ? $changed->format('d/m/Y') : null;
 			$changedTime = $changed ? $changed->format('H:i') : null;
 			$item = [
 				'id' => $h->id,

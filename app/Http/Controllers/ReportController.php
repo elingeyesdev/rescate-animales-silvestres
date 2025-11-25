@@ -30,9 +30,46 @@ class ReportController extends Controller
      */
     public function index(Request $request): View
     {
-        $reports = Report::with('person')->paginate();
+        $query = Report::with(['person', 'condicionInicial', 'incidentType'])
+            ->orderByDesc('id');
 
-        return view('report.index', compact('reports'))
+        // Filters
+        if ($request->filled('urgencia_nivel')) {
+            $nivel = $request->string('urgencia_nivel')->toString();
+            if ($nivel === 'alta') {
+                // 4-5
+                $query->where('urgencia', '>=', 4);
+            } elseif ($nivel === 'media') {
+                // 3
+                $query->where('urgencia', 3);
+            } elseif ($nivel === 'baja') {
+                // 1-2
+                $query->where('urgencia', '<=', 2);
+            }
+        }
+        if ($request->filled('persona_id')) {
+            $query->where('persona_id', $request->input('persona_id'));
+        }
+        if ($request->filled('tipo_incidente_id')) {
+            $query->where('tipo_incidente_id', $request->input('tipo_incidente_id'));
+        }
+        if ($request->filled('aprobado')) {
+            // aprobado can be '1' or '0'
+            $query->where('aprobado', (int) $request->input('aprobado'));
+        }
+
+        $reports = $query->paginate(12)->withQueryString();
+
+        // Filter options
+        $reporters = Person::whereIn(
+                'id',
+                Report::select('persona_id')->whereNotNull('persona_id')->distinct()->pluck('persona_id')
+            )
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
+        $incidentTypes = IncidentType::where('activo', true)->orderBy('nombre')->get(['id','nombre']);
+
+        return view('report.index', compact('reports', 'reporters', 'incidentTypes'))
             ->with('i', ($request->input('page', 1) - 1) * $reports->perPage());
     }
 

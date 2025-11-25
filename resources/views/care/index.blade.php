@@ -52,7 +52,7 @@
 									<td >{{ $care->animalFile?->animal?->nombre }}</td>
 									<td >{{ $care->careType?->nombre }}</td>
 										<td >{{ $care->descripcion }}</td>
-									<td >{{ $care->fecha ? \Carbon\Carbon::parse($care->fecha)->format('d-m-Y') : '' }}</td>
+									<td >{{ $care->fecha ? \Carbon\Carbon::parse($care->fecha)->format('d/m/Y') : '' }}</td>
 
                                             <td>
                                                 <form action="{{ route('cares.destroy', $care->id) }}" method="POST">

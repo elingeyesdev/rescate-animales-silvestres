@@ -121,10 +121,8 @@
                                         <div class="col-md-6">
                                             <div class="form-group mb-2 mb20">
                                                 <label for="imagen" class="form-label">{{ __('Evidencia (imagen)') }}</label>
-                                                <div class="custom-file">
-                                                    <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
-                                                    <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>
-                                                </div>                                                {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
+                                                <input type="file" accept="image/*" name="imagen" class="form-control @error('imagen') is-invalid @enderror" id="imagen">
+                                                {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
                                                 <div class="mt-2">
                                                     <img id="tx-preview-eval-imagen" src="" alt="Evidencia seleccionada" style="max-height:120px; display:none;">
                                                 </div>
@@ -140,24 +138,6 @@
                                                 <label for="diagnostico" class="form-label">{{ __('Diagnóstico') }}</label>
                                                 <textarea name="diagnostico" id="diagnostico" class="form-control @error('diagnostico') is-invalid @enderror" rows="2">{{ old('diagnostico') }}</textarea>
                                                 {!! $errors->first('diagnostico', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2 mb20">
-                                                <label class="form-label d-block">{{ __('¿Apto para traslado inmediato?') }} <span class="text-danger">*</span></label>
-                                                <div class="icheck-primary d-inline mr-3">
-                                                    <input type="radio" id="apto_si" name="apto_traslado" value="si" {{ old('apto_traslado')==='si'?'checked':'' }} required>
-                                                    <label for="apto_si">{{ __('Sí') }}</label>
-                                                </div>
-                                                <div class="icheck-primary d-inline mr-3">
-                                                    <input type="radio" id="apto_no" name="apto_traslado" value="no" {{ old('apto_traslado')==='no'?'checked':'' }}>
-                                                    <label for="apto_no">{{ __('No') }}</label>
-                                                </div>
-                                                <div class="icheck-primary d-inline">
-                                                    <input type="radio" id="apto_restr" name="apto_traslado" value="con_restricciones" {{ old('apto_traslado')==='con_restricciones'?'checked':'' }}>
-                                                    <label for="apto_restr">{{ __('Con restricciones') }}</label>
-                                                </div>
-                                                {!! $errors->first('apto_traslado', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
                                             </div>
                                         </div>
                                     </div>
@@ -205,15 +185,25 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
-                                                   
+                                                    <div class="form-group mb-2 mb20">
+                                                        <label class="form-label d-block">{{ __('¿Apto para traslado inmediato?') }}</label>
+                                                        <div class="icheck-primary d-inline mr-3">
+                                                            <input type="radio" id="apto_si" name="apto_traslado" value="si" {{ old('apto_traslado')==='si'?'checked':'' }}>
+                                                            <label for="apto_si">{{ __('Sí') }}</label>
+                                                        </div>
+                                                        <div class="icheck-primary d-inline mr-3">
+                                                            <input type="radio" id="apto_no" name="apto_traslado" value="no" {{ old('apto_traslado')==='no'?'checked':'' }}>
+                                                            <label for="apto_no">{{ __('No') }}</label>
+                                                        </div>
+                                                        <div class="icheck-primary d-inline">
+                                                            <input type="radio" id="apto_restr" name="apto_traslado" value="con_restricciones" {{ old('apto_traslado')==='con_restricciones'?'checked':'' }}>
+                                                            <label for="apto_restr">{{ __('Con restricciones') }}</label>
+                                                        </div>
+                                                        {!! $errors->first('apto_traslado', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <button type="submit" class="btn btn-primary mr-2">{{ __('Guardar transacción') }}</button>
-                                        <button type="button" class="btn btn-secondary" onclick="window.history.back();">{{ __('Cancelar') }}</button>
                                     </div>
 
                                     </div> {{-- end step2 --}}
@@ -243,6 +233,7 @@
                                       function updateVetHint(){
                                         const opt = vetSel?.selectedOptions?.[0];
                                         const esp = opt ? (opt.getAttribute('data-especialidad') || '') : '';
+                                        if (vetHint) vetHint.textContent = esp ? ('Especialidad: ' + esp) : '';
                                       }
                                       vetSel?.addEventListener('change', updateVetHint);
                                       updateVetHint();
@@ -265,7 +256,7 @@
                                           const dd = String(d.getDate()).padStart(2,'0');
                                           const mm = String(d.getMonth()+1).padStart(2,'0');
                                           const yy = String(d.getFullYear());
-                                          return `${dd}-${mm}-${yy}`;
+                                          return `${dd}/${mm}/${yy}`;
                                         } catch(e){ return dStr || ''; }
                                       }
                                       function applyMeta(id){
@@ -350,6 +341,9 @@
                                     <!-- Observaciones: no necesarias en transaccional -->
                                 </div> {{-- /.col-12 --}}
 
+                                <div class="col-md-12 mt20 mt-2">
+                                    <button type="submit" class="btn btn-primary">{{ __('Guardar transacción') }}</button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -358,7 +352,6 @@
         </div>
     </section>
     @include('partials.page-pad')
-    @include('partials.custom-file')
     <style>.af-card.active{ border:2px solid #28a745; box-shadow:0 0 0 2px rgba(40,167,69,.25); }</style>
 @endsection
 
