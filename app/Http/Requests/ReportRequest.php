@@ -21,24 +21,27 @@ class ReportRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isUpdate = in_array($this->method(), ['PUT', 'PATCH']);
         $rules = [
-			// persona_id and aprobado are set server-side
-			'cantidad_animales' => 'nullable|integer|min:1',
-			'imagen' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
-			'observaciones' => 'nullable|string',
-			'latitud' => 'required|numeric',
-			'longitud' => 'required|numeric',
-			'direccion' => 'nullable|string',
+            // persona_id and aprobado are set server-side (aprobado solo en update)
+            'cantidad_animales' => 'nullable|integer|min:1',
+            'imagen' => ($isUpdate ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'observaciones' => 'nullable|string',
+            // ubicación solo se exige en creación
+            'latitud' => $isUpdate ? 'nullable|numeric' : 'required|numeric',
+            'longitud' => $isUpdate ? 'nullable|numeric' : 'required|numeric',
+            'direccion' => 'nullable|string',
             // nuevos campos parametrizables
             'condicion_inicial_id' => 'required|exists:animal_conditions,id',
             'tipo_incidente_id' => 'required|exists:incident_types,id',
             'tamano' => 'required|in:pequeno,mediano,grande',
             'puede_moverse' => 'required|boolean',
-            'traslado_inmediato' => 'nullable|boolean',
-            'centro_id' => 'nullable|exists:centers,id|required_if:traslado_inmediato,1',
+            // traslado_inmediato y centro solo aplican al crear
+            'traslado_inmediato' => $isUpdate ? 'nullable' : 'nullable|boolean',
+            'centro_id' => $isUpdate ? 'nullable' : 'nullable|exists:centers,id|required_if:traslado_inmediato,1',
         ];
 
-        if (in_array($this->method(), ['PUT','PATCH'])) {
+        if ($isUpdate) {
             $rules['aprobado'] = 'required|boolean';
         }
 

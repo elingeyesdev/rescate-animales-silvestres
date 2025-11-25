@@ -12,18 +12,22 @@
         </div>
     @endif
 
-    <div class="form-group mb-2">
-        <label for="tipo_id" class="form-label">{{ __('Tipo de Animal') }}</label>
-        <select name="tipo_id" id="tipo_id" class="form-control @error('tipo_id') is-invalid @enderror">
-            <option value="">Seleccione</option>
-            @foreach(($animalTypes ?? []) as $t)
-                @if(!Str::contains(mb_strtolower($t->nombre), 'domést'))
-                    <option value="{{ $t->id }}" {{ (string)old('tipo_id', $animalFile?->tipo_id) === (string)$t->id ? 'selected' : '' }}>{{ $t->nombre }}</option>
-                @endif
-            @endforeach
-        </select>
-        {!! $errors->first('tipo_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-    </div>
+    @if(empty($hideType))
+        <div class="form-group mb-2">
+            <label for="tipo_id" class="form-label">{{ __('Tipo de Animal') }}</label>
+            <select name="tipo_id" id="tipo_id" class="form-control @error('tipo_id') is-invalid @enderror">
+                <option value="">Seleccione</option>
+                @foreach(($animalTypes ?? []) as $t)
+                    @if(!Str::contains(mb_strtolower($t->nombre), 'domést'))
+                        <option value="{{ $t->id }}" {{ (string)old('tipo_id', $animalFile?->tipo_id) === (string)$t->id ? 'selected' : '' }}>{{ $t->nombre }}</option>
+                    @endif
+                @endforeach
+            </select>
+            {!! $errors->first('tipo_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        </div>
+    @else
+        <input type="hidden" name="tipo_id" value="{{ $defaultTypeId ?? old('tipo_id', $animalFile?->tipo_id) }}">
+    @endif
 
     <div class="form-group mb-2">
         <label for="especie_id" class="form-label">{{ __('Especie') }}</label>
@@ -38,7 +42,10 @@
 
     <div class="form-group mb-2">
         <label for="imagen" class="form-label">{{ __('Imagen') }}</label>
-        <input type="file" accept="image/*" name="imagen" class="form-control @error('imagen') is-invalid @enderror" id="imagen">
+        <div class="custom-file">
+                <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
+                <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>
+            </div>
         {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
         @php($initialImg = !empty($animalFile?->imagen_url) ? asset('storage/' . $animalFile->imagen_url) : null)
         <div class="mt-2">
@@ -46,29 +53,33 @@
         </div>
     </div>
 
-    <div class="form-group mb-2">
-        <label for="raza_id" class="form-label">{{ __('Raza (Opcional)') }}</label>
-        <select name="raza_id" id="raza_id" class="form-control @error('raza_id') is-invalid @enderror">
-            <option value="">Seleccione especie primero</option>
-            @isset($breeds)
-                @foreach($breeds as $b)
-                    <option value="{{ $b->id }}" {{ (string)old('raza_id', $animalFile?->raza_id) === (string)$b->id ? 'selected' : '' }}>{{ $b->nombre }}</option>
-                @endforeach
-            @endisset
-        </select>
-        {!! $errors->first('raza_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-    </div>
+    @if(empty($hideBreed))
+        <div class="form-group mb-2">
+            <label for="raza_id" class="form-label">{{ __('Raza (Opcional)') }}</label>
+            <select name="raza_id" id="raza_id" class="form-control @error('raza_id') is-invalid @enderror">
+                <option value="">Seleccione especie primero</option>
+                @isset($breeds)
+                    @foreach($breeds as $b)
+                        <option value="{{ $b->id }}" {{ (string)old('raza_id', $animalFile?->raza_id) === (string)$b->id ? 'selected' : '' }}>{{ $b->nombre }}</option>
+                    @endforeach
+                @endisset
+            </select>
+            {!! $errors->first('raza_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        </div>
+    @endif
 
-    <div class="form-group mb-2">
-        <label for="estado_id" class="form-label">{{ __('Estado') }}</label>
-        <select name="estado_id" id="estado_id" class="form-control @error('estado_id') is-invalid @enderror">
-            <option value="">Seleccione</option>
-            @foreach(($animalStatuses ?? []) as $st)
-                <option value="{{ $st->id }}" {{ (string)old('estado_id', $animalFile?->estado_id) === (string)$st->id || ((!old('estado_id', $animalFile?->estado_id)) && empty($animalFile?->estado_id) && mb_strtolower($st->nombre) === 'en atención') ? 'selected' : '' }}>{{ $st->nombre }}</option>
-            @endforeach
-        </select>
-        {!! $errors->first('estado_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-    </div>
+    @if(empty($hideState))
+        <div class="form-group mb-2">
+            <label for="estado_id" class="form-label">{{ __('Estado') }}</label>
+            <select name="estado_id" id="estado_id" class="form-control @error('estado_id') is-invalid @enderror">
+                <option value="">Seleccione</option>
+                @foreach(($animalStatuses ?? []) as $st)
+                    <option value="{{ $st->id }}" {{ (string)old('estado_id', $animalFile?->estado_id) === (string)$st->id || ((!old('estado_id', $animalFile?->estado_id)) && empty($animalFile?->estado_id) && mb_strtolower($st->nombre) === 'en atención') ? 'selected' : '' }}>{{ $st->nombre }}</option>
+                @endforeach
+            </select>
+            {!! $errors->first('estado_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        </div>
+    @endif
 
     @if(($showSubmit ?? true))
         <div class="mt-2">
@@ -77,6 +88,7 @@
     @endif
 </div>
 
+@include('partials.custom-file')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const input = document.getElementById('imagen');
