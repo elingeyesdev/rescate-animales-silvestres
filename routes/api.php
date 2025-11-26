@@ -10,7 +10,8 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::apiResource('login', AuthApiController::class)->only(['store']);
-
-Route::apiResource('reports', ReportApiController::class);
-Route::apiResource('users', UserApiController::class);
+Route::name('api.')->group(function () {
+    Route::apiResource('login', AuthApiController::class)->only(['store']);
+    Route::apiResource('reports', ReportApiController::class);
+    Route::apiResource('users', UserApiController::class);
+});

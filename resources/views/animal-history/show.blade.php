@@ -10,15 +10,45 @@
             <div class="col-md-12">
                 <div class="card card-default">
                     <div class="card-header">
-                        <span class="card-title">{{ __('Detalle de Historial') }} #{{ $animalHistory->id }}</span>
+                        <span class="card-title">
+                            {{ __('Detalle de Historial') }}
+                            @if($animalHistory->animalFile?->animal?->nombre)
+                                {{ ' ' . __('de') . ' ' . $animalHistory->animalFile->animal->nombre }}
+                            @endif
+                        </span>
                     </div>
                     <div class="card-body bg-white">
-                        <div class="mb-3">
-                            <strong>Hoja de Animal:</strong> #{{ $animalHistory->animal_file_id }}
+                        @php
+                            $af = $animalHistory->animalFile;
+                            $animal = $af?->animal;
+                            $statusName = $af?->animalStatus?->nombre ?? '-';
+                            $animalName = $animal?->nombre ?? '-';
+                            $report = $animal?->report ?? null;
+                            $reportDate = optional($report?->created_at)->format('d/m/Y');
+                            $arrivalImg = $report?->imagen_url;
+                        @endphp
+                        <div class="sticky-summary d-flex align-items-center mb-3 p-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center">
+                                    <h4 class="mb-0 mr-3">{{ $animalName !== '-' ? $animalName : __('Detalle de Historial') }}</h4>
+                                    @if($statusName && $statusName !== '-')
+                                        <span class="badge badge-info" style="font-size:0.95rem;">{{ $statusName }}</span>
+                                    @endif
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    {{ __('Hoja') }} #{{ $animalHistory->animal_file_id }}
+                                    @if($reportDate)
+                                        · {{ __('Reporte') }}: {{ $reportDate }}
+                                    @endif
+                                </div>
+                            </div>
+                            @if($arrivalImg)
+                                <div class="ml-3">
+                                    <img src="{{ asset('storage/' . $arrivalImg) }}" alt="Llegada" style="max-height:96px; border-radius:6px;">
+                                </div>
+                            @endif
                         </div>
-                        <div class="mb-3">
-                            <strong>Animal:</strong> {{ $animalHistory->animalFile?->animal?->nombre ?? '-' }}
-                        </div>
+                        
                         <div class="timeline">
                             @php $currentDate = null; @endphp
                             @foreach(($timeline ?? []) as $t)
@@ -103,6 +133,17 @@
         </div>
     </section>
     @include('partials.page-pad')
+    <style>
+        .sticky-summary{
+            position: sticky;
+            top: 0;
+            z-index: 1020; /* above body content */
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,.05);
+        }
+    </style>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const overlay = document.getElementById('imageOverlay');

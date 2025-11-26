@@ -29,7 +29,9 @@ class AnimalHistoryTimelineService
 	 */
 	public function latestPerAnimalFile(int $perPage = 20): LengthAwarePaginator
 	{
-		$latestIds = AnimalHistory::select(DB::raw('MAX(id) as id'))
+        // Excluir historiales sin hoja de animal
+		$latestIds = AnimalHistory::whereNotNull('animal_file_id')
+            ->select(DB::raw('MAX(id) as id'))
 			->groupBy('animal_file_id')
 			->pluck('id');
 
@@ -41,7 +43,9 @@ class AnimalHistoryTimelineService
 
 	public function latestPerAnimalFileOrdered(string $order = 'desc', int $perPage = 20): LengthAwarePaginator
 	{
-		$latestIds = AnimalHistory::select(DB::raw('MAX(id) as id'))
+        // Excluir historiales sin hoja de animal
+		$latestIds = AnimalHistory::whereNotNull('animal_file_id')
+            ->select(DB::raw('MAX(id) as id'))
 			->groupBy('animal_file_id')
 			->pluck('id');
 
@@ -110,12 +114,12 @@ class AnimalHistoryTimelineService
                 $condText = null;
                 if (!empty($rp['condicion_inicial_id'])) {
                     $condModel = \App\Models\AnimalCondition::find($rp['condicion_inicial_id']);
-                    $condText = $condModel?->nombre ?? ('#'.$rp['condicion_inicial_id']);
+                    $condText = $condModel?->nombre;
                 }
                 $incText = null;
                 if (!empty($rp['tipo_incidente_id'])) {
                     $incModel = \App\Models\IncidentType::find($rp['tipo_incidente_id']);
-                    $incText = $incModel?->nombre ?? ('#'.$rp['tipo_incidente_id']);
+                    $incText = $incModel?->nombre;
                 }
 				$item['details'][] = [
 					'label' => 'Detalle',
@@ -123,8 +127,6 @@ class AnimalHistoryTimelineService
 						isset($rp['id']) ? ('#'.$rp['id']) : null,
 						$personName ? ('Reportado por: '.$personName) : null,
 						!empty($rp['direccion']) ? ('Dirección: '.$rp['direccion']) : null,
-						(isset($rp['latitud']) && isset($rp['longitud'])) ? ('GPS: '.$rp['latitud'].','.$rp['longitud']) : null,
-                        !empty($rp['cantidad_animales']) ? ('Cantidad aprox: '.$rp['cantidad_animales']) : null,
 					])),
 				];
                 if ($condText) {
@@ -148,8 +150,8 @@ class AnimalHistoryTimelineService
 			// Cambio de estado
 			if (!empty($new['estado'])) {
 				$item['title'] = 'Cambio de estado';
-				$oldName = isset($old['estado']['id']) ? ($statuses[$old['estado']['id']]->nombre ?? ('#'.$old['estado']['id'])) : ($old['estado']['nombre'] ?? null);
-				$newName = isset($new['estado']['id']) ? ($statuses[$new['estado']['id']]->nombre ?? ('#'.$new['estado']['id'])) : ($new['estado']['nombre'] ?? null);
+				$oldName = isset($old['estado']['id']) ? ($statuses[$old['estado']['id']]->nombre) : ($old['estado']['nombre'] ?? null);
+				$newName = isset($new['estado']['id']) ? ($statuses[$new['estado']['id']]->nombre) : ($new['estado']['nombre'] ?? null);
 				$item['details'][] = [
 					'label' => 'Detalle',
 					'value' => trim(($oldName ? $oldName.' → ' : '') . ($newName ?? '')),
@@ -170,7 +172,7 @@ class AnimalHistoryTimelineService
 					}
 				}
 				$item['details'][] = [
-					'label' => 'Detalle',
+					'label' => 'Información',
 					'value' => implode(' | ', array_filter([
 						$trat ? ('Tratamiento: '.$trat) : null,
 						$vet ? ('Veterinario: '.$vet) : null,
@@ -215,7 +217,7 @@ class AnimalHistoryTimelineService
 					$portion = $p ? ($p->cantidad.' '.$p->unidad) : ('#'.$cf['feeding_portion_id']);
 				}
 				$item['details'][] = [
-					'label' => 'Detalle',
+					'label' => 'Información',
 					'value' => implode(' | ', array_filter([
 						$tipo ? ('Tipo: '.$tipo) : null,
 						$freq ? ('Frecuencia: '.$freq) : null,
@@ -231,7 +233,7 @@ class AnimalHistoryTimelineService
 				$personName = isset($tr['persona_id']) ? (Person::find($tr['persona_id'])->nombre ?? ('#'.$tr['persona_id'])) : null;
 				$centerName = isset($tr['centro_id']) ? (Center::find($tr['centro_id'])->nombre ?? ('#'.$tr['centro_id'])) : null;
 				$item['details'][] = [
-					'label' => 'Detalle',
+					'label' => 'Información',
 					'value' => implode(' | ', array_filter([
 						$personName ? ('Persona: '.$personName) : null,
 						$centerName ? ('Centro: '.$centerName) : null,

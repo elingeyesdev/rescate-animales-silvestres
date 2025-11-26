@@ -14,6 +14,16 @@
                         <span class="card-title">{{ __('Create') }} {{ __('Report') }}</span>
                     </div>
                     <div class="card-body bg-white">
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <div class="font-weight-bold mb-1">{{ __('No se pudo registrar el hallazgo. Revisa los errores:') }}</div>
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                         <form method="POST" action="{{ route('reports.store') }}"  role="form" enctype="multipart/form-data">
                             @csrf
 

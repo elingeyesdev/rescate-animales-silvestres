@@ -40,6 +40,12 @@ class AnimalFileController extends Controller
         $animalStatuses = AnimalStatus::orderBy('nombre')->get(['id','nombre']);
         $animals = Animal::orderByDesc('id')->get(['id','nombre']);
 
+        // Preseleccionar tipo "Silvestre" si existe
+        $defaultTypeId = $animalTypes->firstWhere('nombre', 'Silvestre')?->id;
+        if ($defaultTypeId && empty($animalFile->tipo_id)) {
+            $animalFile->tipo_id = $defaultTypeId;
+        }
+
         return view('animal-file.create', compact('animalFile','animalTypes','species','animalStatuses','animals'));
     }
 

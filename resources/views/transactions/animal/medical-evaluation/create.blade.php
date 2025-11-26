@@ -121,7 +121,10 @@
                                         <div class="col-md-6">
                                             <div class="form-group mb-2 mb20">
                                                 <label for="imagen" class="form-label">{{ __('Evidencia (imagen)') }}</label>
-                                                <input type="file" accept="image/*" name="imagen" class="form-control @error('imagen') is-invalid @enderror" id="imagen">
+                                                <div class="custom-file">
+                                                    <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
+                                                    <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>
+                                                </div>
                                                 {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
                                                 <div class="mt-2">
                                                     <img id="tx-preview-eval-imagen" src="" alt="Evidencia seleccionada" style="max-height:120px; display:none;">
@@ -138,6 +141,24 @@
                                                 <label for="diagnostico" class="form-label">{{ __('Diagnóstico') }}</label>
                                                 <textarea name="diagnostico" id="diagnostico" class="form-control @error('diagnostico') is-invalid @enderror" rows="2">{{ old('diagnostico') }}</textarea>
                                                 {!! $errors->first('diagnostico', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-2 mb20">
+                                                <label class="form-label d-block">{{ __('¿Apto para traslado inmediato?') }}</label>
+                                                <div class="icheck-primary d-inline mr-3">
+                                                    <input type="radio" id="apto_si" name="apto_traslado" value="si" {{ old('apto_traslado')==='si'?'checked':'' }}>
+                                                    <label for="apto_si">{{ __('Sí') }}</label>
+                                                </div>
+                                                <div class="icheck-primary d-inline mr-3">
+                                                    <input type="radio" id="apto_no" name="apto_traslado" value="no" {{ old('apto_traslado')==='no'?'checked':'' }}>
+                                                    <label for="apto_no">{{ __('No') }}</label>
+                                                </div>
+                                                <div class="icheck-primary d-inline">
+                                                    <input type="radio" id="apto_restr" name="apto_traslado" value="con_restricciones" {{ old('apto_traslado')==='con_restricciones'?'checked':'' }}>
+                                                    <label for="apto_restr">{{ __('Con restricciones') }}</label>
+                                                </div>
+                                                {!! $errors->first('apto_traslado', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
                                             </div>
                                         </div>
                                     </div>
@@ -184,24 +205,7 @@
                                                         {!! $errors->first('recomendacion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                                     </div>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group mb-2 mb20">
-                                                        <label class="form-label d-block">{{ __('¿Apto para traslado inmediato?') }}</label>
-                                                        <div class="icheck-primary d-inline mr-3">
-                                                            <input type="radio" id="apto_si" name="apto_traslado" value="si" {{ old('apto_traslado')==='si'?'checked':'' }}>
-                                                            <label for="apto_si">{{ __('Sí') }}</label>
-                                                        </div>
-                                                        <div class="icheck-primary d-inline mr-3">
-                                                            <input type="radio" id="apto_no" name="apto_traslado" value="no" {{ old('apto_traslado')==='no'?'checked':'' }}>
-                                                            <label for="apto_no">{{ __('No') }}</label>
-                                                        </div>
-                                                        <div class="icheck-primary d-inline">
-                                                            <input type="radio" id="apto_restr" name="apto_traslado" value="con_restricciones" {{ old('apto_traslado')==='con_restricciones'?'checked':'' }}>
-                                                            <label for="apto_restr">{{ __('Con restricciones') }}</label>
-                                                        </div>
-                                                        {!! $errors->first('apto_traslado', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
-                                                    </div>
-                                                </div>
+                                               
                                             </div>
                                         </div>
                                     </div>
@@ -248,6 +252,7 @@
                                       const headerStatus = document.getElementById('header_current_status');
                                       const headerLast = document.getElementById('header_last_update');
                                       const lastEvalsCont = document.getElementById('last_evals_container');
+                                      const submitWrap = document.getElementById('submit_wrap');
                                       const afMeta = @json($afMeta);
                                       const lastData = @json($lastDataByAnimalFile ?? []);
                                       function formatDateYmd(dStr){
@@ -318,13 +323,21 @@
                                           if (btnNext) btnNext.disabled = false;
                                         });
                                       });
+                                      function revealStep2(){
+                                        if (step2) step2.style.display = '';
+                                        if (submitWrap) submitWrap.style.display = '';
+                                      }
                                       btnNext?.addEventListener('click', function(){
                                         if (!hiddenId?.value) return;
-                                        step2.style.display = '';
+                                        revealStep2();
                                         this.disabled = true;
                                         this.textContent = '{{ __('Seleccionado') }}';
                                         step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                       });
+                                      // Mostrar paso 2 automáticamente si ya venimos con animal_file_id (post-validación)
+                                      if (hiddenId && hiddenId.value) {
+                                        revealStep2();
+                                      }
                                     });
                                     </script>
                                     <script>
@@ -341,7 +354,7 @@
                                     <!-- Observaciones: no necesarias en transaccional -->
                                 </div> {{-- /.col-12 --}}
 
-                                <div class="col-md-12 mt20 mt-2">
+                                <div class="col-md-12 mt20 mt-2" id="submit_wrap" style="display:none;">
                                     <button type="submit" class="btn btn-primary">{{ __('Guardar transacción') }}</button>
                                 </div>
                             </div>
@@ -351,6 +364,7 @@
             </div>
         </div>
     </section>
+    @include('partials.custom-file')
     @include('partials.page-pad')
     <style>.af-card.active{ border:2px solid #28a745; box-shadow:0 0 0 2px rgba(40,167,69,.25); }</style>
 @endsection

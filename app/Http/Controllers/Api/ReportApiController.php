@@ -80,7 +80,7 @@ class ReportApiController extends Controller
                 'imagen_url' => $report->imagen_url,
             ],
         ];
-        $hist->observaciones = ['texto' => $report->observaciones ?? 'Registro de reporte'];
+        $hist->observaciones = ['texto' => $report->observaciones ?? 'Registro de Hallazgo'];
         $hist->changed_at = $report->created_at;
         $hist->save();
 

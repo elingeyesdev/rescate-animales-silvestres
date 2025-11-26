@@ -49,25 +49,34 @@ class TransferController extends Controller
             ]);
         }
 
+        $tab = $request->string('tab')->toString() ?: 'first';
         $transfers = Transfer::with(['person','center'])->paginate();
-        // Datos para UI de operaciones en la misma ruta
-        $firstReportIds = Transfer::where('primer_traslado', true)
-            ->whereNotNull('reporte_id')
-            ->pluck('reporte_id')
-            ->all();
-        $reportsFirst = Report::with(['person','condicionInicial'])
-            ->where('aprobado', true)
-            ->when(!empty($firstReportIds), fn($q) => $q->whereNotIn('id', $firstReportIds))
-            ->orderByDesc('id')
-            ->take(12)
-            ->get(['id','persona_id','condicion_inicial_id','aprobado','created_at','direccion','imagen_url']);
         $centers = Center::orderBy('nombre')->get(['id','nombre','latitud','longitud']);
         $people = Person::orderBy('nombre')->get(['id','nombre']);
-        $animals = Animal::orderByDesc('id')->get(['id','nombre']);
-        $animalFiles = \App\Models\AnimalFile::with(['animal:id,nombre'])->orderByDesc('id')->get(['id','animal_id','imagen_url']);
+
+        // Preparar datos SOLO para la pestaña activa
+        $reportsFirst = collect();
+        $animalFiles = collect();
+        if ($tab === 'first') {
+            $firstReportIds = Transfer::where('primer_traslado', true)
+                ->whereNotNull('reporte_id')
+                ->pluck('reporte_id')
+                ->all();
+            $reportsWithAnimal = Animal::whereNotNull('reporte_id')->pluck('reporte_id')->all();
+            $reportsFirst = Report::with(['person','condicionInicial'])
+                ->where('aprobado', true)
+                ->when(!empty($firstReportIds), fn($q) => $q->whereNotIn('id', $firstReportIds))
+                ->when(!empty($reportsWithAnimal), fn($q) => $q->whereNotIn('id', $reportsWithAnimal))
+                ->orderByDesc('id')
+                ->take(12)
+                ->get(['id','persona_id','condicion_inicial_id','aprobado','created_at','direccion','imagen_url']);
+        } elseif ($tab === 'internal') {
+            $animalFiles = \App\Models\AnimalFile::with(['animal:id,nombre'])
+                ->orderByDesc('id')->get(['id','animal_id','imagen_url']);
+        }
         $transfer = new Transfer();
 
-        return view('transfer.index', compact('transfers','reportsFirst','centers','people','animals','animalFiles','transfer'))
+        return view('transfer.index', compact('transfers','reportsFirst','centers','people','animalFiles','transfer','tab'))
             ->with('i', ($request->input('page', 1) - 1) * $transfers->perPage());
     }
 

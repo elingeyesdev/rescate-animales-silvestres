@@ -92,67 +92,78 @@ class ReportController extends Controller
      */
     public function store(ReportRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        try {
+            $data = $request->validated();
 
-        // Attach current user's person id
-        $personId = Person::where('usuario_id', Auth::id())->value('id');
-        $data['persona_id'] = $personId;
-        $data['aprobado'] = 0;
-        // Default cantidad if not provided
-        if (empty($data['cantidad_animales'])) {
-            $data['cantidad_animales'] = 1;
-        }
+            // Persona del usuario autenticado (obligatoria para guardar)
+            $personId = Person::where('usuario_id', Auth::id())->value('id');
+            if (empty($personId)) {
+                return Redirect::back()
+                    ->withInput()
+                    ->withErrors(['persona_id' => 'Tu usuario no está vinculado a una persona. Comunícate con el administrador.']);
+            }
+            $data['persona_id'] = $personId;
+            $data['aprobado'] = 0;
+            // Default cantidad si no viene
+            if (empty($data['cantidad_animales'])) {
+                $data['cantidad_animales'] = 1;
+            }
 
-        if ($request->hasFile('imagen')) {
-            $path = $request->file('imagen')->store('reports', 'public');
-            $data['imagen_url'] = $path;
-        }
-        // Calcular urgencia
-        $data['urgencia'] = $this->urgencyService->compute($data);
+            if ($request->hasFile('imagen')) {
+                $path = $request->file('imagen')->store('reports', 'public');
+                $data['imagen_url'] = $path;
+            }
+            // Calcular urgencia
+            $data['urgencia'] = $this->urgencyService->compute($data);
 
-        $report = Report::create($data);
+            $report = Report::create($data);
 
-        // Registrar evento de reporte en el historial (sin hoja)
-        $hist = new AnimalHistory();
-        $hist->animal_file_id = null;
-        $hist->valores_antiguos = null;
-        $hist->valores_nuevos = [
-            'report' => [
-                'id' => $report->id,
-                'persona_id' => $report->persona_id,
-                'direccion' => $report->direccion,
-                'latitud' => $report->latitud,
-                'longitud' => $report->longitud,
-                'condicion_inicial_id' => $report->condicion_inicial_id,
-                'tipo_incidente_id' => $report->tipo_incidente_id,
-                'tamano' => $report->tamano,
-                'puede_moverse' => $report->puede_moverse,
-                'urgencia' => $report->urgencia,
-                'cantidad_animales' => $report->cantidad_animales,
-                'imagen_url' => $report->imagen_url,
-            ],
-        ];
-        $hist->observaciones = ['texto' => $report->observaciones ?? 'Registro de reporte'];
-        $hist->changed_at = $report->created_at;
-        $hist->save();
-
-        // Si se marcó traslado inmediato, registrar primer traslado (sin hoja)
-        if ($request->boolean('traslado_inmediato')) {
-            $tData = [
-                'persona_id' => $report->persona_id,
-                'centro_id' => $request->input('centro_id'),
-                'observaciones' => $report->observaciones,
-                'primer_traslado' => true,
-                'animal_id' => null,
-                'latitud' => $report->latitud,
-                'longitud' => $report->longitud,
-                'reporte_id' => $report->id,
+            // Registrar evento de reporte en el historial (sin hoja)
+            $hist = new AnimalHistory();
+            $hist->animal_file_id = null;
+            $hist->valores_antiguos = null;
+            $hist->valores_nuevos = [
+                'report' => [
+                    'id' => $report->id,
+                    'persona_id' => $report->persona_id,
+                    'direccion' => $report->direccion,
+                    'latitud' => $report->latitud,
+                    'longitud' => $report->longitud,
+                    'condicion_inicial_id' => $report->condicion_inicial_id,
+                    'tipo_incidente_id' => $report->tipo_incidente_id,
+                    'tamano' => $report->tamano,
+                    'puede_moverse' => $report->puede_moverse,
+                    'urgencia' => $report->urgencia,
+                    'cantidad_animales' => $report->cantidad_animales,
+                    'imagen_url' => $report->imagen_url,
+                ],
             ];
-            $this->transferService->create($tData);
-        }
+            $hist->observaciones = ['texto' => $report->observaciones ?? 'Registro de hallazgo'];
+            $hist->changed_at = $report->created_at;
+            $hist->save();
 
-        return Redirect::route('reports.index')
-            ->with('success', 'El hallazgo se registró correctamente.');
+            // Si se marcó traslado inmediato, registrar primer traslado (sin hoja)
+            if ($request->boolean('traslado_inmediato')) {
+                $tData = [
+                    'persona_id' => $report->persona_id,
+                    'centro_id' => $request->input('centro_id'),
+                    'observaciones' => $report->observaciones,
+                    'primer_traslado' => true,
+                    'animal_id' => null,
+                    'latitud' => $report->latitud,
+                    'longitud' => $report->longitud,
+                    'reporte_id' => $report->id,
+                ];
+                $this->transferService->create($tData);
+            }
+
+            return Redirect::route('reports.index')
+                ->with('success', 'El hallazgo se registró correctamente.');
+        } catch (\Throwable $e) {
+            return Redirect::back()
+                ->withInput()
+                ->withErrors(['general' => 'No se pudo registrar el hallazgo: ' . $e->getMessage()]);
+        }
     }
 
     /**

@@ -26,10 +26,7 @@
             <input type="hidden" name="animal_id" id="animal_id" value="{{ old('animal_id', $transfer?->animal_id) }}">
         </div>
 
-        <div class="form-group mb-2 mb20" id="current_center_wrap" style="display:none;">
-            <label class="form-label">{{ __('Centro actual del animal') }}</label>
-            <div id="current_center_name" class="form-control-plaintext"></div>
-        </div>
+        
 
         <div class="form-group mb-2 mb20" id="centers_map_wrap" style="display:none;">
             <label class="form-label">{{ __('Seleccione el centro de destino en el mapa') }}</label>

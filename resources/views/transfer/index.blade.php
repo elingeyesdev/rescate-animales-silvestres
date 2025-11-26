@@ -32,16 +32,17 @@
                     <div class="card-body bg-white">
                         <ul class="nav nav-pills mb-3" id="transferTabs" role="tablist">
                             <li class="nav-item">
-                                <a class="nav-link active" id="first-tab" data-toggle="tab" href="#first" role="tab">{{ __('Primer traslado') }}</a>
+                                <a class="nav-link {{ ($tab ?? 'first')==='first' ? 'active' : '' }}" id="first-tab" href="{{ route('transfers.index', ['tab' => 'first']) }}" role="tab">{{ __('Primer traslado') }}</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" id="internal-tab" data-toggle="tab" href="#internal" role="tab">{{ __('Traslado entre centros') }}</a>
+                                <a class="nav-link {{ ($tab ?? 'first')==='internal' ? 'active' : '' }}" id="internal-tab" href="{{ route('transfers.index', ['tab' => 'internal']) }}" role="tab">{{ __('Traslado entre centros') }}</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" id="history-tab" data-toggle="tab" href="#history" role="tab">{{ __('Historial') }}</a>
                             </li>
                         </ul>
                         <div class="tab-content">
+                            @if(($tab ?? 'first')==='first')
                             <div class="tab-pane fade show active" id="first" role="tabpanel" aria-labelledby="first-tab">
                                 <div class="row">
                                     <div class="col-md-6" id="reports_list">
@@ -59,41 +60,37 @@
                                                         $prov = null;
                                                         if (preg_match('/Provincia\\s+([^,]+)/i', $dirRaw, $m)) { $prov = $m[1]; }
                                                     @endphp
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            @if($report->imagen_url)
-                                                                <div class="mb-2">
-                                                                    <img src="{{ asset('storage/' . $report->imagen_url) }}" alt="img" style="max-height:160px; border-radius:4px;">
-                                                                </div>
-                                                            @endif
-                                                            <div class="mb-2">
-                                                                <strong>{{ __('Dirección') }}:</strong> {{ $dirNoCountry ?: '-' }}
-                                                            </div>
-                                                            <div class="mb-2">
-                                                                <strong>{{ __('Provincia') }}:</strong> {{ $prov ?: '-' }}
-                                                            </div>
-                                                            <div class="mb-2">
-                                                                <strong>{{ __('Condición') }}:</strong> {{ $report->condicionInicial?->nombre ?? '-' }}
-                                                            </div>
-                                                            <form method="POST" action="{{ route('transfers.store') }}">
-                                                                @csrf
-                                                                <input type="hidden" name="report_id" value="{{ $report->id }}">
-                                                                <div class="form-group mb-2 mb20">
-                                                                    <label for="persona_r{{ $report->id }}" class="form-label">{{ __('Persona que traslada') }}</label>
-                                                                    <select name="persona_id" id="persona_r{{ $report->id }}" class="form-control js-person-select" data-report-id="{{ $report->id }}">
-                                                                        <option value="">{{ __('Seleccione') }}</option>
-                                                                        @foreach(($people ?? []) as $p)
-                                                                            <option value="{{ $p->id }}">{{ $p->nombre }}</option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </div>
-                                                                <button type="submit" class="btn btn-primary mt-2">
-                                                                    {{ __('Enviar a centro') }}
-                                                                </button>
-                                                                <input type="hidden" name="centro_id" id="centro_r{{ $report->id }}">
-                                                            </form>
+                                                    @if($report->imagen_url)
+                                                        <div class="mb-2">
+                                                            <img src="{{ asset('storage/' . $report->imagen_url) }}" alt="img" style="width:100%; max-height:220px; object-fit:cover; border-radius:4px;">
                                                         </div>
+                                                    @endif
+                                                    <div class="mb-2">
+                                                        <strong>{{ __('Dirección') }}:</strong> {{ $dirNoCountry ?: '-' }}
                                                     </div>
+                                                    <div class="mb-2">
+                                                        <strong>{{ __('Provincia') }}:</strong> {{ $prov ?: '-' }}
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <strong>{{ __('Condición') }}:</strong> {{ $report->condicionInicial?->nombre ?? '-' }}
+                                                    </div>
+                                                    <form method="POST" action="{{ route('transfers.store') }}">
+                                                        @csrf
+                                                        <input type="hidden" name="report_id" value="{{ $report->id }}">
+                                                        <div class="form-group mb-2 mb20">
+                                                            <label for="persona_r{{ $report->id }}" class="form-label">{{ __('Persona que traslada') }}</label>
+                                                            <select name="persona_id" id="persona_r{{ $report->id }}" class="form-control js-person-select" data-report-id="{{ $report->id }}">
+                                                                <option value="">{{ __('Seleccione') }}</option>
+                                                                @foreach(($people ?? []) as $p)
+                                                                    <option value="{{ $p->id }}">{{ $p->nombre }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <button type="submit" class="btn btn-primary mt-2">
+                                                            {{ __('Enviar a centro') }}
+                                                        </button>
+                                                        <input type="hidden" name="centro_id" id="centro_r{{ $report->id }}">
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
@@ -110,11 +107,12 @@
                                         <label class="form-label d-block mb-1">{{ __('Seleccione el centro de destino en el mapa') }}</label>
                                         <small class="text-muted d-block mb-2">{{ __('Haga clic en un centro o en su nombre en la lista para seleccionarlo') }}</small>
                                         <div id="centers_map_first" style="height: 360px; border-radius: 4px; margin-bottom: 8px;"></div>
-                                        <div id="centers_legend_first" class="small text-muted"></div
+                                        <div id="centers_legend_first" class="small text-muted"></div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="tab-pane fade" id="internal" role="tabpanel" aria-labelledby="internal-tab">
+                            @elseif(($tab ?? 'first')==='internal')
+                            <div class="tab-pane fade show active" id="internal" role="tabpanel" aria-labelledby="internal-tab">
                                 <div class="row">
                                     <div class="col-md-6" id="internal_list">
                                         @forelse(($animalFiles ?? []) as $af)
@@ -142,6 +140,7 @@
                                             <input type="hidden" name="animal_file_id" id="internal_af_hidden">
                                             <input type="hidden" name="animal_id" id="internal_animal_hidden">
                                             <input type="hidden" name="centro_id" id="centro_internal">
+                                            
                                             <div class="form-group mb-2 mb20">
                                                 <label for="persona_internal" class="form-label">{{ __('Persona que traslada') }}</label>
                                                 <select name="persona_id" id="persona_internal" class="form-control">
@@ -151,10 +150,7 @@
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="form-group mb-2 mb20">
-                                                <label class="form-label">{{ __('Centro actual') }}</label>
-                                                <div id="internal_current_center" class="form-control-plaintext">-</div>
-                                            </div>
+                                            
                                             <label class="form-label">{{ __('Seleccione el centro de destino en el mapa') }}</label>
                                             <div id="centers_map_internal" style="height: 360px; border-radius: 4px; margin-bottom: 8px;"></div>
                                             <div id="centers_legend_internal" class="small text-muted"></div>
@@ -163,6 +159,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
                             <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
                                 <div class="table-responsive">
                                     <table class="table table-striped table-hover">
@@ -289,6 +286,7 @@
             return map;
         }
         // Mostrar mapa a la derecha y ocultar otras cards cuando se elige persona en cada card
+        @if(($tab ?? 'first')==='first')
         (function initFirstTransferMaps(){
             const peopleSelects = document.querySelectorAll('[id^="persona_r"]');
             peopleSelects.forEach(sel => {
@@ -335,8 +333,10 @@
                 });
             });
         })();
+        @endif
 
         // Interacciones para traslado entre centros
+        @if(($tab ?? 'first')==='internal')
         (function initInternalTransfer(){
             const list = document.getElementById('internal_list');
             const panel = document.getElementById('internal_map_panel');
@@ -390,6 +390,9 @@
                 document.querySelectorAll('.internal-af-card').forEach(c => c.style.display = '');
             });
         })();
+        @endif
+
+        // Navegación server-side por pestañas: no necesitamos resets adicionales
     });
     </script>
     @include('partials.page-pad')
