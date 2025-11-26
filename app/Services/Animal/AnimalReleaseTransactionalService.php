@@ -49,6 +49,7 @@ class AnimalReleaseTransactionalService
 				'observaciones' => [
 					'texto' => 'Registro de liberación',
 				],
+                'changed_at' => $release->created_at,
 			]);
 
 			return $release;

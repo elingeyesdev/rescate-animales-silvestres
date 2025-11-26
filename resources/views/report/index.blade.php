@@ -126,7 +126,7 @@
                                         </div>
                                         <div class="card-body">
                                             <p class="mb-1"><strong>{{ __('Incidente:') }}</strong> {{ $report->incidentType?->nombre ?? '-' }}</p>
-                                            <p class="mb-1"><strong>{{ __('Reportante:') }}</strong> {{ $report->person?->nombre ?? '-' }}</p>
+                                            <!-- Se oculta Reportante según requerimiento -->
                                             <p class="mb-1"><strong>{{ __('Aprobado:') }}</strong> {{ (int)$report->aprobado === 1 ? __('Sí') : __('No') }}</p>
                                             <!--<p class="mb-1"><strong>{{ __('Tamaño:') }}</strong> {{ $report->tamano ?? '-' }}</p>
                                             <p class="mb-1"><strong>{{ __('¿Puede moverse?:') }}</strong> {{ is_null($report->puede_moverse) ? '-' : ($report->puede_moverse ? __('Sí') : __('No')) }}</p>-->

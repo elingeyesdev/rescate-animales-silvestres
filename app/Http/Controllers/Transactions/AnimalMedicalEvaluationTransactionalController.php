@@ -23,7 +23,11 @@ class AnimalMedicalEvaluationTransactionalController extends Controller
 
 	public function create(): View
 	{
-		$animalFiles = AnimalFile::with(['animal.report.person','animalStatus'])->orderByDesc('id')->get(['id','animal_id','estado_id','imagen_url']);
+		$animalFiles = AnimalFile::with(['animal.report.person','animalStatus'])
+            ->leftJoin('releases', 'releases.animal_file_id', '=', 'animal_files.id')
+            ->whereNull('releases.animal_file_id')
+            ->orderByDesc('animal_files.id')
+            ->get(['animal_files.id','animal_files.animal_id','animal_files.estado_id','animal_files.imagen_url']);
 		$treatmentTypes = TreatmentType::orderBy('nombre')->get(['id','nombre']);
 		$veterinarians = Veterinarian::with('person')->where('aprobado', true)->orderBy('id')->get();
 		$statuses = AnimalStatus::orderBy('nombre')->get(['id','nombre']);

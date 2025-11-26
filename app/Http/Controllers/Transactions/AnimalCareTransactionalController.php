@@ -21,7 +21,11 @@ class AnimalCareTransactionalController extends Controller
 
 	public function create(): View
 	{
-		$animalFiles = AnimalFile::with('animal')->orderByDesc('id')->get(['id','animal_id']);
+		$animalFiles = AnimalFile::with('animal')
+            ->leftJoin('releases', 'releases.animal_file_id', '=', 'animal_files.id')
+            ->whereNull('releases.animal_file_id')
+            ->orderByDesc('animal_files.id')
+            ->get(['animal_files.id','animal_files.animal_id']);
 		$careTypes = CareType::orderBy('nombre')->get(['id','nombre']);
 
 		return view('transactions.animal.care.create', compact('animalFiles','careTypes'));

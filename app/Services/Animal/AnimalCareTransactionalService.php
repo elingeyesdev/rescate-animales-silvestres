@@ -20,7 +20,10 @@ class AnimalCareTransactionalService
 		DB::beginTransaction();
 		$storedPath = null;
 		try {
-			$animalFile = AnimalFile::findOrFail($data['animal_file_id']);
+			$animalFile = AnimalFile::with('release')->findOrFail($data['animal_file_id']);
+            if ($animalFile->release()->exists()) {
+                throw new \DomainException('No se puede registrar cuidado: el animal ya fue liberado.');
+            }
 
             $careData = [
 				'hoja_animal_id' => $animalFile->id,

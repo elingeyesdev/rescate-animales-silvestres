@@ -237,7 +237,6 @@
                                       function updateVetHint(){
                                         const opt = vetSel?.selectedOptions?.[0];
                                         const esp = opt ? (opt.getAttribute('data-especialidad') || '') : '';
-                                        if (vetHint) vetHint.textContent = esp ? ('Especialidad: ' + esp) : '';
                                       }
                                       vetSel?.addEventListener('change', updateVetHint);
                                       updateVetHint();

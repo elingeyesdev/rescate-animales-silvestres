@@ -29,9 +29,7 @@
                         @endphp
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Reportante') }}:</strong> {{ $report->person?->nombre ?? '-' }}
-                                </div>
+                                <!-- Se oculta Reportante según requerimiento -->
                                 <div class="form-group mb-2 mb20">
                                     <strong>{{ __('Estado inicial del animal') }}:</strong> {{ $report->condicionInicial?->nombre ?? '-' }}
                                 </div>

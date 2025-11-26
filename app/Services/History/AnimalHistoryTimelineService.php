@@ -243,6 +243,21 @@ class AnimalHistoryTimelineService
 				];
 			}
 
+            // Liberación
+            if (!empty($new['liberacion'])) {
+                $item['title'] = 'Liberación';
+                $lib = $new['liberacion'];
+                $aprob = array_key_exists('aprobada', $lib) ? (bool)$lib['aprobada'] : null;
+                $parts = [];
+                if (!empty($lib['direccion'])) $parts[] = 'Dirección: '.$lib['direccion'];
+                if (!is_null($aprob)) $parts[] = 'Aprobada: '.($aprob ? 'Sí' : 'No');
+                if (!empty($lib['latitud']) && !empty($lib['longitud'])) $parts[] = 'GPS: '.$lib['latitud'].','.$lib['longitud'];
+                $item['details'][] = [
+                    'label' => 'Información',
+                    'value' => implode(' | ', $parts),
+                ];
+            }
+
 			// Creación de Hoja de Vida / Animal
 			if (!empty($new['animal']) || !empty($new['animal_file'])) {
 				if (!empty($new['animal'])) {

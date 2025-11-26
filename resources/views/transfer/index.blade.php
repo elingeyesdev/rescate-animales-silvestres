@@ -221,9 +221,10 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Inicializar mapas por cada hallazgo en primer traslado
         const centersData = @json($centers ?? []);
-        function buildMap(containerId, legendId, hiddenInputId) {
+        function buildMap(containerId, legendId, hiddenInputId, centersArr) {
             const el = document.getElementById(containerId);
             const legend = document.getElementById(legendId);
+            const data = Array.isArray(centersArr) ? centersArr : centersData;
             // hidden input id can change depending the selected report; use a dynamic getter
             function getHidden() {
                 const dynamicId = window.firstMapTargetHiddenId || hiddenInputId;
@@ -232,8 +233,10 @@
             if (!el) return null;
             const map = L.map(containerId).setView([ -17.7833, -63.1821 ], 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+            // Ensure map sizes correctly when container was hidden
+            setTimeout(() => { try { map.invalidateSize(); } catch(e) {} }, 0);
             const markers = [];
-            centersData.forEach((c) => {
+            data.forEach((c) => {
                 if (c.latitud && c.longitud) {
                     const m = L.marker([c.latitud, c.longitud]).addTo(map);
                     m.bindTooltip(`${c.nombre}`, { permanent: true, direction: 'top', className: 'center-tooltip', offset: [0,-10] });
@@ -260,7 +263,7 @@
             }
             if (legend) {
                 legend.innerHTML = '';
-                centersData.forEach(c => {
+                data.forEach(c => {
                     const span = document.createElement('span');
                     span.textContent = `#${c.id} ${c.nombre}`;
                     span.style.cursor = 'pointer';
@@ -302,7 +305,7 @@
                         // Target hidden input of this report
                         window.firstMapTargetHiddenId = `centro_r${id}`;
                         if (!initialized) {
-                            buildMap(`centers_map_first`, `centers_legend_first`, window.firstMapTargetHiddenId);
+                            buildMap(`centers_map_first`, `centers_legend_first`, window.firstMapTargetHiddenId, centersData);
                             initialized = true;
                         } else {
                             // map already built; only retarget hidden input
@@ -358,12 +361,12 @@
                         } else {
                             currentCenterEl.textContent = '-';
                         }
-                        buildMap('centers_map_internal', 'centers_legend_internal', 'centro_internal');
+                        window._internalMapInstance = buildMap('centers_map_internal', 'centers_legend_internal', 'centro_internal', (data.destinations || []));
                         panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     })
                     .catch(() => {
                         currentCenterEl.textContent = '-';
-                        buildMap('centers_map_internal', 'centers_legend_internal', 'centro_internal');
+                        window._internalMapInstance = buildMap('centers_map_internal', 'centers_legend_internal', 'centro_internal', []);
                     });
             }
 
@@ -378,6 +381,12 @@
                     // Show right panel
                     panel.classList.remove('d-none');
                     renderInternalMap(animalId);
+                    // fix leaflet sizing after reveal
+                    setTimeout(() => {
+                        if (window._internalMapInstance && window._internalMapInstance.invalidateSize) {
+                            try { window._internalMapInstance.invalidateSize(); } catch(e) {}
+                        }
+                    }, 50);
                 });
             });
 

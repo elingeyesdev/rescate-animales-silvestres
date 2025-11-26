@@ -21,7 +21,10 @@ class AnimalMedicalEvaluationTransactionalService
 		DB::beginTransaction();
 		$storedPath = null;
 		try {
-			$animalFile = AnimalFile::with('animalStatus')->findOrFail($data['animal_file_id']);
+			$animalFile = AnimalFile::with(['animalStatus','release'])->findOrFail($data['animal_file_id']);
+            if ($animalFile->release()->exists()) {
+                throw new \DomainException('No se puede registrar evaluación médica: el animal ya fue liberado.');
+            }
 
 			// Crear evaluación médica
 			$evalData = [

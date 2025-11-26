@@ -61,7 +61,10 @@
         </div>
         <div class="form-group mb-2 mb20">
             <label for="imagen" class="form-label">{{ __('Imagen (opcional)') }}</label>
-            <input type="file" accept="image/*" name="imagen" class="form-control @error('imagen') is-invalid @enderror" id="imagen">
+            <div class="custom-file">
+                <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
+                <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>
+            </div>
             {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
             @php
                 $initialEvalSrc = !empty($medicalEvaluation?->imagen_url) ? asset('storage/' . $medicalEvaluation->imagen_url) : null;
@@ -76,6 +79,7 @@
         <button type="submit" class="btn btn-primary">{{ __('Submit') }}</button>
     </div>
 </div>
+@include('partials.custom-file')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   var input = document.getElementById('imagen');
@@ -107,9 +111,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var updateHint = function () {
     var opt = vetSel && vetSel.selectedOptions && vetSel.selectedOptions[0];
     var esp = opt ? (opt.getAttribute('data-especialidad') || '') : '';
-    if (hint) {
-      hint.textContent = esp ? ('Especialidad: ' + esp) : '';
-    }
+    
   };
   var updateSummary = function () {
     var opt = vetSel && vetSel.selectedOptions && vetSel.selectedOptions[0];

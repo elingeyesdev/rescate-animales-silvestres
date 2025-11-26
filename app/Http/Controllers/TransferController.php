@@ -72,7 +72,10 @@ class TransferController extends Controller
                 ->get(['id','persona_id','condicion_inicial_id','aprobado','created_at','direccion','imagen_url']);
         } elseif ($tab === 'internal') {
             $animalFiles = \App\Models\AnimalFile::with(['animal:id,nombre'])
-                ->orderByDesc('id')->get(['id','animal_id','imagen_url']);
+                ->leftJoin('releases', 'releases.animal_file_id', '=', 'animal_files.id')
+                ->whereNull('releases.animal_file_id')
+                ->orderByDesc('animal_files.id')
+                ->get(['animal_files.id','animal_files.animal_id','animal_files.imagen_url']);
         }
         $transfer = new Transfer();
 

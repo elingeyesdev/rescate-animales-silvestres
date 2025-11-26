@@ -38,8 +38,6 @@
                                         
 									<th >Nombre</th>
 									<th >Direccion</th>
-									<th >Latitud</th>
-									<th >Longitud</th>
 									<th >Contacto</th>
 
                                         <th></th>
@@ -52,8 +50,6 @@
                                             
 										<td >{{ $center->nombre }}</td>
 										<td >{{ $center->direccion }}</td>
-										<td >{{ $center->latitud }}</td>
-										<td >{{ $center->longitud }}</td>
 										<td >{{ $center->contacto }}</td>
 
                                             <td>

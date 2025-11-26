@@ -28,14 +28,7 @@
                                     <strong>Direccion:</strong>
                                     {{ $center->direccion }}
                                 </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Latitud:</strong>
-                                    {{ $center->latitud }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Longitud:</strong>
-                                    {{ $center->longitud }}
-                                </div>
+                                <!-- Ocultamos latitud y longitud en detalle -->
                                 @if(!is_null($center->latitud) && !is_null($center->longitud))
                                 <div class="form-group mb-2 mb20">
                                     <strong>Ubicación:</strong>
