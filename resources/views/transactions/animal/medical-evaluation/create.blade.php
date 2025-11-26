@@ -10,7 +10,7 @@
             <div class="col-md-12">
                 <div class="card card-default">
                     <div class="card-header">
-                        <span class="card-title">{{ __('Evaluación Médica + Cambio de Estado + Historial') }}</span>
+                        <span class="card-title">{{ __('Registrar Evaluación Médica') }}</span>
                     </div>
                     <div class="card-body bg-white">
                         <form method="POST" action="{{ route('medical-evaluation-transactions.store') }}" role="form" enctype="multipart/form-data">
@@ -255,13 +255,18 @@
                                       const afMeta = @json($afMeta);
                                       const lastData = @json($lastDataByAnimalFile ?? []);
                                       function formatDateYmd(dStr){
-                                        try {
-                                          const d = new Date(dStr);
-                                          const dd = String(d.getDate()).padStart(2,'0');
-                                          const mm = String(d.getMonth()+1).padStart(2,'0');
-                                          const yy = String(d.getFullYear());
+                                        if (!dStr) return '';
+                                        // Asegurarnos de quedarnos solo con la parte de fecha (YYYY-MM-DD)
+                                        const raw = String(dStr).trim().split(' ')[0]; // "2025-11-26 11:30:07" -> "2025-11-26"
+                                        const parts = raw.split('-');
+                                        if (parts.length === 3) {
+                                          const [y, m, d] = parts;
+                                          const dd = String(d).padStart(2,'0');
+                                          const mm = String(m).padStart(2,'0');
+                                          const yy = String(y);
                                           return `${dd}/${mm}/${yy}`;
-                                        } catch(e){ return dStr || ''; }
+                                        }
+                                        return raw;
                                       }
                                       function applyMeta(id){
                                         const meta = afMeta[id] || {};

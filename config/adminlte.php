@@ -356,7 +356,7 @@ return [
         [
             'text' => 'Estados de Animales',
             'url' => 'animal-statuses',
-            'icon' => 'fas fa-fw fa-paw',
+            'icon' => 'fas fa-fw fa-heartbeat',
         ],
         /*[
             'text' => 'Tipos de Animales',
@@ -366,12 +366,12 @@ return [
         [
             'text' => 'Tipos de Incidentes',
             'url' => 'incident-types',
-            'icon' => 'fas fa-fw fa-paw',
+            'icon' => 'fas fa-fw fa-exclamation-triangle',
         ],
         [
             'text' => 'Condiciones de Animales',
             'url' => 'animal-conditions',
-            'icon' => 'fas fa-fw fa-paw',
+            'icon' => 'fas fa-fw fa-first-aid',
         ],
         [
             'text' => 'Especies',
@@ -386,6 +386,22 @@ return [
         
         ['header' => 'DIAGNOSTICO'],
         [
+            'text' => 'Evaluaciones Médicas',
+            'url' => 'medical-evaluations',
+            'icon' => 'fas fa-fw fa-stethoscope',
+        ],
+        
+        [
+            'text' => 'Cuidados de Animales',
+            'url' => 'cares',
+            'icon' => 'fas fa-fw fa-hand-holding-heart',
+        ],
+        [
+            'text' => 'Alimentación',
+            'url' => 'care-feedings',
+            'icon' => 'fas fa-fw fa-utensils',
+        ],
+        [
             'text' => 'Veterinarios',
             'url' => 'veterinarians',
             'icon' => 'fas fa-fw fa-user-md',
@@ -393,70 +409,57 @@ return [
         [
             'text' => 'Tipos de Tratamiento',
             'url' => 'treatment-types',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        [
-            'text' => 'Evaluaciones Médicas',
-            'url' => 'medical-evaluations',
-            'icon' => 'fas fa-fw fa-paw',
+            'icon' => 'fas fa-fw fa-pills',
         ],
         
         [
-            'text' => 'Cuidados de Animales',
-            'url' => 'cares',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        [
             'text' => 'Tipos de Cuidado',
             'url' => 'care-types',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        [
-            'text' => 'Alimentación',
-            'url' => 'care-feedings',
-            'icon' => 'fas fa-fw fa-paw',
+            'icon' => 'fas fa-fw fa-hands-helping',
         ],
         [
             'text' => 'Tipos de Alimentación',
             'url' => 'feeding-types',
-            'icon' => 'fas fa-fw fa-paw',
+            'icon' => 'fas fa-fw fa-drumstick-bite',
         ],
         [
             'text' => 'Frecuencia',
             'url' => 'feeding-frequencies',
-            'icon' => 'fas fa-fw fa-paw',
+            'icon' => 'fas fa-fw fa-clock',
         ],
         [
             'text' => 'Porción de Alimentación',
             'url' => 'feeding-portions',
-            'icon' => 'fas fa-fw fa-paw',
+            'icon' => 'fas fa-fw fa-weight-hanging',
         ],
         ['header' => 'DISPOSICION'],
         [
+            'text' => 'Traslados',
+            'url' => 'transfers',
+            'icon' => 'fas fa-fw fa-exchange-alt',
+        ],
+        [
+            'text' => 'Liberaciones',
+            'url' => 'releases',
+            'icon' => 'fas fa-fw fa-unlock',
+        ],
+        [
             'text' => 'Centros',
             'url' => 'centers',
-            'icon' => 'fas fa-fw fa-building',
+            'icon' => 'fas fa-fw fa-clinic-medical',
         ],
         [
             'text' => 'Rescatistas',
             'url' => 'rescuers',
             'icon' => 'fas fa-fw fa-user-injured',
         ],
-        [
-            'text' => 'Transferencias',
-            'url' => 'transfers',
-            'icon' => 'fas fa-fw fa-exchange-alt',
-        ],
+        
         /*[
             'text' => 'Adopciones',
             'url' => 'adoptions',
             'icon' => 'fas fa-fw fa-paw',
         ],*/
-        [
-            'text' => 'Liberaciones',
-            'url' => 'releases',
-            'icon' => 'fas fa-fw fa-unlock',
-        ],
+        
         
         ['header' => 'ADMINISTRACION'],
         [

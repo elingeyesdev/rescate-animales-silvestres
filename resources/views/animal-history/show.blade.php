@@ -112,9 +112,7 @@
                                     </div>
                                 </div>
                             @endforeach
-                            <div>
-                                <i class="fas fa-clock bg-gray"></i>
-                            </div>
+                            {{-- Punto final de la línea de tiempo eliminado para evitar icono de reloj adicional --}}
                         </div>
                         <div id="imageOverlay" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.85); z-index:1050; align-items:center; justify-content:center;">
                             <button id="overlayClose" type="button" style="position:absolute; top:16px; right:16px; background:rgba(0,0,0,.4); border:0; color:#fff; padding:8px 12px; border-radius:4px; cursor:pointer;">

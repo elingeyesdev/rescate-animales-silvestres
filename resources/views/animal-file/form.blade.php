@@ -13,11 +13,7 @@
         </div>
     @endif
 
-    <div class="form-group mb-2">
-        <label for="animal_nombre" class="form-label">{{ __('Nombre') }}</label>
-        <input type="text" name="animal_nombre" id="animal_nombre" class="form-control @error('animal_nombre') is-invalid @enderror" value="{{ old('animal_nombre', $animalFile?->animal?->nombre) }}" placeholder="Nombre del animal">
-        {!! $errors->first('animal_nombre', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-    </div>
+    
 
     @if(empty($hideType))
         <div class="form-group mb-2">

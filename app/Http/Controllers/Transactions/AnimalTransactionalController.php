@@ -43,8 +43,14 @@ class AnimalTransactionalController extends Controller
         }
 
 		// Datos requeridos por el form de Animal (select oculto y tarjetas)
+		// Solo mostrar hallazgos aprobados que YA tengan primer traslado registrado.
 		$reports = Report::query()
 			->where('aprobado', 1)
+            ->whereIn('reports.id', function($q) {
+                $q->select('reporte_id')
+                  ->from('transfers')
+                  ->where('primer_traslado', true);
+            })
 			->leftJoin('animals', 'animals.reporte_id', '=', 'reports.id')
 			->groupBy('reports.id', 'reports.cantidad_animales')
 			->havingRaw('COUNT(animals.id) < COALESCE(reports.cantidad_animales, 1)')
@@ -53,6 +59,11 @@ class AnimalTransactionalController extends Controller
 
         $reportCards = Report::query()
             ->where('reports.aprobado', 1)
+            ->whereIn('reports.id', function($q) {
+                $q->select('reporte_id')
+                  ->from('transfers')
+                  ->where('primer_traslado', true);
+            })
             ->leftJoin('animals', 'animals.reporte_id', '=', 'reports.id')
             ->leftJoin('people', 'people.id', '=', 'reports.persona_id')
             ->leftJoin('animal_conditions', 'animal_conditions.id', '=', 'reports.condicion_inicial_id')

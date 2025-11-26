@@ -37,7 +37,6 @@
                                         <th>No</th>
                                         
 								<th >Tratamiento</th>
-								<th >Descripcion</th>
 								<th >Fecha Revisión</th>
 								<th >Veterinario</th>
 								<th >Animal</th>
@@ -51,7 +50,6 @@
                                             <td>{{ ++$i }}</td>
                                             
 									<td >{{ $medicalEvaluation->treatmentType?->nombre }}</td>
-									<td >{{ $medicalEvaluation->descripcion }}</td>
 									<td >{{ $medicalEvaluation->fecha ? \Carbon\Carbon::parse($medicalEvaluation->fecha)->format('d/m/Y') : '' }}</td>
 									<td >{{ $medicalEvaluation->veterinarian?->person?->nombre }}</td>
 									<td >{{ $medicalEvaluation->animalFile?->animal?->nombre ?? '-' }}</td>

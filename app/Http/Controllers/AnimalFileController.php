@@ -9,6 +9,7 @@ use App\Models\AnimalStatus;
 use App\Models\Report;
 use App\Models\Animal;
 use App\Models\Breed;
+use App\Models\Center;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\AnimalFileRequest;
@@ -22,10 +23,33 @@ class AnimalFileController extends Controller
      */
     public function index(Request $request): View
     {
-        $animalFiles = AnimalFile::with(['animalType','species','animalStatus','breed','animal.report','adoption','release'])
-            ->paginate();
+        $query = AnimalFile::with(['animalType','species','animalStatus','breed','animal.report','adoption','release','center']);
 
-        return view('animal-file.index', compact('animalFiles'))
+        // Filtros
+        if ($request->filled('nombre')) {
+            $term = $request->string('nombre')->toString();
+            $query->whereHas('animal', function ($q) use ($term) {
+                $q->where('nombre', 'like', '%'.$term.'%');
+            });
+        }
+        if ($request->filled('especie_id')) {
+            $query->where('especie_id', $request->input('especie_id'));
+        }
+        if ($request->filled('estado_id')) {
+            $query->where('estado_id', $request->input('estado_id'));
+        }
+        if ($request->filled('centro_id')) {
+            $query->where('centro_id', $request->input('centro_id'));
+        }
+
+        $animalFiles = $query->orderByDesc('id')->paginate(12)->withQueryString();
+
+        // Opciones de filtro
+        $species = Species::orderBy('nombre')->get(['id','nombre']);
+        $statuses = AnimalStatus::orderBy('nombre')->get(['id','nombre']);
+        $centers = Center::orderBy('nombre')->get(['id','nombre']);
+
+        return view('animal-file.index', compact('animalFiles','species','statuses','centers'))
             ->with('i', ($request->input('page', 1) - 1) * $animalFiles->perPage());
     }
 

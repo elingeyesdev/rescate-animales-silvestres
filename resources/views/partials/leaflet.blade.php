@@ -74,7 +74,7 @@ window.initMapWithGeolocation = function initMapWithGeolocation(opts) {
                         if (userLocked) return;
                         const lat = pos.coords.latitude.toFixed(6);
                         const lon = pos.coords.longitude.toFixed(6);
-                        setMarker(lat, lon, !hasCentered, false);
+                        setMarker(lat, lon, true, false);
                         hasCentered = true;
                     },
                     () => {},
@@ -99,7 +99,7 @@ window.initMapWithGeolocation = function initMapWithGeolocation(opts) {
                 if (userLocked) return;
                 const lat = pos.coords.latitude.toFixed(6);
                 const lon = pos.coords.longitude.toFixed(6);
-                setMarker(lat, lon, !hasCentered, false);
+                setMarker(lat, lon, true, false);
                 hasCentered = true;
             },
             () => {},

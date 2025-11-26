@@ -147,7 +147,7 @@ class TransferController extends Controller
         }
 
         return Redirect::route('transfers.index')
-            ->with('success', 'Transferencia creada correctamente.');
+            ->with('success', 'Traslado creado correctamente.');
     }
 
     /**
@@ -184,7 +184,7 @@ class TransferController extends Controller
         $transfer->update($request->validated());
 
         return Redirect::route('transfers.index')
-            ->with('success', 'Transferencia actualizada correctamente');
+            ->with('success', 'Traslado actualizado correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -192,6 +192,6 @@ class TransferController extends Controller
         Transfer::find($id)->delete();
 
         return Redirect::route('transfers.index')
-            ->with('success', 'Transferencia eliminada correctamente');
+            ->with('success', 'Traslado eliminado correctamente');
     }
 }

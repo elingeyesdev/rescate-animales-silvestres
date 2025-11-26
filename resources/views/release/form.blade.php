@@ -13,16 +13,17 @@
         </div>
         <div class="form-group mb-2 mb20">
             <label for="detalle" class="form-label">{{ __('Detalle') }}</label>
-            <input type="text" name="detalle" class="form-control @error('detalle') is-invalid @enderror" value="{{ old('detalle', $release?->detalle) }}" id="detalle" placeholder="Detalle">
+            <textarea name="detalle" class="form-control @error('detalle') is-invalid @enderror" id="detalle" rows="3" placeholder="Detalle">{{ old('detalle', $release?->detalle) }}</textarea>
             {!! $errors->first('detalle', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
-            <label for="animal_file_id" class="form-label">{{ __('Animal (liberable)') }}</label>
+            <label for="animal_file_id" class="form-label">{{ __('Animal a liberar') }}</label>
             <select name="animal_file_id" id="animal_file_id" class="form-control @error('animal_file_id') is-invalid @enderror">
                 <option value="">{{ __('Seleccione') }}</option>
                 @foreach(($animalFiles ?? []) as $af)
-                    <option value="{{ $af->id }}" {{ (string)old('animal_file_id', $release?->animal_file_id) === (string)$af->id ? 'selected' : '' }}>
-                        #{{ $af->id }} {{ $af->nombre ? '- ' . $af->nombre : '' }}
+                    <option value="{{ $af->id }}"
+                        {{ (string)old('animal_file_id', $release?->animal_file_id) === (string)$af->id || (!old('animal_file_id', $release?->animal_file_id) && $loop->first) ? 'selected' : '' }}>
+                        {{ $af->nombre ? '- ' . $af->nombre : '' }}
                     </option>
                 @endforeach
             </select>

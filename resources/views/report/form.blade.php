@@ -41,7 +41,12 @@
                         <option value="">{{ __('Seleccione...') }}</option>
                         @foreach(($conditions ?? []) as $c)
                             @php($condLabel = $c->nombre === 'Desconocido' ? ($c->nombre.' (especificar en Observaciones)') : $c->nombre)
-                            <option value="{{ $c->id }}" {{ (string)old('condicion_inicial_id', $report?->condicion_inicial_id) === (string)$c->id ? 'selected' : '' }}>{{ $condLabel }}</option>
+                            <option value="{{ $c->id }}"
+                                {{ (string)old('condicion_inicial_id', $report?->condicion_inicial_id) === (string)$c->id
+                                    || (!old('condicion_inicial_id', $report?->condicion_inicial_id) && empty($report?->id) && $loop->first)
+                                        ? 'selected' : '' }}>
+                                {{ $condLabel }}
+                            </option>
                         @endforeach
                     </select>
                     {!! $errors->first('condicion_inicial_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
@@ -54,7 +59,12 @@
                         <option value="">{{ __('Seleccione...') }}</option>
                         @foreach(($incidentTypes ?? []) as $it)
                             @php($incLabel = $it->nombre === 'Otro' ? ($it->nombre.' (especificar en Observaciones)') : $it->nombre)
-                            <option value="{{ $it->id }}" {{ (string)old('tipo_incidente_id', $report?->tipo_incidente_id) === (string)$it->id ? 'selected' : '' }}>{{ $incLabel }}</option>
+                            <option value="{{ $it->id }}"
+                                {{ (string)old('tipo_incidente_id', $report?->tipo_incidente_id) === (string)$it->id
+                                    || (!old('tipo_incidente_id', $report?->tipo_incidente_id) && empty($report?->id) && $loop->first)
+                                        ? 'selected' : '' }}>
+                                {{ $incLabel }}
+                            </option>
                         @endforeach
                     </select>
                     {!! $errors->first('tipo_incidente_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
@@ -64,7 +74,7 @@
 
         <div class="form-group mb-2 mb20">
             <label class="form-label d-block">{{ __('Tamaño del animal') }}</label>
-            @php($tam = old('tamano', $report?->tamano))
+            @php($tam = old('tamano', $report?->tamano ?? 'mediano'))
             <div class="icheck-primary d-inline mr-3">
                 <input type="radio" id="tamano_peq" name="tamano" value="pequeno" {{ $tam==='pequeno' ? 'checked' : '' }}>
                 <label for="tamano_peq">{{ __('Pequeño') }}</label>
@@ -82,7 +92,7 @@
 
         <div class="form-group mb-2 mb20">
             <label class="form-label d-block">{{ __('¿Puede moverse?') }}</label>
-            @php($pm = old('puede_moverse', is_null($report?->puede_moverse) ? '' : (int)$report->puede_moverse))
+            @php($pm = old('puede_moverse', is_null($report?->puede_moverse) ? '0' : (int)$report->puede_moverse))
             <div class="icheck-primary d-inline mr-3">
                 <input type="radio" id="moverse_si" name="puede_moverse" value="1" {{ (string)$pm === '1' ? 'checked' : '' }}>
                 <label for="moverse_si">{{ __('Sí') }}</label>

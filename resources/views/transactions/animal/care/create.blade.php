@@ -26,7 +26,7 @@
                                                     data-rep-img="{{ $af->animal?->report?->imagen_url }}"
                                                     data-rep-obs="{{ $af->animal?->report?->observaciones }}"
                                                     data-last-info="{{ $af->last_summary }}"
-                                                    {{ (string)old('animal_file_id') === (string)$af->id ? 'selected' : '' }}>
+                                                    {{ (string)old('animal_file_id') === (string)$af->id || (!old('animal_file_id') && $loop->first) ? 'selected' : '' }}>
                                                     {{ $af->animal?->nombre ? '' . $af->animal->nombre : '' }}
                                                 </option>
                                             @endforeach
@@ -53,7 +53,10 @@
                                         <select name="tipo_cuidado_id" id="tipo_cuidado_id" class="form-control @error('tipo_cuidado_id') is-invalid @enderror">
                                             <option value="">{{ __('Seleccione') }}</option>
                                             @foreach(($careTypes ?? []) as $t)
-                                                <option value="{{ $t->id }}" {{ (string)old('tipo_cuidado_id') === (string)$t->id ? 'selected' : '' }}>{{ $t->nombre }}</option>
+                                                <option value="{{ $t->id }}"
+                                                    {{ (string)old('tipo_cuidado_id') === (string)$t->id || (!old('tipo_cuidado_id') && $loop->first) ? 'selected' : '' }}>
+                                                    {{ $t->nombre }}
+                                                </option>
                                             @endforeach
                                         </select>
                                         {!! $errors->first('tipo_cuidado_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}

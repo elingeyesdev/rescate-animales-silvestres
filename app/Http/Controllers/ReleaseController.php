@@ -38,9 +38,11 @@ class ReleaseController extends Controller
         $release = new Release();
         $animalFiles = AnimalFile::query()
             ->join('animal_types', 'animal_files.tipo_id', '=', 'animal_types.id')
+            ->join('animal_statuses', 'animal_files.estado_id', '=', 'animal_statuses.id')
             ->leftJoin('releases', 'releases.animal_file_id', '=', 'animal_files.id')
             ->join('animals', 'animal_files.animal_id', '=', 'animals.id')
             ->where('animal_types.permite_liberacion', true)
+            ->whereRaw('LOWER(animal_statuses.nombre) = ?', ['estable'])
             ->whereNull('releases.animal_file_id')
             ->orderBy('animals.nombre')
             ->get(['animal_files.id as id', 'animals.nombre as nombre']);
@@ -83,11 +85,17 @@ class ReleaseController extends Controller
         $release = Release::find($id);
         $animalFiles = AnimalFile::query()
             ->join('animal_types', 'animal_files.tipo_id', '=', 'animal_types.id')
+            ->join('animal_statuses', 'animal_files.estado_id', '=', 'animal_statuses.id')
             ->leftJoin('releases', 'releases.animal_file_id', '=', 'animal_files.id')
             ->join('animals', 'animal_files.animal_id', '=', 'animals.id')
             ->where('animal_types.permite_liberacion', true)
             ->where(function($q) use ($release) {
                 $q->whereNull('releases.animal_file_id')
+                  ->orWhere('releases.id', $release->id);
+            })
+            ->where(function($q) use ($release) {
+                // Permitir animales en estado "Estable" o el actualmente asociado a la liberación
+                $q->whereRaw('LOWER(animal_statuses.nombre) = ?', ['estable'])
                   ->orWhere('releases.id', $release->id);
             })
             ->orderBy('animals.nombre')

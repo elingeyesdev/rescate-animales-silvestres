@@ -30,6 +30,52 @@
                     @endif
 
                     <div class="card-body bg-white">
+                        <form method="GET" class="mb-3">
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <label class="mb-1">{{ __('Nombre del animal') }}</label>
+                                    <input type="text" name="nombre" value="{{ request('nombre') }}" class="form-control" placeholder="{{ __('Buscar por nombre') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="mb-1">{{ __('Especie') }}</label>
+                                    <select name="especie_id" class="form-control">
+                                        <option value="">{{ __('Todas') }}</option>
+                                        @foreach(($species ?? []) as $s)
+                                            <option value="{{ $s->id }}" {{ (string)request('especie_id') === (string)$s->id ? 'selected' : '' }}>
+                                                {{ $s->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="mb-1">{{ __('Estado') }}</label>
+                                    <select name="estado_id" class="form-control">
+                                        <option value="">{{ __('Todos') }}</option>
+                                        @foreach(($statuses ?? []) as $st)
+                                            <option value="{{ $st->id }}" {{ (string)request('estado_id') === (string)$st->id ? 'selected' : '' }}>
+                                                {{ $st->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="mb-1">{{ __('Centro') }}</label>
+                                    <select name="centro_id" class="form-control">
+                                        <option value="">{{ __('Todos') }}</option>
+                                        @foreach(($centers ?? []) as $c)
+                                            <option value="{{ $c->id }}" {{ (string)request('centro_id') === (string)$c->id ? 'selected' : '' }}>
+                                                {{ $c->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-2 d-flex align-items-center">
+                                <button type="submit" class="btn btn-primary btn-sm mr-3">{{ __('Buscar') }}</button>
+                                <a href="{{ route('animal-files.index') }}" class="btn btn-link p-0">{{ __('Mostrar todos') }}</a>
+                            </div>
+                        </form>
+
                         <style>
                         .animalfile-card-img {
                             width: 100%;

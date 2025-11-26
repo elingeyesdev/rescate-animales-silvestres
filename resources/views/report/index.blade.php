@@ -72,7 +72,7 @@
                                 </div>
                             </div>
                             <div class="mt-2 d-flex align-items-center">
-                                <button type="submit" class="btn btn-primary btn-sm mr-3">{{ __('Aplicar filtros') }}</button>
+                                <button type="submit" class="btn btn-primary btn-sm mr-3">{{ __('Buscar') }}</button>
                                 <a href="{{ route('reports.index') }}" class="btn btn-link p-0">{{ __('Mostrar todos') }}</a>
                             </div>
                         </form>

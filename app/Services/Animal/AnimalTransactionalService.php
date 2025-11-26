@@ -28,6 +28,16 @@ class AnimalTransactionalService
 		$storedPath = null;
 		$copiedFromReport = null;
 		try {
+            // Si viene de un reporte, validar que tenga primer traslado registrado
+            if (!empty($animalData['reporte_id'])) {
+                $hasFirstTransfer = Transfer::where('reporte_id', $animalData['reporte_id'])
+                    ->where('primer_traslado', true)
+                    ->exists();
+                if (!$hasFirstTransfer) {
+                    throw new \DomainException('No se puede crear la Hoja de Vida: el hallazgo aún no tiene registrado su primer traslado a un centro.');
+                }
+            }
+
 			$animal = Animal::create($animalData);
 
 			if ($image) {
