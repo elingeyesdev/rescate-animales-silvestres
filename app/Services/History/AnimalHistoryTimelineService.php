@@ -262,7 +262,7 @@ class AnimalHistoryTimelineService
 					$item['title'] = 'Animal';
 					$an = $new['animal'];
 					$item['details'][] = [
-						'label' => 'Detalle',
+						'label' => 'Información',
 						'value' => implode(' | ', array_filter([
 							!empty($an['nombre']) ? ('Nombre: '.$an['nombre']) : null,
 							!empty($an['sexo']) ? ('Sexo: '.$an['sexo']) : null,

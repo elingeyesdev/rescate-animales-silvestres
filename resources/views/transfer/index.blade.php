@@ -37,9 +37,9 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ ($tab ?? 'first')==='internal' ? 'active' : '' }}" id="internal-tab" href="{{ route('transfers.index', ['tab' => 'internal']) }}" role="tab">{{ __('Traslado entre centros') }}</a>
                             </li>
-                            <li class="nav-item">
+                            <!--<li class="nav-item">
                                 <a class="nav-link" id="history-tab" data-toggle="tab" href="#history" role="tab">{{ __('Historial') }}</a>
-                            </li>
+                            </li>-->
                         </ul>
                         <div class="tab-content">
                             @if(($tab ?? 'first')==='first')
@@ -50,7 +50,7 @@
                                         <div class="first-transfer-card" data-report-id="{{ $report->id }}">
                                             <div class="card card-outline card-secondary mb-3">
                                                 <div class="card-header d-flex justify-content-between align-items-center">
-                                                    <h3 class="card-title mb-0">{{ __('Hallazgo aprobado') }} #{{ $report->id }}</h3>
+                                                    <h3 class="card-title mb-0">{{ __('Hallazgo aprobado') }} N°{{ $report->id }}</h3>
                                                     <span class="small text-muted">{{ optional($report->created_at)->format('d/m/Y') }}</span>
                                                 </div>
                                                 <div class="card-body">
@@ -116,15 +116,19 @@
                                 <div class="row">
                                     <div class="col-md-6" id="internal_list">
                                         @forelse(($animalFiles ?? []) as $af)
-                                            <div class="card card-outline card-secondary mb-3 internal-af-card" data-animal-id="{{ $af->animal_id }}" data-af-id="{{ $af->id }}">
+                                            <div class="card card-outline card-secondary mb-3 internal-af-card"
+                                                 data-animal-id="{{ $af->animal_id }}"
+                                                 data-af-id="{{ $af->id }}"
+                                                 data-center-id="{{ $af->centro_id }}"
+                                                 data-center-name="{{ $af->center?->nombre }}">
                                                 <div class="card-header">
-                                                    <h3 class="card-title mb-0">#{{ $af->id }} {{ $af->animal?->nombre ?? '-' }}</h3>
+                                                    <h3 class="card-title mb-0">{{ $af->animal?->nombre ?? '-' }}</h3>
                                                 </div>
                                                 <div class="card-body">
                                                     @if($af->imagen_url)
-                                                        <div class="mb-2"><img src="{{ asset('storage/' . $af->imagen_url) }}" alt="img" style="max-height:160px; border-radius:4px;"></div>
+                                                        <img class="internal-af-img" src="{{ asset('storage/' . $af->imagen_url) }}" alt="imagen animal">
                                                     @endif
-                                                    <div class="text-muted small">{{ __('Click para seleccionar') }}</div>
+                                                    <div class="text-muted small mt-2">{{ __('Click para seleccionar') }}</div>
                                                 </div>
                                             </div>
                                         @empty
@@ -166,10 +170,9 @@
                                                 <select name="centro_id" id="centro_internal_select" class="form-control">
                                                     <option value="">{{ __('Seleccione') }}</option>
                                                     @foreach(($centers ?? []) as $c)
-                                                        <option value="{{ $c->id }}">N°{{ $c->id }} {{ $c->nombre }}</option>
+                                                        <option value="{{ $c->id }}">{{ $c->nombre }}</option>
                                                     @endforeach
                                                 </select>
-                                                <small class="form-text text-muted">{{ __('Seleccione el centro de destino.') }}</small>
                                             </div>
                                             <button type="submit" class="btn btn-primary mt-2">{{ __('Enviar a centro') }}</button>
                                         </form>
@@ -220,6 +223,13 @@
     </div>
     @include('partials.leaflet')
     <style>
+    .internal-af-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #f4f6f9;
+      border-radius: 4px;
+    }
     .leaflet-tooltip.center-tooltip {
       background: #ffffff;
       color: #333;
@@ -368,30 +378,12 @@
             const infoName = document.getElementById('internal_animal_info_name');
             const infoImg = document.getElementById('internal_animal_info_img');
 
-            function loadCurrentCenter(animalId) {
-                const url = new URL('{{ route('transfers.index') }}', window.location.origin);
-                url.searchParams.set('current_center', '1');
-                url.searchParams.set('animal_id', animalId);
-                fetch(url.toString())
-                    .then(r => r.json())
-                    .then(data => {
-                        const cur = data.current;
-                        if (cur) {
-                            currentCenterEl.textContent = `N°${cur.id} ${cur.nombre}`;
-                        } else {
-                            currentCenterEl.textContent = '-';
-                        }
-                        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    })
-                    .catch(() => {
-                        currentCenterEl.textContent = '-';
-                    });
-            }
-
             document.querySelectorAll('.internal-af-card').forEach(card => {
                 card.addEventListener('click', function(){
                     const afId = this.getAttribute('data-af-id');
                     const animalId = this.getAttribute('data-animal-id');
+                    const centerId = this.getAttribute('data-center-id');
+                    const centerName = this.getAttribute('data-center-name');
                     if (hiddenAf) hiddenAf.value = afId || '';
                     if (hiddenAnimal) hiddenAnimal.value = animalId || '';
                     // Copiar info al panel derecho
@@ -411,7 +403,31 @@
                     document.querySelectorAll('.internal-af-card').forEach(c => { if (c !== this) c.style.display = 'none'; });
                     // Show right panel
                     panel.classList.remove('d-none');
-                    loadCurrentCenter(animalId);
+                    // Mostrar centro actual desde la hoja de vida
+                    if (centerId && centerName) {
+                        currentCenterEl.textContent = centerName;
+                    } else {
+                        currentCenterEl.textContent = '-';
+                    }
+                    // En el combo de destino, ocultar / deshabilitar el centro actual
+                    if (centerSelect) {
+                        Array.from(centerSelect.options).forEach(opt => {
+                            if (!opt.value) {
+                                opt.disabled = false;
+                                opt.hidden = false;
+                                return;
+                            }
+                            if (centerId && String(opt.value) === String(centerId)) {
+                                opt.disabled = true;
+                                opt.hidden = true;
+                            } else {
+                                opt.disabled = false;
+                                opt.hidden = false;
+                            }
+                        });
+                        centerSelect.value = '';
+                    }
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
             });
 

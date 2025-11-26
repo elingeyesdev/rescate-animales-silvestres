@@ -131,7 +131,7 @@
                                             @if($report->firstTransfer?->center)
                                                 <p class="mb-1">
                                                     <strong>{{ __('Traslado a:') }}</strong>
-                                                    {{ 'N°' . $report->firstTransfer->center->id . ' ' . $report->firstTransfer->center->nombre }}
+                                                    {{ $report->firstTransfer->center->nombre }}
                                                 </p>
                                             @endif
                                             <!--<p class="mb-1"><strong>{{ __('Tamaño:') }}</strong> {{ $report->tamano ?? '-' }}</p>

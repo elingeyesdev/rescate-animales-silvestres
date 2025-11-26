@@ -23,12 +23,12 @@ class TransferRequest extends FormRequest
     {
         return [
             // Dos modos:
-            // - Primer traslado: report_id requerido, persona/animal no requeridos
-            // - Traslado interno: animal_id requerido, persona requerida (o la define el servidor)
-            'report_id' => 'nullable|exists:reports,id|prohibited_with:animal_id,animal_file_id',
+            // - Primer traslado: report_id presente, sin animal_id / animal_file_id
+            // - Traslado interno: animal_id (o animal_file_id) presente, sin report_id
+            'report_id' => 'nullable|exists:reports,id|prohibits:animal_id,animal_file_id',
             'persona_id' => 'required_without:report_id|nullable|exists:people,id',
-            'animal_id' => 'required_without:report_id|nullable|exists:animals,id|prohibited_with:report_id',
-            'animal_file_id' => 'nullable|exists:animal_files,id|prohibited_with:report_id',
+            'animal_id' => 'required_without:report_id|nullable|exists:animals,id|prohibits:report_id',
+            'animal_file_id' => 'nullable|exists:animal_files,id|prohibits:report_id',
             'centro_id' => 'required|exists:centers,id',
             'observaciones' => 'nullable|string',
         ];

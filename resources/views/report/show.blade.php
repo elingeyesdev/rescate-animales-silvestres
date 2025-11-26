@@ -55,7 +55,7 @@
                                 @if($report->firstTransfer?->center)
                                 <div class="form-group mb-2 mb20">
                                     <strong>{{ __('Traslado a') }}:</strong>
-                                    {{ 'N°' . $report->firstTransfer->center->id . ' ' . $report->firstTransfer->center->nombre }}
+                                    {{ $report->firstTransfer->center->nombre }}
                                 </div>
                                 @endif
                             </div>

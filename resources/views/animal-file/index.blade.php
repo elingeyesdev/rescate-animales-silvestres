@@ -64,7 +64,7 @@
                                             @if($animalFile->center)
                                                 <p class="mb-1">
                                                     <strong>{{ __('Centro actual:') }}</strong>
-                                                    {{ 'N°' . $animalFile->center->id . ' ' . $animalFile->center->nombre }}
+                                                    {{$animalFile->center->nombre }}
                                                 </p>
                                             @endif
                                             <p class="mb-0"><strong>{{ __('Sexo:') }}</strong> {{ $animalFile->animal?->sexo ?? '-' }}</p>

@@ -88,19 +88,57 @@ class AnimalTransactionalService
 				],
 			]);
 
-			// Reclamar por reporte (auto) si hay report_id
-			if (!empty($animalData['reporte_id'])) {
-				// Enlazar por report_id en traslados
-				AnimalHistory::whereNull('animal_file_id')
-					->whereNotNull('valores_nuevos')
-					->whereRaw("(valores_nuevos->'transfer'->>'report_id')::text = ?", [(string)$animalData['reporte_id']])
-					->update(['animal_file_id' => $animalFile->id]);
-				// Enlazar también historiales de tipo 'report' asociados a ese reporte
-				AnimalHistory::whereNull('animal_file_id')
-					->whereNotNull('valores_nuevos')
-					->whereRaw("(valores_nuevos->'report'->>'id')::text = ?", [(string)$animalData['reporte_id']])
-					->update(['animal_file_id' => $animalFile->id]);
-			}
+            // Reclamar por reporte (auto) si hay report_id
+            if (!empty($animalData['reporte_id'])) {
+                $reportId = (string)$animalData['reporte_id'];
+
+                // Enlazar por report_id en traslados ya registrados en historial (primer traslado)
+                AnimalHistory::whereNull('animal_file_id')
+                    ->whereNotNull('valores_nuevos')
+                    ->whereRaw("(valores_nuevos->'transfer'->>'report_id')::text = ?", [$reportId])
+                    ->update(['animal_file_id' => $animalFile->id]);
+
+                // Enlazar también historiales de tipo 'report' asociados a ese reporte
+                AnimalHistory::whereNull('animal_file_id')
+                    ->whereNotNull('valores_nuevos')
+                    ->whereRaw("(valores_nuevos->'report'->>'id')::text = ?", [$reportId])
+                    ->update(['animal_file_id' => $animalFile->id]);
+
+                // Asegurar que exista al menos un historial de "primer traslado" ligado a esta hoja
+                $hasFirstTransferHistory = AnimalHistory::where('animal_file_id', $animalFile->id)
+                    ->whereNotNull('valores_nuevos')
+                    ->whereRaw("(valores_nuevos->'transfer'->>'primer_traslado')::text = 'true'")
+                    ->exists();
+
+                if (!$hasFirstTransferHistory) {
+                    $firstTransfer = Transfer::where('reporte_id', $reportId)
+                        ->where('primer_traslado', true)
+                        ->orderBy('id')
+                        ->first();
+
+                    if ($firstTransfer) {
+                        AnimalHistory::create([
+                            'animal_file_id' => $animalFile->id,
+                            'valores_antiguos' => null,
+                            'valores_nuevos' => [
+                                'transfer' => [
+                                    'id' => $firstTransfer->id,
+                                    'persona_id' => $firstTransfer->persona_id,
+                                    'reporte_id' => (int)$reportId,
+                                    'centro_id' => $firstTransfer->centro_id,
+                                    'observaciones' => $firstTransfer->observaciones,
+                                    'primer_traslado' => true,
+                                    'latitud' => $firstTransfer->latitud,
+                                    'longitud' => $firstTransfer->longitud,
+                                ],
+                            ],
+                            'observaciones' => [
+                                'texto' => 'Primer traslado desde reporte de hallazgo (asociado al crear Hoja de Vida)',
+                            ],
+                        ]);
+                    }
+                }
+            }
 
 			DB::commit();
 
