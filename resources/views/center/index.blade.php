@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container-fluid page-pad">
         <div class="row">
             <div class="col-sm-12">
                 <div class="card">
@@ -37,12 +37,8 @@
                                         <th>No</th>
                                         
 									<th >Nombre</th>
-									<th >Telefono</th>
-									<th >Longitud</th>
-									<th >Latitud</th>
 									<th >Direccion</th>
-									<th >Capacidad Maxima</th>
-									<th >Fecha Creacion</th>
+									<th >Contacto</th>
 
                                         <th></th>
                                     </tr>
@@ -53,12 +49,8 @@
                                             <td>{{ ++$i }}</td>
                                             
 										<td >{{ $center->nombre }}</td>
-										<td >{{ $center->telefono }}</td>
-										<td >{{ $center->longitud }}</td>
-										<td >{{ $center->latitud }}</td>
 										<td >{{ $center->direccion }}</td>
-										<td >{{ $center->capacidad_maxima }}</td>
-										<td >{{ $center->fecha_creacion }}</td>
+										<td >{{ $center->contacto }}</td>
 
                                             <td>
                                                 <form action="{{ route('centers.destroy', $center->id) }}" method="POST">
@@ -66,7 +58,7 @@
                                                     <a class="btn btn-sm btn-success" href="{{ route('centers.edit', $center->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
+                                                    <button type="button" class="btn btn-danger btn-sm js-confirm-delete"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
                                                 </form>
                                             </td>
                                         </tr>
@@ -80,4 +72,5 @@
             </div>
         </div>
     </div>
+    @include('partials.page-pad')
 @endsection

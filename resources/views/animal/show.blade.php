@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-    <section class="content container-fluid">
+    <section class="content container-fluid page-pad">
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
@@ -25,20 +25,16 @@
                                     {{ $animal->nombre }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Especie:</strong>
-                                    {{ $animal->especie }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Raza:</strong>
-                                    {{ $animal->raza }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>Edad:</strong>
-                                    {{ $animal->edad }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
                                     <strong>Sexo:</strong>
                                     {{ $animal->sexo }}
+                                </div>
+                                <div class="form-group mb-2 mb20">
+                                    <strong>Descripcion:</strong>
+                                    {{ $animal->descripcion }}
+                                </div>
+                                <div class="form-group mb-2 mb20">
+                                    <strong>Número de reporte:</strong>
+                                    {{ $animal->reporte_id ? ('#' . $animal->reporte_id) : '-' }}
                                 </div>
 
                     </div>
@@ -46,4 +42,5 @@
             </div>
         </div>
     </section>
+    @include('partials.page-pad')
 @endsection

@@ -22,10 +22,10 @@ class AnimalRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'nombre' => 'required|string',
-			'especie' => 'required|string',
-			'raza' => 'string',
-			'sexo' => 'string',
+			'nombre' => 'nullable|string',
+			'sexo' => 'required|string|in:Hembra,Macho,Desconocido',
+			'descripcion' => 'nullable|string',
+			'reporte_id' => 'required|exists:reports,id',
         ];
     }
 }

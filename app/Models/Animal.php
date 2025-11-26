@@ -9,13 +9,14 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @property $id
  * @property $nombre
- * @property $especie
- * @property $raza
- * @property $edad
  * @property $sexo
+ * @property $descripcion
  * @property $created_at
  * @property $updated_at
+ * @property $reporte_id
  *
+ * @property Report $report
+ * @property AnimalFile[] $animalFiles
  * @package App
  * @mixin \Illuminate\Database\Eloquent\Builder
  */
@@ -29,7 +30,23 @@ class Animal extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['nombre', 'especie', 'raza', 'edad', 'sexo'];
+    protected $fillable = ['nombre', 'sexo', 'descripcion', 'reporte_id'];
 
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function report()
+    {
+        return $this->belongsTo(\App\Models\Report::class, 'reporte_id', 'id');
+    }
+    
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function animalFiles()
+    {
+        return $this->hasMany(\App\Models\AnimalFile::class, 'animal_id', 'id');
+    }
+    
 }

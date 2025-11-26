@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-    <section class="content container-fluid">
+    <section class="content container-fluid page-pad">
         <div class="">
             <div class="col-md-12">
 
@@ -18,7 +18,11 @@
                             {{ method_field('PATCH') }}
                             @csrf
 
-                            @include('animal.form')
+                            @include('animal.form', [
+                                'animal' => $animal ?? null,
+                                'reports' => $reports ?? [],
+                                'animalStatuses' => (\App\Models\AnimalStatus::orderBy('nombre')->get())
+                            ])
 
                         </form>
                     </div>
@@ -26,4 +30,5 @@
             </div>
         </div>
     </section>
+    @include('partials.page-pad')
 @endsection

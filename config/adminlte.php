@@ -63,7 +63,7 @@ return [
     |
     */
 
-    'logo' => '<b>Admin</b>LTE',
+    'logo' => '<b>Rescate</b>Animales',
     'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
@@ -313,24 +313,16 @@ return [
         // Sidebar items:
         [
             'type' => 'sidebar-menu-search',
-            'text' => 'search',
+            'text' => 'Buscar',
         ],
         [
             'text' => 'blog',
             'url' => 'admin/blog',
             'can' => 'manage-blog',
         ],
-        [
-            'text' => 'pages',
-            'url' => 'admin/pages',
-            'icon' => 'far fa-fw fa-file',
-            'label' => 4,
-            'label_color' => 'success',
-        ],
         
-        
-        ['header' => 'account_settings'],
-        [
+        ['header' => 'ANIMALES'],
+        /*[
             'text' => 'profile',
             'url' => 'admin/settings',
             'icon' => 'fas fa-fw fa-user',
@@ -339,38 +331,148 @@ return [
             'text' => 'change_password',
             'url' => 'admin/settings',
             'icon' => 'fas fa-fw fa-lock',
-        ],
+        ],*/
         [
-            'text' => 'Hoja Animal',
-            'url' => 'animal-profiles',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        [
-            'text' => 'Disposicion',
-            'url' => 'dispositions',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        [
-            'text' => 'Diagnostico',
-            'url' => 'health-records',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        [
-            'text' => 'animales',
-            'url' => 'animals',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        [
-            'text' => 'centros',
-            'url' => 'centers',
-            'icon' => 'fas fa-fw fa-building',
-        ],
-        [
-            'text' => 'Reportes',
+            'text' => 'Hallazgos',
             'url' => 'reports',
             'icon' => 'fas fa-fw fa-file-alt',
         ],
+        /*[
+            'text' => 'Animales',
+            'url' => 'animals',
+            'icon' => 'fas fa-fw fa-paw',
+        ],*/
         [
+            'text' => 'Hojas de Animales',
+            'url' => 'animal-files',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        [
+            'text' => 'Historial de Animales',
+            'url' => 'animal-histories',
+            'icon' => 'fas fa-fw fa-history',
+        ],
+        
+        [
+            'text' => 'Estados de Animales',
+            'url' => 'animal-statuses',
+            'icon' => 'fas fa-fw fa-heartbeat',
+        ],
+        /*[
+            'text' => 'Tipos de Animales',
+            'url' => 'animal-types',
+            'icon' => 'fas fa-fw fa-paw',
+        ],*/
+        [
+            'text' => 'Tipos de Incidentes',
+            'url' => 'incident-types',
+            'icon' => 'fas fa-fw fa-exclamation-triangle',
+        ],
+        [
+            'text' => 'Condiciones de Animales',
+            'url' => 'animal-conditions',
+            'icon' => 'fas fa-fw fa-first-aid',
+        ],
+        [
+            'text' => 'Especies',
+            'url' => 'species',
+            'icon' => 'fas fa-fw fa-paw',
+        ],
+        /*[
+            'text' => 'Razas',
+            'url' => 'breeds',
+            'icon' => 'fas fa-fw fa-paw',
+        ],*/
+        
+        ['header' => 'DIAGNOSTICO'],
+        [
+            'text' => 'Evaluaciones Médicas',
+            'url' => 'medical-evaluations',
+            'icon' => 'fas fa-fw fa-stethoscope',
+        ],
+        
+        [
+            'text' => 'Cuidados de Animales',
+            'url' => 'cares',
+            'icon' => 'fas fa-fw fa-hand-holding-heart',
+        ],
+        [
+            'text' => 'Alimentación',
+            'url' => 'care-feedings',
+            'icon' => 'fas fa-fw fa-utensils',
+        ],
+        [
+            'text' => 'Veterinarios',
+            'url' => 'veterinarians',
+            'icon' => 'fas fa-fw fa-user-md',
+        ],
+        [
+            'text' => 'Tipos de Tratamiento',
+            'url' => 'treatment-types',
+            'icon' => 'fas fa-fw fa-pills',
+        ],
+        
+        [
+            'text' => 'Tipos de Cuidado',
+            'url' => 'care-types',
+            'icon' => 'fas fa-fw fa-hands-helping',
+        ],
+        [
+            'text' => 'Tipos de Alimentación',
+            'url' => 'feeding-types',
+            'icon' => 'fas fa-fw fa-drumstick-bite',
+        ],
+        [
+            'text' => 'Frecuencia',
+            'url' => 'feeding-frequencies',
+            'icon' => 'fas fa-fw fa-clock',
+        ],
+        [
+            'text' => 'Porción de Alimentación',
+            'url' => 'feeding-portions',
+            'icon' => 'fas fa-fw fa-weight-hanging',
+        ],
+        ['header' => 'DISPOSICION'],
+        [
+            'text' => 'Traslados',
+            'url' => 'transfers',
+            'icon' => 'fas fa-fw fa-exchange-alt',
+        ],
+        [
+            'text' => 'Liberaciones',
+            'url' => 'releases',
+            'icon' => 'fas fa-fw fa-unlock',
+        ],
+        [
+            'text' => 'Centros',
+            'url' => 'centers',
+            'icon' => 'fas fa-fw fa-clinic-medical',
+        ],
+        [
+            'text' => 'Rescatistas',
+            'url' => 'rescuers',
+            'icon' => 'fas fa-fw fa-user-injured',
+        ],
+        
+        /*[
+            'text' => 'Adopciones',
+            'url' => 'adoptions',
+            'icon' => 'fas fa-fw fa-paw',
+        ],*/
+        
+        
+        ['header' => 'ADMINISTRACION'],
+        [
+            'text' => 'Personas',
+            'url' => 'people',
+            'icon' => 'fas fa-fw fa-user',
+        ],
+        /*[
+            'text' => 'Usuarios',
+            'url' => 'users',
+            'icon' => 'fas fa-fw fa-user',
+        ],*/
+        /*[
             'text' => 'multilevel',
             'icon' => 'fas fa-fw fa-share',
             'submenu' => [
@@ -407,24 +509,9 @@ return [
                     'url' => '#',
                 ],
             ],
-        ],
-        ['header' => 'labels'],
-        [
-            'text' => 'important',
-            'icon_color' => 'red',
-            'url' => '#',
-        ],
-        [
-            'text' => 'warning',
-            'icon_color' => 'yellow',
-            'url' => '#',
-        ],
-        [
-            'text' => 'information',
-            'icon_color' => 'cyan',
-            'url' => '#',
-        ],
+        ]*/
     ],
+
 
     /*
     |--------------------------------------------------------------------------
@@ -528,6 +615,16 @@ return [
                     'type' => 'js',
                     'asset' => false,
                     'location' => '//cdnjs.cloudflare.com/ajax/libs/pace/1.0.2/pace.min.js',
+                ],
+            ],
+        ],
+        'ConfirmDelete' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'js',
+                    'asset' => true,
+                    'location' => 'js/confirm-delete.js',
                 ],
             ],
         ],

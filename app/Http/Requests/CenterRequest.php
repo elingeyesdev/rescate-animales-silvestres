@@ -19,17 +19,14 @@ class CenterRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'nombre' => 'required|string|max:255',
-            'telefono' => 'required|numeric',
-            'latitud' => 'required|numeric|between:-90,90',
-            // longitud: sin validación (se rellena desde el mapa)
-            // 'longitud' => 'numeric|between:-180,180',  // eliminado según tu pedido
-            'direccion' => 'required|string|max:255',
-            'capacidad_maxima' => 'required|integer|min:1',
-            'fecha_creacion' => 'required|date',
+			'nombre' => 'required|string',
+			'direccion' => 'string',
+            'latitud' => 'nullable|numeric|between:-90,90',
+            'longitud' => 'nullable|numeric|between:-180,180',
+			'contacto' => 'string',
         ];
     }
 }

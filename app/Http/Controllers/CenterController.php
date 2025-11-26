@@ -40,7 +40,7 @@ class CenterController extends Controller
         Center::create($request->validated());
 
         return Redirect::route('centers.index')
-            ->with('success', 'Center created successfully.');
+            ->with('success', 'Centro creado correctamente.');
     }
 
     /**
@@ -71,7 +71,7 @@ class CenterController extends Controller
         $center->update($request->validated());
 
         return Redirect::route('centers.index')
-            ->with('success', 'Center updated successfully');
+            ->with('success', 'Centro actualizado correctamente');
     }
 
     public function destroy($id): RedirectResponse
@@ -79,6 +79,6 @@ class CenterController extends Controller
         Center::find($id)->delete();
 
         return Redirect::route('centers.index')
-            ->with('success', 'Center deleted successfully');
+            ->with('success', 'Centro eliminado correctamente');
     }
 }

@@ -7,7 +7,8 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+use App\Models\Person;
+use Illuminate\Http\Request;
 
 class RegisterController extends Controller
 {
@@ -29,7 +30,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/animals';
+    protected $redirectTo = '/login';
 
     /**
      * Create a new controller instance.
@@ -50,12 +51,11 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'nombre' => ['required', 'string', 'max:255'],
+            'ci' => ['required', 'string', 'max:50'],
+            'telefono' => ['nullable', 'string', 'max:50'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'rol' => ['required', 'string', Rule::in([
-                'ciudadano','rescatista','veterinario','cuidador','encargado','administrador'
-            ])],
         ]);
     }
 
@@ -67,11 +67,30 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
-            'name' => $data['name'],
+        $user = User::create([
+            'name' => $data['nombre'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'rol' => $data['rol'],
         ]);
+
+        Person::create([
+            'usuario_id' => $user->id,
+            'nombre' => $data['nombre'],
+            'ci' => $data['ci'],
+            'telefono' => $data['telefono'] ?? null,
+            'es_cuidador' => false,
+        ]);
+
+        return $user;
+    }
+
+    /**
+     * The user has been registered.
+     * Logout immediately and send to login page to start session explicitly.
+     */
+    protected function registered(Request $request, $user)
+    {
+        $this->guard()->logout();
+        return redirect('/login');
     }
 }

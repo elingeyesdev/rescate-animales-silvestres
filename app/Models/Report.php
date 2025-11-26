@@ -3,49 +3,115 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Center;
-use App\Models\User;
+use App\Models\Transfer;
 
+/**
+ * Class Report
+ *
+ * @property $id
+ * @property $persona_id
+ * @property $aprobado
+ * @property $imagen_url
+ * @property $observaciones
+ * @property $cantidad_animales
+ * @property $created_at
+ * @property $updated_at
+ *
+ * @property Person $person
+ * @property Animal[] $animals
+ * @package App
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class Report extends Model
 {
+    
     protected $perPage = 20;
 
-    protected $table = 'reports';
-    protected $primaryKey = 'reporte_id';
-
-    const CREATED_AT = 'fecha_creacion';
-    const UPDATED_AT = 'fecha_actualizacion';
-
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'reportador_id',
+        'persona_id',
+        'aprobado',
+        'imagen_url',
+        'observaciones',
         'cantidad_animales',
-        'longitud',
         'latitud',
+        'longitud',
         'direccion',
-        'centro_id',
-        'aprobado_id',
-        'detalle_aprobado',
-        'fecha_creacion',
-        'fecha_actualizacion',
+        // nuevos campos parametrizables
+        'condicion_inicial_id',
+        'tipo_incidente_id',
+        'tamano',
+        'puede_moverse',
+        'urgencia',
     ];
 
-    protected $casts = [
-        'reportador_id' => 'integer',
-        'cantidad_animales' => 'integer',
-        'centro_id' => 'integer',
-        'longitud' => 'float',
-        'latitud' => 'float',
-        'fecha_creacion' => 'date',
-        'fecha_actualizacion' => 'date',
-    ];
 
-    public function center()
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function person()
     {
-        return $this->belongsTo(Center::class, 'centro_id');
+        return $this->belongsTo(\App\Models\Person::class, 'persona_id', 'id');
+    }
+    
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function animalFiles()
+    {
+        // Compatibilidad: obtener animal_files a través de animals (report -> animals -> animal_files)
+        return $this->hasManyThrough(
+            \App\Models\AnimalFile::class,
+            \App\Models\Animal::class,
+            'reporte_id',   // Foreign key on animals referencing reports.id
+            'animal_id',    // Foreign key on animal_files referencing animals.id
+            'id',           // Local key on reports
+            'id'            // Local key on animals
+        );
+    }
+    
+    /**
+     * Animales relacionados (reporte tiene muchos animales)
+     */
+    public function animals()
+    {
+        return $this->hasMany(\App\Models\Animal::class, 'reporte_id', 'id');
     }
 
-    public function reportador()
+    /**
+     * Condición observada (catálogo)
+     */
+    public function condicionInicial()
     {
-        return $this->belongsTo(User::class, 'reportador_id');
+        return $this->belongsTo(\App\Models\AnimalCondition::class, 'condicion_inicial_id', 'id');
+    }
+
+    /**
+     * Tipo de incidente (catálogo)
+     */
+    public function incidentType()
+    {
+        return $this->belongsTo(\App\Models\IncidentType::class, 'tipo_incidente_id', 'id');
+    }
+
+    /**
+     * Traslados asociados a este hallazgo (vía campo reporte_id en transfers).
+     */
+    public function transfers()
+    {
+        return $this->hasMany(Transfer::class, 'reporte_id', 'id');
+    }
+
+    /**
+     * Primer traslado registrado para este hallazgo (si existe).
+     */
+    public function firstTransfer()
+    {
+        return $this->hasOne(Transfer::class, 'reporte_id', 'id')
+            ->where('primer_traslado', true);
     }
 }

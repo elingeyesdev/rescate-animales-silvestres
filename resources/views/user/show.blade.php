@@ -1,19 +1,19 @@
 @extends('adminlte::page')
 
 @section('template_title')
-    {{ $user->name ?? __('Show') . " " . __('User') }}
+    {{ $user->name ?? __('Show') . ' ' . __('User') }}
 @endsection
 
 @section('content')
-    <section class="content container-fluid">
+    <section class="content container-fluid page-pad">
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <div class="float-left">
-                            <span class="card-title">{{ __('Show') }} User</span>
+                    <div class="card-header d-flex align-items-center">
+                        <div>
+                            <span class="card-title">{{ __('Show') }} {{ __('User') }}</span>
                         </div>
-                        <div class="float-right">
+                        <div class="ml-auto">
                             <a class="btn btn-primary btn-sm" href="{{ route('users.index') }}"> {{ __('Back') }}</a>
                         </div>
                     </div>
@@ -34,4 +34,5 @@
             </div>
         </div>
     </section>
+    @include('partials.page-pad')
 @endsection

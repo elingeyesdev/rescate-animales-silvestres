@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Animal;
+use Illuminate\Support\Facades\DB;
+use App\Models\Report;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\AnimalRequest;
@@ -28,8 +30,16 @@ class AnimalController extends Controller
     public function create(): View
     {
         $animal = new Animal();
+        // Listar solo reportes con cupo disponible según cantidad_animales
+        $reports = Report::query()
+            ->where('aprobado', 1)
+            ->leftJoin('animals', 'animals.reporte_id', '=', 'reports.id')
+            ->groupBy('reports.id', 'reports.cantidad_animales')
+            ->havingRaw('COUNT(animals.id) < COALESCE(reports.cantidad_animales, 1)')
+            ->orderByDesc('reports.id')
+            ->get(['reports.id']);
 
-        return view('animal.create', compact('animal'));
+        return view('animal.create', compact('animal','reports'));
     }
 
     /**
@@ -40,7 +50,7 @@ class AnimalController extends Controller
         Animal::create($request->validated());
 
         return Redirect::route('animals.index')
-            ->with('success', 'Animal created successfully.');
+            ->with('success', 'Animal creado exitosamente.');
     }
 
     /**
@@ -59,8 +69,22 @@ class AnimalController extends Controller
     public function edit($id): View
     {
         $animal = Animal::find($id);
+        // Reportes con cupo disponible
+        $reports = Report::query()
+            ->where('aprobado', 1)
+            ->leftJoin('animals', 'animals.reporte_id', '=', 'reports.id')
+            ->groupBy('reports.id', 'reports.cantidad_animales')
+            ->havingRaw('COUNT(animals.id) < COALESCE(reports.cantidad_animales, 1)')
+            ->orderByDesc('reports.id')
+            ->get(['reports.id'])
+            ->keyBy('id');
+        // Asegurar que el reporte actual esté disponible en el select aunque esté lleno
+        if ($animal?->reporte_id && !$reports->has($animal->reporte_id)) {
+            $reports->put($animal->reporte_id, (object)['id' => $animal->reporte_id]);
+        }
+        $reports = $reports->values();
 
-        return view('animal.edit', compact('animal'));
+        return view('animal.edit', compact('animal','reports'));
     }
 
     /**
@@ -71,7 +95,7 @@ class AnimalController extends Controller
         $animal->update($request->validated());
 
         return Redirect::route('animals.index')
-            ->with('success', 'Animal updated successfully');
+            ->with('success', 'Animal actualizado exitosamente.');
     }
 
     public function destroy($id): RedirectResponse
@@ -79,6 +103,6 @@ class AnimalController extends Controller
         Animal::find($id)->delete();
 
         return Redirect::route('animals.index')
-            ->with('success', 'Animal deleted successfully');
+            ->with('success', 'Animal eliminado exitosamente.');
     }
 }

@@ -11,13 +11,33 @@
         @csrf
 
         <div class="input-group mb-3">
-            <input type="text" name="name"
-                class="form-control @error('name') is-invalid @enderror"
-                placeholder="Nombre completo" value="{{ old('name') }}" required autofocus>
+            <input type="text" name="nombre"
+                class="form-control @error('nombre') is-invalid @enderror"
+                placeholder="Nombre completo" value="{{ old('nombre') }}" required autofocus>
             <div class="input-group-append">
                 <div class="input-group-text"><span class="fas fa-user"></span></div>
             </div>
-            @error('name') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+            @error('nombre') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+        </div>
+
+        <div class="input-group mb-3">
+            <input type="text" name="ci"
+                class="form-control @error('ci') is-invalid @enderror"
+                placeholder="CI" value="{{ old('ci') }}" required>
+            <div class="input-group-append">
+                <div class="input-group-text"><span class="fas fa-id-card"></span></div>
+            </div>
+            @error('ci') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+        </div>
+
+        <div class="input-group mb-3">
+            <input type="text" name="telefono"
+                class="form-control @error('telefono') is-invalid @enderror"
+                placeholder="Teléfono (opcional)" value="{{ old('telefono') }}">
+            <div class="input-group-append">
+                <div class="input-group-text"><span class="fas fa-phone"></span></div>
+            </div>
+            @error('telefono') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
         </div>
 
         <div class="input-group mb-3">
@@ -49,20 +69,7 @@
             </div>
         </div>
 
-        <div class="form-group mb-3">
-            <label for="rol">Rol</label>
-            <select name="rol" id="rol"
-                class="form-control @error('rol') is-invalid @enderror" required>
-                <option value="" disabled {{ old('rol') ? '' : 'selected' }}>Seleccione rol</option>
-                <option value="ciudadano"   {{ old('rol')=='ciudadano' ? 'selected' : '' }}>Ciudadano</option>
-                <option value="rescatista"  {{ old('rol')=='rescatista' ? 'selected' : '' }}>Rescatista</option>
-                <option value="veterinario" {{ old('rol')=='veterinario' ? 'selected' : '' }}>Veterinario</option>
-                <option value="cuidador"    {{ old('rol')=='cuidador' ? 'selected' : '' }}>Cuidador</option>
-                <option value="encargado"   {{ old('rol')=='encargado' ? 'selected' : '' }}>Encargado</option>
-                <option value="administrador" {{ old('rol')=='administrador' ? 'selected' : '' }}>Administrador</option>
-            </select>
-            @error('rol') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
-        </div>
+        
 
         <button type="submit" class="btn btn-primary btn-block">
             Registrarme

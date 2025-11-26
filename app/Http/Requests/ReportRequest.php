@@ -6,60 +6,66 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ReportRequest extends FormRequest
 {
+    /**
+     * Determine if the user is authorized to make this request.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
     public function rules(): array
     {
-        return [
-            'reporte_id' => 'sometimes|nullable',
-            'reportador_id' => 'required|integer',
-            'cantidad_animales' => 'required|integer',
-            // longitud: sin validación (se rellena desde el mapa)
-            // 'longitud' => 'numeric|between:-180,180',
-            'latitud' => 'required|numeric|between:-90,90',
-            'direccion' => 'required|string',
-            'centro_id' => 'required|integer',
-            'aprobado_id' => 'nullable|string',
-            'detalle_aprobado' => 'nullable|string',
-            'fecha_creacion' => 'nullable|date',
-            'fecha_actualizacion' => 'nullable|date',
+        $isUpdate = in_array($this->method(), ['PUT', 'PATCH']);
+        $rules = [
+            // persona_id and aprobado are set server-side (aprobado solo en update)
+            'cantidad_animales' => 'nullable|integer|min:1',
+            'imagen' => ($isUpdate ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'observaciones' => 'nullable|string',
+            // ubicación solo se exige en creación
+            'latitud' => $isUpdate ? 'nullable|numeric' : 'required|numeric',
+            'longitud' => $isUpdate ? 'nullable|numeric' : 'required|numeric',
+            'direccion' => 'nullable|string',
+            // nuevos campos parametrizables
+            'condicion_inicial_id' => 'required|exists:animal_conditions,id',
+            'tipo_incidente_id' => 'required|exists:incident_types,id',
+            'tamano' => 'required|in:pequeno,mediano,grande',
+            'puede_moverse' => 'required|boolean',
+            // traslado_inmediato y centro solo aplican al crear
+            'traslado_inmediato' => $isUpdate ? 'nullable' : 'nullable|boolean',
+            'centro_id' => $isUpdate ? 'nullable' : 'nullable|exists:centers,id|required_if:traslado_inmediato,1',
         ];
-    }
 
-    protected function prepareForValidation(): void
-    {
-        $lat = $this->parseCoordinate($this->input('latitud'), true);
-        $lon = $this->parseCoordinate($this->input('longitud'), false);
-
-        $this->merge([
-            'latitud' => $lat,
-            'longitud' => $lon,
-        ]);
-    }
-
-    protected function parseCoordinate($value, bool $isLatitude)
-    {
-        if ($value === null) return null;
-        $s = trim((string) $value);
-        if ($s === '') return null;
-        $s = str_replace(',', '.', $s);
-        if (is_numeric($s)) return (float) $s;
-
-        if (preg_match('/^\s*([+-]?\d+)\s+(\d+)\s+(\d+)\s*([NnSsEeWw])?\s*$/', $s, $m)
-            || preg_match('/^\s*([+-]?\d+)[^\d]+(\d+)[^\d]+(\d+)\s*([NnSsEeWw])?\s*$/', $s, $m)) {
-            $deg = (int) $m[1]; $min = (int) $m[2]; $sec = (int) $m[3]; $hem = $m[4] ?? null;
-            $val = abs($deg) + ($min / 60) + ($sec / 3600);
-            $sign = ($deg < 0) ? -1 : 1;
-            if ($hem) {
-                $hem = strtoupper($hem);
-                if ($hem === 'S' || $hem === 'W') $sign = -1;
-                else $sign = 1;
-            }
-            return $sign * $val;
+        if ($isUpdate) {
+            $rules['aprobado'] = 'required|boolean';
         }
-        return null;
+
+        return $rules;
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($v) {
+            try {
+                $condDesconocidoId = \App\Models\AnimalCondition::where('nombre', 'Desconocido')->value('id');
+                $incOtroId = \App\Models\IncidentType::where('nombre', 'Otro')->value('id');
+            } catch (\Throwable $e) {
+                $condDesconocidoId = null;
+                $incOtroId = null;
+            }
+            $condId = $this->input('condicion_inicial_id');
+            $incId = $this->input('tipo_incidente_id');
+            $obs = trim((string)$this->input('observaciones', ''));
+            $mustExplain = ($condDesconocidoId && (string)$condId === (string)$condDesconocidoId)
+                || ($incOtroId && (string)$incId === (string)$incOtroId);
+            if ($mustExplain && $obs === '') {
+                $v->errors()->add('observaciones', 'Debe especificar detalles en Observaciones para el caso seleccionado.');
+            }
+        });
     }
 }
