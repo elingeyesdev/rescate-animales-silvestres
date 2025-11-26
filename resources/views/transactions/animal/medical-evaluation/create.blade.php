@@ -354,7 +354,7 @@
                                 </div> {{-- /.col-12 --}}
 
                                 <div class="col-md-12 mt20 mt-2" id="submit_wrap" style="display:none;">
-                                    <button type="submit" class="btn btn-primary">{{ __('Guardar transacción') }}</button>
+                                    <button type="submit" class="btn btn-primary">{{ __('Guardar') }}</button>
                                 </div>
                             </div>
                         </form>

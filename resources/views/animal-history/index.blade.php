@@ -31,7 +31,6 @@
                                 <thead class="thead">
                                 <tr>
                                     <th>No</th>
-                                    <th>Hoja</th>
                                     <th>Animal</th>
                                     <th>Fecha de cambio</th>
                                     <th>Resumen</th>
@@ -42,7 +41,6 @@
                                 @foreach ($histories as $h)
                                     <tr>
                                         <td>{{ ++$i }}</td>
-                                        <td>#{{ $h->animal_file_id }}</td>
                                         <td>{{ $h->animalFile?->animal?->nombre ?? '-' }}</td>
                                         <td>{{ $h->changed_at ? \Carbon\Carbon::parse($h->changed_at)->format('d/m/Y H:i') : '' }}</td>
                                         <td>

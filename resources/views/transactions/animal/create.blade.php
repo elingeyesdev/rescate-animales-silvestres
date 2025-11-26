@@ -14,6 +14,16 @@
                         <span class="card-title">{{ __('Registrar Hoja de Vida del Animal') }}</span>
                     </div>
                     <div class="card-body bg-white">
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <div class="font-weight-bold mb-1">{{ __('No se pudo registrar la hoja. Revisa los errores:') }}</div>
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                         <form method="POST" action="{{ route('animal-records.store') }}"  role="form" enctype="multipart/form-data">
                             @csrf
 
@@ -31,13 +41,13 @@
                                                 @endif
                                             </div>
                                             <div class="card-body p-2">
-                                                <div class="small font-weight-bold">#{{ $rep->id }}</div>
+                                                <div class="small font-weight-bold">Hallazgo N°{{ $rep->id }}</div>
                                                 @if(!empty($rep->reportante_nombre))
                                                     <div class="small">{{ __('Reportante') }}: {{ $rep->reportante_nombre }}</div>
                                                 @endif
-                                                <div class="small text-muted">{{ __('Reportados') }}: {{ $rep->cantidad_animales ?? 1 }}</div>
+                                                <!--<div class="small text-muted">{{ __('Reportados') }}: {{ $rep->cantidad_animales ?? 1 }}</div>
                                                 <div class="small text-muted">{{ __('Asignados') }}: {{ $rep->asignados }}</div>
-                                                <div class="small text-success">{{ __('Disp.') }}: {{ $available }}</div>
+                                                <div class="small text-success">{{ __('Disp.') }}: {{ $available }}</div>-->
                                             </div>
                                         </div>
                                     @endforeach
@@ -58,7 +68,7 @@
                                                 'animal' => $animal ?? null,
                                                 'reports' => $reports ?? [],
                                                 'showSubmit' => false,
-                                                'showName' => false,
+                                                'showName' => true,
                                                 'hideReportSelect' => true,
                                                 'hideInitialState' => true
                                             ])
@@ -66,9 +76,8 @@
                                         <div class="form-group mb-2">
                                             <label for="estado_id" class="form-label">{{ __('Estado Actual') }}</label>
                                             <select name="estado_id" id="estado_id" class="form-control @error('estado_id') is-invalid @enderror">
-                                                <option value="">{{ __('Seleccione') }}</option>
                                                 @foreach(collect($animalStatuses ?? [])->sortBy('nombre') as $st)
-                                                    <option value="{{ $st->id }}" {{ (string)old('estado_id') === (string)$st->id ? 'selected' : '' }}>{{ $st->nombre }}</option>
+                                                    <option value="{{ $st->id }}" {{ (string)old('estado_id') === (string)$st->id ? 'selected' : ((empty(old('estado_id')) && (string)$defaultStatusId === (string)$st->id) ? 'selected' : '') }}>{{ $st->nombre }}</option>
                                                 @endforeach
                                             </select>
                                             {!! $errors->first('estado_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}

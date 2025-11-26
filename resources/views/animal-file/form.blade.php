@@ -1,16 +1,23 @@
 <div class="padding-1 p-1">
+    {!! $errors->first('general', '<div class="alert alert-danger" role="alert"><strong>:message</strong></div>') !!}
     @if(($showAnimalSelect ?? true))
         <div class="form-group mb-2">
             <label for="animal_id" class="form-label">{{ __('Animal') }}</label>
             <select name="animal_id" id="animal_id" class="form-control @error('animal_id') is-invalid @enderror">
                 <option value="">{{ __('Seleccione') }}</option>
                 @foreach(($animals ?? []) as $a)
-                    <option value="{{ $a->id }}" {{ (string)old('animal_id', $animalFile?->animal_id) === (string)$a->id ? 'selected' : '' }}>#{{ $a->id }} {{ $a->nombre ? '- ' . $a->nombre : '' }}</option>
+                    <option value="{{ $a->id }}" {{ (string)old('animal_id', $animalFile?->animal_id) === (string)$a->id ? 'selected' : '' }}>N°{{ $a->id }} {{ $a->nombre ? '- ' . $a->nombre : '' }}</option>
                 @endforeach
             </select>
             {!! $errors->first('animal_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
     @endif
+
+    <div class="form-group mb-2">
+        <label for="animal_nombre" class="form-label">{{ __('Nombre') }}</label>
+        <input type="text" name="animal_nombre" id="animal_nombre" class="form-control @error('animal_nombre') is-invalid @enderror" value="{{ old('animal_nombre', $animalFile?->animal?->nombre) }}" placeholder="Nombre del animal">
+        {!! $errors->first('animal_nombre', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+    </div>
 
     @if(empty($hideType))
         <div class="form-group mb-2">
@@ -32,7 +39,6 @@
     <div class="form-group mb-2">
         <label for="especie_id" class="form-label">{{ __('Especie') }}</label>
         <select name="especie_id" id="especie_id" class="form-control @error('especie_id') is-invalid @enderror">
-            <option value="">Seleccione</option>
             @foreach(($species ?? []) as $s)
                 <option value="{{ $s->id }}" {{ (string)old('especie_id', $animalFile?->especie_id) === (string)$s->id ? 'selected' : '' }}>{{ $s->nombre }}</option>
             @endforeach
@@ -53,28 +59,14 @@
         </div>
     </div>
 
-    @if(empty($hideBreed))
-        <div class="form-group mb-2">
-            <label for="raza_id" class="form-label">{{ __('Raza (Opcional)') }}</label>
-            <select name="raza_id" id="raza_id" class="form-control @error('raza_id') is-invalid @enderror">
-                <option value="">Seleccione especie primero</option>
-                @isset($breeds)
-                    @foreach($breeds as $b)
-                        <option value="{{ $b->id }}" {{ (string)old('raza_id', $animalFile?->raza_id) === (string)$b->id ? 'selected' : '' }}>{{ $b->nombre }}</option>
-                    @endforeach
-                @endisset
-            </select>
-            {!! $errors->first('raza_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
-    @endif
+    
 
     @if(empty($hideState))
         <div class="form-group mb-2">
             <label for="estado_id" class="form-label">{{ __('Estado') }}</label>
             <select name="estado_id" id="estado_id" class="form-control @error('estado_id') is-invalid @enderror">
-                <option value="">Seleccione</option>
                 @foreach(($animalStatuses ?? []) as $st)
-                    <option value="{{ $st->id }}" {{ (string)old('estado_id', $animalFile?->estado_id) === (string)$st->id || ((!old('estado_id', $animalFile?->estado_id)) && empty($animalFile?->estado_id) && mb_strtolower($st->nombre) === 'en atención') ? 'selected' : '' }}>{{ $st->nombre }}</option>
+                    <option value="{{ $st->id }}" {{ (string)old('estado_id', $animalFile?->estado_id) === (string)$st->id || ((!old('estado_id', $animalFile?->estado_id)) && empty($animalFile?->estado_id) && mb_strtolower($st->nombre) === 'en recuperación') ? 'selected' : '' }}>{{ $st->nombre }}</option>
                 @endforeach
             </select>
             {!! $errors->first('estado_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}

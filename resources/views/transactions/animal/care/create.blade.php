@@ -81,7 +81,7 @@
                         </div>
                         <div class="card-footer">
                             <a href="{{ route('cares.index') }}" class="btn btn-secondary">{{ __('Cancelar') }}</a>
-                            <button type="submit" class="btn btn-primary">{{ __('Guardar transacción') }}</button>
+                            <button type="submit" class="btn btn-primary">{{ __('Guardar') }}</button>
                         </div>
                     </form>
                 </div>

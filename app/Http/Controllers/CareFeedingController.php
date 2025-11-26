@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\CareFeedingRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Carbon;
 
 class CareFeedingController extends Controller
 {
@@ -34,7 +35,8 @@ class CareFeedingController extends Controller
         $careFeeding = new CareFeeding();
 
 		$careOptions = Care::orderByDesc('id')->get()->mapWithKeys(function (Care $care) {
-			$label = 'Cuidado N°'.$care->id.(isset($care->fecha) ? ' - '.$care->fecha : '');
+			$date = isset($care->fecha) ? Carbon::parse($care->fecha)->format('d/m/y') : null;
+			$label = 'Cuidado N°'.$care->id.($date ? ' - '.$date : '');
 			return [$care->id => $label];
 		});
 		$feedingTypeOptions = FeedingType::orderBy('nombre')->pluck('nombre', 'id');
@@ -81,8 +83,8 @@ class CareFeedingController extends Controller
         $careFeeding = CareFeeding::find($id);
 
 		$careOptions = Care::orderByDesc('id')->get()->mapWithKeys(function (Care $care) {
-			$label = 'Cuidado №
-'.$care->id.(isset($care->fecha) ? ' - '.$care->fecha : '');
+			$date = isset($care->fecha) ? Carbon::parse($care->fecha)->format('d/m/y') : null;
+			$label = 'Cuidado N°'.$care->id.($date ? ' - '.$date : '');
 			return [$care->id => $label];
 		});
 		$feedingTypeOptions = FeedingType::orderBy('nombre')->pluck('nombre', 'id');

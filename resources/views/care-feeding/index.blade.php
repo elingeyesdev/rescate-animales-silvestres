@@ -49,12 +49,12 @@
                                         <tr>
                                             <td>{{ ++$i }}</td>
                                             
-										<td >{{ $careFeeding->care?->descripcion ?? ('#'.$careFeeding->care_id) }}</td>
-										<td >{{ $careFeeding->feedingType?->nombre ?? ('#'.$careFeeding->feeding_type_id) }}</td>
-										<td >{{ $careFeeding->feedingFrequency?->nombre ?? ('#'.$careFeeding->feeding_frequency_id) }}</td>
+										<td >{{ $careFeeding->care?->descripcion ?? ('N°'.$careFeeding->care_id) }}</td>
+										<td >{{ $careFeeding->feedingType?->nombre ?? ('N°'.$careFeeding->feeding_type_id) }}</td>
+										<td >{{ $careFeeding->feedingFrequency?->nombre ?? ('N°'.$careFeeding->feeding_frequency_id) }}</td>
 										<td >
                                             @php($p = $careFeeding->feedingPortion)
-                                            {{ $p ? ($p->cantidad.' '.$p->unidad) : ('#'.$careFeeding->feeding_portion_id) }}
+                                            {{ $p ? ($p->cantidad.' '.$p->unidad) : ('N°'.$careFeeding->feeding_portion_id) }}
                                         </td>
 
                                             <td>

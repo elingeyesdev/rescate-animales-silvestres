@@ -45,6 +45,16 @@ class AnimalFileController extends Controller
         if ($defaultTypeId && empty($animalFile->tipo_id)) {
             $animalFile->tipo_id = $defaultTypeId;
         }
+        // Preseleccionar Especie "Desconocido" si existe
+        $unknownSpeciesId = Species::whereRaw('LOWER(nombre) = ?', ['desconocido'])->value('id');
+        if ($unknownSpeciesId && empty($animalFile->especie_id)) {
+            $animalFile->especie_id = $unknownSpeciesId;
+        }
+        // Preseleccionar Estado "En recuperación" si existe
+        $recoveryStatusId = AnimalStatus::whereRaw('LOWER(nombre) = ?', ['en recuperación'])->value('id');
+        if ($recoveryStatusId && empty($animalFile->estado_id)) {
+            $animalFile->estado_id = $recoveryStatusId;
+        }
 
         return view('animal-file.create', compact('animalFile','animalTypes','species','animalStatuses','animals'));
     }
@@ -54,15 +64,30 @@ class AnimalFileController extends Controller
      */
     public function store(AnimalFileRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-        if ($request->hasFile('imagen')) {
-            $path = $request->file('imagen')->store('animal_files', 'public');
-            $data['imagen_url'] = $path;
-        }
-        AnimalFile::create($data);
+        try {
+            $data = $request->validated();
+            // animal_nombre is for updating related Animal's nombre, not a column in animal_files
+            $animalNombre = $data['animal_nombre'] ?? null;
+            unset($data['animal_nombre']);
+            if ($request->hasFile('imagen')) {
+                $path = $request->file('imagen')->store('animal_files', 'public');
+                $data['imagen_url'] = $path;
+            }
+            $animalFile = AnimalFile::create($data);
+            if (!empty($animalNombre)) {
+                $animal = Animal::find($animalFile->animal_id);
+                if ($animal) {
+                    $animal->update(['nombre' => $animalNombre]);
+                }
+            }
 
-        return Redirect::route('animal-files.index')
-            ->with('success', 'Hoja del Animal creada correctamente.');
+            return Redirect::route('animal-files.index')
+                ->with('success', 'Hoja del Animal creada correctamente.');
+        } catch (\Throwable $e) {
+            return Redirect::back()
+                ->withInput()
+                ->withErrors(['general' => 'No se pudo crear la hoja del animal: ' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -97,15 +122,31 @@ class AnimalFileController extends Controller
      */
     public function update(AnimalFileRequest $request, AnimalFile $animalFile): RedirectResponse
     {
-        $data = $request->validated();
-        if ($request->hasFile('imagen')) {
-            $path = $request->file('imagen')->store('animal_files', 'public');
-            $data['imagen_url'] = $path;
-        }
-        $animalFile->update($data);
+        try {
+            $data = $request->validated();
+            // animal_nombre is for updating related Animal's nombre, not a column in animal_files
+            $animalNombre = $data['animal_nombre'] ?? null;
+            unset($data['animal_nombre']);
+            if ($request->hasFile('imagen')) {
+                $path = $request->file('imagen')->store('animal_files', 'public');
+                $data['imagen_url'] = $path;
+            }
+            $animalFile->update($data);
+            if (!empty($animalNombre)) {
+                $animalId = $data['animal_id'] ?? $animalFile->animal_id;
+                $animal = Animal::find($animalId);
+                if ($animal) {
+                    $animal->update(['nombre' => $animalNombre]);
+                }
+            }
 
-        return Redirect::route('animal-files.index')
-            ->with('success', 'Hoja del Animal actualizada exitosamente');
+            return Redirect::route('animal-files.index')
+                ->with('success', 'Hoja del Animal actualizada exitosamente');
+        } catch (\Throwable $e) {
+            return Redirect::back()
+                ->withInput()
+                ->withErrors(['general' => 'No se pudo actualizar la hoja del animal: ' . $e->getMessage()]);
+        }
     }
 
     public function destroy($id): RedirectResponse

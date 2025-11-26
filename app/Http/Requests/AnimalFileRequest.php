@@ -22,13 +22,14 @@ class AnimalFileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'animal_id' => 'required',
-			'tipo_id' => 'required',
-			'especie_id' => 'required',
+            'animal_nombre' => 'nullable|string|max:255',
+            'animal_id' => 'required|exists:animals,id',
+			'tipo_id' => 'required|exists:animal_types,id',
+			'especie_id' => 'required|exists:species,id',
 			'imagen_url' => 'nullable|string',
 			'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
 			'raza_id' => 'nullable|exists:breeds,id',
-			'estado_id' => 'required',
+			'estado_id' => 'required|exists:animal_statuses,id',
         ];
     }
 }

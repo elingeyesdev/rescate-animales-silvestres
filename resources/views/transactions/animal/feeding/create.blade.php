@@ -68,8 +68,8 @@
                                 </div>
                                 <div class="col-md-12">
                                     <div class="form-group mb-1">
-                                        <label for="descripcion" class="form-label">{{ __('Descripción del Cuidado') }}</label>
-                                        <input type="text" name="descripcion" id="descripcion" class="form-control @error('descripcion') is-invalid @enderror" value="{{ old('descripcion') }}">
+                                        <label for="descripcion" class="form-label">{{ __('Descripción') }}</label>
+                                        <textarea name="descripcion" id="descripcion" class="form-control @error('descripcion') is-invalid @enderror" rows="3">{{ old('descripcion') }}</textarea>
                                         {!! $errors->first('descripcion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                                     </div>
                                 </div>

@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('template_title')
-    {{ __('Historial de Hoja #') . $animalHistory->animal_file_id }}
+    {{ __('Historial de Animal ') . $animalHistory->animal_file_id }}
 @endsection
 
 @section('content')
@@ -36,9 +36,8 @@
                                     @endif
                                 </div>
                                 <div class="text-muted small mt-1">
-                                    {{ __('Hoja') }} #{{ $animalHistory->animal_file_id }}
                                     @if($reportDate)
-                                        · {{ __('Reporte') }}: {{ $reportDate }}
+                                        {{ __('Hallazgo') }}: {{ $reportDate }}
                                     @endif
                                 </div>
                             </div>
@@ -79,7 +78,7 @@
                                 <div>
                                     <i class="{{ $icon }} {{ $bg }}"></i>
                                     <div class="timeline-item">
-                                        <span class="time"><i class="fas fa-clock"></i> {{ $time }}</span>
+                                        <span class="time"><i class="fas fa-clock"></i> {{ $time }} @if($date)&nbsp;&nbsp;<i class="fas fa-calendar-alt"></i> {{ $date }}@endif</span>
                                         <h3 class="timeline-header">{{ $title }}</h3>
                                         <div class="timeline-body">
                                             <div class="row">

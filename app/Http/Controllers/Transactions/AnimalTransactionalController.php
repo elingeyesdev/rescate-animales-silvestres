@@ -35,7 +35,12 @@ class AnimalTransactionalController extends Controller
 
 		// Defaults
 		$wildTypeId = AnimalType::whereRaw('LOWER(nombre) = ?', ['silvestre'])->value('id');
-		$defaultStatusId = AnimalStatus::whereRaw('LOWER(nombre) = ?', ['en atención'])->value('id');
+		$defaultStatusId = AnimalStatus::whereRaw('LOWER(nombre) = ?', ['en recuperación'])->value('id');
+        // Default especie "Desconocido" en el formulario de hoja
+        $unknownSpeciesId = Species::whereRaw('LOWER(nombre) = ?', ['desconocido'])->value('id');
+        if ($unknownSpeciesId && empty($animalFile->especie_id)) {
+            $animalFile->especie_id = $unknownSpeciesId;
+        }
 
 		// Datos requeridos por el form de Animal (select oculto y tarjetas)
 		$reports = Report::query()
@@ -97,38 +102,44 @@ class AnimalTransactionalController extends Controller
 	 */
 	public function store(AnimalWithFileRequest $request): RedirectResponse
 	{
-		$animalData = $request->only(['nombre','sexo','descripcion','reporte_id','transfer_history_ids','llegaron_cantidad']);
-		$animalFileData = $request->only(['tipo_id','especie_id','raza_id','estado_id']);
-		$image = $request->file('imagen');
+		try {
+			$animalData = $request->only(['nombre','sexo','descripcion','reporte_id','transfer_history_ids','llegaron_cantidad']);
+			$animalFileData = $request->only(['tipo_id','especie_id','raza_id','estado_id']);
+			$image = $request->file('imagen');
 
-        // Forzar tipo Silvestre por defecto si no viene del formulario
-        if (empty($animalFileData['tipo_id'])) {
-            $animalFileData['tipo_id'] = AnimalType::whereRaw('LOWER(nombre) = ?', ['silvestre'])->value('id');
-        }
+			// Forzar tipo Silvestre por defecto si no viene del formulario
+			if (empty($animalFileData['tipo_id'])) {
+				$animalFileData['tipo_id'] = AnimalType::whereRaw('LOWER(nombre) = ?', ['silvestre'])->value('id');
+			}
 
-        // Si no viene estado, mapear desde la condición inicial del reporte
-        if (empty($animalFileData['estado_id']) && !empty($animalData['reporte_id'])) {
-            $rep = Report::with('animalCondition')->find($animalData['reporte_id']);
-            if ($rep && $rep->animalCondition && $rep->animalCondition->nombre) {
-                $status = AnimalStatus::whereRaw('LOWER(nombre) = ?', [mb_strtolower($rep->animalCondition->nombre)])->value('id');
-                if ($status) {
-                    $animalFileData['estado_id'] = $status;
-                } else {
-                    // fallback
-                    $animalFileData['estado_id'] = AnimalStatus::whereRaw('LOWER(nombre) = ?', ['en atención'])->value('id');
-                }
-            }
-            // Copiar observaciones en descripción si no se envió
-            if (empty($animalData['descripcion']) && $rep && !empty($rep->observaciones)) {
-                $animalData['descripcion'] = $rep->observaciones;
-            }
-        }
+			// Si no viene estado, mapear desde la condición inicial del reporte
+			if (empty($animalFileData['estado_id']) && !empty($animalData['reporte_id'])) {
+				$rep = Report::with('animalCondition')->find($animalData['reporte_id']);
+				if ($rep && $rep->animalCondition && $rep->animalCondition->nombre) {
+					$status = AnimalStatus::whereRaw('LOWER(nombre) = ?', [mb_strtolower($rep->animalCondition->nombre)])->value('id');
+					if ($status) {
+						$animalFileData['estado_id'] = $status;
+					} else {
+						// fallback
+						$animalFileData['estado_id'] = AnimalStatus::whereRaw('LOWER(nombre) = ?', ['en atención'])->value('id');
+					}
+				}
+				// Copiar observaciones en descripción si no se envió
+				if (empty($animalData['descripcion']) && $rep && !empty($rep->observaciones)) {
+					$animalData['descripcion'] = $rep->observaciones;
+				}
+			}
 
-        $this->service->createWithFile($animalData, $animalFileData, $image);
-        $msg = 'Animal y Hoja creados correctamente en una transacción.';
+			$this->service->createWithFile($animalData, $animalFileData, $image);
+			$msg = 'Animal y Hoja creados correctamente en una transacción.';
 
-		return Redirect::route('animal-files.index')
-			->with('success', $msg);
+			return Redirect::route('animal-files.index')
+				->with('success', $msg);
+		} catch (\Throwable $e) {
+			return Redirect::back()
+				->withInput()
+				->withErrors(['general' => 'No se pudo registrar la hoja del animal: ' . $e->getMessage()]);
+		}
 	}
 }
 

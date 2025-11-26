@@ -82,7 +82,7 @@ class AnimalHistoryTimelineService
 		$timeline = [];
 		foreach ($all as $h) {
 			$changed = $h->changed_at ? Carbon::parse($h->changed_at) : null;
-			$changedDate = $changed ? $changed->format('d/m/Y') : null;
+			$changedDate = $changed ? $changed->format('d/m/y') : null;
 			$changedTime = $changed ? $changed->format('H:i') : null;
 			$item = [
 				'id' => $h->id,
@@ -102,7 +102,7 @@ class AnimalHistoryTimelineService
 			if (!empty($new['report'])) {
 				$item['title'] = 'Reporte de hallazgo';
 				$rp = $new['report'];
-				$personName = isset($rp['persona_id']) ? (Person::find($rp['persona_id'])->nombre ?? ('#'.$rp['persona_id'])) : null;
+				$personName = isset($rp['persona_id']) ? (Person::find($rp['persona_id'])->nombre) : null;
 				// imagen desde reporte si existe
 				if (!empty($rp['id'])) {
 					$reportModel = Report::find($rp['id']);
@@ -124,7 +124,6 @@ class AnimalHistoryTimelineService
 				$item['details'][] = [
 					'label' => 'Detalle',
 					'value' => implode(' | ', array_filter([
-						isset($rp['id']) ? ('#'.$rp['id']) : null,
 						$personName ? ('Reportado por: '.$personName) : null,
 						!empty($rp['direccion']) ? ('Dirección: '.$rp['direccion']) : null,
 					])),
@@ -162,8 +161,8 @@ class AnimalHistoryTimelineService
 			if (!empty($new['evaluacion_medica'])) {
 				$item['title'] = 'Evaluación Médica';
 				$em = $new['evaluacion_medica'];
-				$trat = isset($em['tratamiento_id']) ? ($treatments[$em['tratamiento_id']]->nombre ?? ('#'.$em['tratamiento_id'])) : null;
-				$vet = isset($em['veterinario_id']) ? ($vets[$em['veterinario_id']]->person->nombre ?? ('#'.$em['veterinario_id'])) : null;
+				$trat = isset($em['tratamiento_id']) ? ($treatments[$em['tratamiento_id']]->nombre) : null;
+				$vet = isset($em['veterinario_id']) ? ($vets[$em['veterinario_id']]->person->nombre) : null;
 				// intentar obtener imagen desde la evaluación
 				if (!empty($em['id'])) {
 					$me = MedicalEvaluation::find($em['id']);
@@ -194,7 +193,7 @@ class AnimalHistoryTimelineService
 				$careTypeText = null;
 				if (!empty($care['tipo_cuidado_id'])) {
 					$ct = CareType::find($care['tipo_cuidado_id']);
-					$careTypeText = $ct ? ('Tipo: '.$ct->nombre) : ('Tipo: #'.$care['tipo_cuidado_id']);
+					$careTypeText = $ct ? ('Tipo: '.$ct->nombre) : null;
 				}
 				$item['details'][] = [
 					'label' => 'Detalle',
@@ -209,12 +208,12 @@ class AnimalHistoryTimelineService
 			if (!empty($new['care_feeding'])) {
 				$item['title'] = 'Alimentación';
 				$cf = $new['care_feeding'];
-				$tipo = isset($cf['feeding_type_id']) ? ($feedTypes[$cf['feeding_type_id']]->nombre ?? ('#'.$cf['feeding_type_id'])) : null;
-				$freq = isset($cf['feeding_frequency_id']) ? ($feedFreqs[$cf['feeding_frequency_id']]->nombre ?? ('#'.$cf['feeding_frequency_id'])) : null;
+				$tipo = isset($cf['feeding_type_id']) ? ($feedTypes[$cf['feeding_type_id']]->nombre) : null;
+				$freq = isset($cf['feeding_frequency_id']) ? ($feedFreqs[$cf['feeding_frequency_id']]->nombre) : null;
 				$portion = null;
 				if (isset($cf['feeding_portion_id'])) {
 					$p = $feedPortions[$cf['feeding_portion_id']] ?? null;
-					$portion = $p ? ($p->cantidad.' '.$p->unidad) : ('#'.$cf['feeding_portion_id']);
+					$portion = $p ? ($p->cantidad.' '.$p->unidad) : null;
 				}
 				$item['details'][] = [
 					'label' => 'Información',
@@ -230,8 +229,8 @@ class AnimalHistoryTimelineService
 			if (!empty($new['transfer'])) {
 				$item['title'] = 'Traslado';
 				$tr = $new['transfer'];
-				$personName = isset($tr['persona_id']) ? (Person::find($tr['persona_id'])->nombre ?? ('#'.$tr['persona_id'])) : null;
-				$centerName = isset($tr['centro_id']) ? (Center::find($tr['centro_id'])->nombre ?? ('#'.$tr['centro_id'])) : null;
+				$personName = isset($tr['persona_id']) ? (Person::find($tr['persona_id'])->nombre) : null;
+				$centerName = isset($tr['centro_id']) ? (Center::find($tr['centro_id'])->nombre) : null;
 				$item['details'][] = [
 					'label' => 'Información',
 					'value' => implode(' | ', array_filter([
@@ -250,8 +249,7 @@ class AnimalHistoryTimelineService
                 $aprob = array_key_exists('aprobada', $lib) ? (bool)$lib['aprobada'] : null;
                 $parts = [];
                 if (!empty($lib['direccion'])) $parts[] = 'Dirección: '.$lib['direccion'];
-                if (!is_null($aprob)) $parts[] = 'Aprobada: '.($aprob ? 'Sí' : 'No');
-                if (!empty($lib['latitud']) && !empty($lib['longitud'])) $parts[] = 'GPS: '.$lib['latitud'].','.$lib['longitud'];
+                //if (!is_null($aprob)) $parts[] = 'Aprobada: '.($aprob ? 'Sí' : 'No');
                 $item['details'][] = [
                     'label' => 'Información',
                     'value' => implode(' | ', $parts),
@@ -268,7 +266,6 @@ class AnimalHistoryTimelineService
 						'value' => implode(' | ', array_filter([
 							!empty($an['nombre']) ? ('Nombre: '.$an['nombre']) : null,
 							!empty($an['sexo']) ? ('Sexo: '.$an['sexo']) : null,
-							isset($an['id']) ? ('#'.$an['id']) : null,
 						])),
 					];
 				}
@@ -282,13 +279,12 @@ class AnimalHistoryTimelineService
 							$imageUrl = $afModel->imagen_url;
 						}
 					}
-					$estadoName = isset($af['estado_id']) ? (AnimalStatus::find($af['estado_id'])->nombre ?? ('#'.$af['estado_id'])) : null;
-					$tipoName = isset($af['tipo_id']) ? (AnimalType::find($af['tipo_id'])->nombre ?? ('#'.$af['tipo_id'])) : null;
-					$espName = isset($af['especie_id']) ? (Species::find($af['especie_id'])->nombre ?? ('#'.$af['especie_id'])) : null;
+					$estadoName = isset($af['estado_id']) ? (AnimalStatus::find($af['estado_id'])->nombre) : null;
+					$tipoName = isset($af['tipo_id']) ? (AnimalType::find($af['tipo_id'])->nombre) : null;
+					$espName = isset($af['especie_id']) ? (Species::find($af['especie_id'])->nombre) : null;
 					$item['details'][] = [
 						'label' => 'Detalle',
 						'value' => implode(' | ', array_filter([
-							isset($af['id']) ? ('#'.$af['id']) : null,
 							$estadoName ? ('Estado: '.$estadoName) : null,
 							$tipoName ? ('Tipo: '.$tipoName) : null,
 							$espName ? ('Especie: '.$espName) : null,
