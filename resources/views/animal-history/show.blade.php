@@ -47,7 +47,19 @@
                                 </div>
                             @endif
                         </div>
-                        
+
+                        <div class="mb-3">
+                            <div class="btn-group" role="group" aria-label="{{ __('Vista de historial') }}">
+                                <button type="button" class="btn btn-outline-primary btn-sm active" id="btnTimelineView">
+                                    {{ __('Línea de tiempo') }}
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="btnMapView">
+                                    {{ __('Mapa de traslados') }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="timelineContainer">
                         <div class="timeline">
                             @php $currentDate = null; @endphp
                             @foreach(($timeline ?? []) as $t)
@@ -114,6 +126,30 @@
                             @endforeach
                             {{-- Punto final de la línea de tiempo eliminado para evitar icono de reloj adicional --}}
                         </div>
+                        </div>
+
+                        <div id="mapContainer" style="display:none;">
+                            @php $points = $mapRoute['points'] ?? []; @endphp
+                            @if(!empty($points))
+                                <div id="animalRouteMap" style="height: 380px; border-radius: 6px; overflow: hidden;"></div>
+                                <div class="mt-2 small text-muted">
+                                    <strong>{{ __('Leyenda') }}:</strong>
+                                    <span class="ml-2">
+                                        <span class="legend-dot legend-dot-hallazgo"></span> {{ __('Hallazgo') }}
+                                    </span>
+                                    <span class="ml-3">
+                                        <span class="legend-dot legend-dot-transfer"></span> {{ __('Traslado / Centro') }}
+                                    </span>
+                                    <span class="ml-3">
+                                        <span class="legend-dot legend-dot-release"></span> {{ __('Liberación') }}
+                                    </span>
+                                </div>
+                            @else
+                                <div class="alert alert-info">
+                                    {{ __('No hay datos de ubicación geográfica registrados para este animal.') }}
+                                </div>
+                            @endif
+                        </div>
                         <div id="imageOverlay" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.85); z-index:1050; align-items:center; justify-content:center;">
                             <button id="overlayClose" type="button" style="position:absolute; top:16px; right:16px; background:rgba(0,0,0,.4); border:0; color:#fff; padding:8px 12px; border-radius:4px; cursor:pointer;">
                                 ✕ {{ __('Cerrar') }}
@@ -129,6 +165,7 @@
             </div>
         </div>
     </section>
+    @include('partials.leaflet')
     @include('partials.page-pad')
     <style>
         .sticky-summary{
@@ -140,6 +177,16 @@
             border-radius: 4px;
             box-shadow: 0 2px 6px rgba(0,0,0,.05);
         }
+        .legend-dot{
+            display:inline-block;
+            width:10px;
+            height:10px;
+            border-radius:50%;
+            margin-right:4px;
+        }
+        .legend-dot-hallazgo{ background-color:#16a34a; }
+        .legend-dot-transfer{ background-color:#2563eb; }
+        .legend-dot-release{ background-color:#f59e0b; }
     </style>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -164,6 +211,95 @@
         closeBtn?.addEventListener('click', hideOverlay);
         overlay?.addEventListener('click', function(e){ if (e.target === overlay) hideOverlay(); });
         document.addEventListener('keydown', function(e){ if (e.key === 'Escape') hideOverlay(); });
+
+        // Toggle entre Timeline y Mapa
+        const btnTimeline = document.getElementById('btnTimelineView');
+        const btnMap = document.getElementById('btnMapView');
+        const timelineContainer = document.getElementById('timelineContainer');
+        const mapContainer = document.getElementById('mapContainer');
+        let routeMap = null;
+
+        function activateTimeline() {
+            if (!timelineContainer || !mapContainer) return;
+            timelineContainer.style.display = '';
+            mapContainer.style.display = 'none';
+            btnTimeline?.classList.add('active');
+            btnMap?.classList.remove('active');
+        }
+
+        function activateMap() {
+            if (!timelineContainer || !mapContainer) return;
+            timelineContainer.style.display = 'none';
+            mapContainer.style.display = '';
+            btnMap?.classList.add('active');
+            btnTimeline?.classList.remove('active');
+            if (!routeMap) {
+                initRouteMap();
+            }
+        }
+
+        btnTimeline?.addEventListener('click', function (e) {
+            e.preventDefault();
+            activateTimeline();
+        });
+        btnMap?.addEventListener('click', function (e) {
+            e.preventDefault();
+            activateMap();
+        });
+
+        function initRouteMap() {
+            if (routeMap) return;
+            const mapEl = document.getElementById('animalRouteMap');
+            if (!mapEl || !window.L) return;
+
+            const data = @json($mapRoute ?? ['points' => []]);
+            const points = Array.isArray(data.points) ? data.points : [];
+            if (!points.length) return;
+
+            routeMap = L.map('animalRouteMap');
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19
+            }).addTo(routeMap);
+
+            const latlngs = [];
+            points.forEach(function (p) {
+                const lat = parseFloat(p.lat);
+                const lon = parseFloat(p.lon);
+                if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+                const latlng = [lat, lon];
+                latlngs.push(latlng);
+
+                let color = '#2563eb'; // traslado por defecto
+                if (p.type === 'report') color = '#16a34a';
+                if (p.type === 'release') color = '#f59e0b';
+
+                const marker = L.circleMarker(latlng, {
+                    radius: 7,
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.9
+                }).addTo(routeMap);
+
+                let popup = '';
+                if (p.label) popup += '<strong>' + p.label + '</strong>';
+                if (p.center_name) popup += '<br>Centro: ' + p.center_name;
+                if (p.address) popup += '<br>Dirección: ' + p.address;
+                if (p.date) popup += '<br>Fecha: ' + p.date;
+                if (p.observaciones) popup += '<br>Obs: ' + p.observaciones;
+                if (popup) marker.bindPopup(popup);
+            });
+
+            if (latlngs.length >= 2) {
+                const poly = L.polyline(latlngs, {
+                    color: '#2563eb',
+                    weight: 4,
+                    opacity: 0.8
+                }).addTo(routeMap);
+                routeMap.fitBounds(poly.getBounds().pad(0.2));
+            } else if (latlngs.length === 1) {
+                routeMap.setView(latlngs[0], 15);
+            }
+        }
     });
     </script>
 @endsection

@@ -16,6 +16,8 @@ use App\Models\Person;
 use App\Models\Center;
 use App\Models\Species;
 use App\Models\Report;
+use App\Models\Transfer;
+use App\Models\Release;
 use App\Models\AnimalFile as AnimalFileModel;
 use Illuminate\Support\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -318,6 +320,117 @@ class AnimalHistoryTimelineService
 		}
 
 		return $timeline;
+	}
+
+	/**
+	 * Construye una ruta geográfica (para mapa) con las posiciones relevantes
+	 * del historial de un animal: hallazgo, traslados y liberación (si existe).
+	 *
+	 * @return array{
+	 *     points: array<int, array<string, mixed>>
+	 * }
+	 */
+	public function buildLocationRoute(int $animalFileId): array
+	{
+		$histories = AnimalHistory::where('animal_file_id', $animalFileId)
+			->orderBy('changed_at')
+			->orderBy('id')
+			->get();
+
+		$points = [];
+
+		foreach ($histories as $h) {
+			$changed = $h->changed_at ? Carbon::parse($h->changed_at) : null;
+			$new = $h->valores_nuevos ?? [];
+
+			// Punto de hallazgo (reporte)
+			if (!empty($new['report'])) {
+				$rp = $new['report'];
+				$lat = $rp['latitud'] ?? null;
+				$lon = $rp['longitud'] ?? null;
+				if ($lat !== null && $lon !== null) {
+					$eventDate = $changed;
+					if (!$eventDate && !empty($rp['id'])) {
+						$reportModel = Report::find($rp['id']);
+						if ($reportModel && $reportModel->created_at) {
+							$eventDate = Carbon::parse($reportModel->created_at);
+						}
+					}
+
+					$points[] = [
+						'type' => 'report',
+						'label' => 'Hallazgo',
+						'lat' => (float)$lat,
+						'lon' => (float)$lon,
+						'address' => $rp['direccion'] ?? null,
+						'date' => $eventDate ? $eventDate->format('d/m/Y H:i') : null,
+					];
+				}
+			}
+
+			// Traslados (entre centros o primer traslado)
+			if (!empty($new['transfer'])) {
+				$tr = $new['transfer'];
+
+				$center = null;
+				if (!empty($tr['centro_id'])) {
+					$center = Center::find($tr['centro_id']);
+				}
+
+				$lat = $center?->latitud ?? ($tr['latitud'] ?? null);
+				$lon = $center?->longitud ?? ($tr['longitud'] ?? null);
+
+				if ($lat !== null && $lon !== null) {
+					$eventDate = $changed;
+					if (!$eventDate && !empty($tr['id'])) {
+						$transferModel = Transfer::find($tr['id']);
+						if ($transferModel && $transferModel->created_at) {
+							$eventDate = Carbon::parse($transferModel->created_at);
+						}
+					}
+
+					$points[] = [
+						'type' => 'transfer',
+						'label' => !empty($tr['primer_traslado']) ? 'Primer traslado a centro' : 'Traslado entre centros',
+						'lat' => (float)$lat,
+						'lon' => (float)$lon,
+						'center_name' => $center?->nombre,
+						'observaciones' => $tr['observaciones'] ?? null,
+						'date' => $eventDate ? $eventDate->format('d/m/Y H:i') : null,
+					];
+				}
+			}
+
+			// Liberación
+			if (!empty($new['liberacion'])) {
+				$lib = $new['liberacion'];
+				$lat = $lib['latitud'] ?? null;
+				$lon = $lib['longitud'] ?? null;
+				if ($lat !== null && $lon !== null) {
+					$eventDate = $changed;
+					if (!$eventDate && !empty($lib['id'])) {
+						$releaseModel = Release::find($lib['id']);
+						if ($releaseModel && $releaseModel->created_at) {
+							$eventDate = Carbon::parse($releaseModel->created_at);
+						}
+					}
+
+					$points[] = [
+						'type' => 'release',
+						'label' => 'Liberación',
+						'lat' => (float)$lat,
+						'lon' => (float)$lon,
+						'address' => $lib['direccion'] ?? null,
+						'approved' => array_key_exists('aprobada', $lib) ? (bool)$lib['aprobada'] : null,
+						'date' => $eventDate ? $eventDate->format('d/m/Y H:i') : null,
+					];
+				}
+			}
+		}
+
+		return [
+			'points' => $points,
+		];
 	}
 }
 

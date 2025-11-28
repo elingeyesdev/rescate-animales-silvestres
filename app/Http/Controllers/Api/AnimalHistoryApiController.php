@@ -35,10 +35,12 @@ class AnimalHistoryApiController extends Controller
     public function show(int $animal_history): JsonResponse
     {
         $timeline = $this->timelineService->buildForAnimalFile($animal_history);
+        $route = $this->timelineService->buildLocationRoute($animal_history);
 
         return response()->json([
             'animal_file_id' => $animal_history,
             'timeline'       => $timeline,
+            'route'          => $route,
         ]);
     }
 

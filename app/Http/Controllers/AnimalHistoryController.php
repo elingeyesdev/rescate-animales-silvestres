@@ -30,10 +30,14 @@ class AnimalHistoryController extends Controller
         $timeline = $animalHistory->animal_file_id
             ? $this->timelineService->buildForAnimalFile($animalHistory->animal_file_id)
             : [];
+        $mapRoute = $animalHistory->animal_file_id
+            ? $this->timelineService->buildLocationRoute($animalHistory->animal_file_id)
+            : ['points' => []];
 
         return view('animal-history.show', [
             'animalHistory' => $animalHistory,
             'timeline' => $timeline,
+            'mapRoute' => $mapRoute,
         ]);
 	}
 }
