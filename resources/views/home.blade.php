@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Dashboard')
+@section('title', 'Inicio')
 
 @section('content_header')
-    <h1>Dashboard</h1>
+    <h1>Inicio</h1>
 @stop
 
 @section('content')
@@ -85,7 +85,7 @@
                 <div class="small-box bg-info">
                     <div class="inner">
                         <h3>{{ $pendingReportsCount ?? 0 }}</h3>
-                        <p>Reportes Pendientes</p>
+                        <p>Hallazgos Pendientes</p>
                     </div>
                     <div class="icon">
                         <i class="fas fa-file-alt"></i>
@@ -149,7 +149,7 @@
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="fas fa-chart-line mr-1"></i>
-                            Reportes por Mes (Últimos 6 meses)
+                            Hallazgos por Mes (Últimos 6 meses)
                         </h3>
                     </div>
                     <div class="card-body">
@@ -188,7 +188,99 @@
                 </div>
             </div>
         </div>
-    @else
+    @endif
+
+    {{-- ESTADÍSTICAS GENERALES PARA TODOS LOS ROLES --}}
+    @php
+        $isOnlyCitizen = Auth::user()->hasRole('ciudadano') && !Auth::user()->hasAnyRole(['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador']);
+    @endphp
+    <div class="row">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3>{{ $totalAnimals ?? 0 }}</h3>
+                    <p>Animales en el Sistema</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-paw"></i>
+                </div>
+                @if(!$isOnlyCitizen)
+                <a href="{{ route('animal-files.index') }}" class="small-box-footer">
+                    Ver más <i class="fas fa-arrow-circle-right"></i>
+                </a>
+                @else
+                <div class="small-box-footer" style="background-color: rgba(0,0,0,.1); padding: 10px; text-align: center; color: rgba(255,255,255,.8);">
+                    &nbsp;
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3>{{ $releasedAnimals ?? 0 }}</h3>
+                    <p>Animales Liberados</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-dove"></i>
+                </div>
+                @if(!$isOnlyCitizen)
+                <a href="{{ route('releases.index') }}" class="small-box-footer">
+                    Ver más <i class="fas fa-arrow-circle-right"></i>
+                </a>
+                @else
+                <div class="small-box-footer" style="background-color: rgba(0,0,0,.1); padding: 10px; text-align: center; color: rgba(255,255,255,.8);">
+                    &nbsp;
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning">
+                <div class="inner">
+                    <h3>{{ $totalReports ?? 0 }}</h3>
+                    <p>Total de Hallazgos</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                @if(!$isOnlyCitizen)
+                <a href="{{ route('reports.index') }}" class="small-box-footer">
+                    Ver más <i class="fas fa-arrow-circle-right"></i>
+                </a>
+                @else
+                <div class="small-box-footer" style="background-color: rgba(0,0,0,.1); padding: 10px; text-align: center; color: rgba(255,255,255,.8);">
+                    &nbsp;
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-primary">
+                <div class="inner">
+                    <h3>{{ $totalTransfers ?? 0 }}</h3>
+                    <p>Traslados Realizados</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                @if(!$isOnlyCitizen)
+                <a href="{{ route('transfers.index') }}" class="small-box-footer">
+                    Ver más <i class="fas fa-arrow-circle-right"></i>
+                </a>
+                @else
+                <div class="small-box-footer" style="background-color: rgba(0,0,0,.1); padding: 10px; text-align: center; color: rgba(255,255,255,.8);">
+                    &nbsp;
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    @if(!Auth::user()->hasAnyRole(['admin', 'encargado']))
         {{-- DASHBOARD PARA OTROS ROLES --}}
         <div class="row">
             <div class="col-md-12">
@@ -218,7 +310,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Gráfico de reportes por mes
+    // Gráfico de hallazgos por mes
     const reportsCtx = document.getElementById('reportsChart');
     if (reportsCtx) {
         const reportsData = @json($reportsByMonth ?? []);
@@ -230,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Reportes',
+                    label: 'Hallazgos',
                     data: data,
                     borderColor: 'rgb(75, 192, 192)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',

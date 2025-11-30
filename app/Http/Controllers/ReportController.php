@@ -29,14 +29,28 @@ class ReportController extends Controller
         $this->middleware('auth');
         // Solo ciertos roles gestionan reportes en el panel interno
         $this->middleware('role:ciudadano|rescatista|encargado|admin');
+        // Ciudadanos solo pueden ver y crear, no editar ni eliminar
+        $this->middleware('role:admin|encargado|rescatista')->only(['edit', 'update', 'destroy']);
     }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): View
     {
+        $user = Auth::user();
         $query = Report::with(['person', 'condicionInicial', 'incidentType', 'firstTransfer.center'])
             ->orderByDesc('id');
+
+        // Si el usuario es solo ciudadano (sin otros roles), mostrar solo sus hallazgos
+        if ($user->hasRole('ciudadano') && !$user->hasAnyRole(['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador'])) {
+            $personId = Person::where('usuario_id', $user->id)->value('id');
+            if ($personId) {
+                $query->where('persona_id', $personId);
+            } else {
+                // Si no tiene persona asociada, no mostrar nada
+                $query->whereRaw('1 = 0');
+            }
+        }
 
         // Filters
         if ($request->filled('urgencia_nivel')) {
@@ -65,13 +79,16 @@ class ReportController extends Controller
 
         $reports = $query->paginate(12)->withQueryString();
 
-        // Filter options
-        $reporters = Person::whereIn(
-                'id',
-                Report::select('persona_id')->whereNotNull('persona_id')->distinct()->pluck('persona_id')
-            )
-            ->orderBy('nombre')
-            ->get(['id', 'nombre']);
+        // Filter options (solo para admin/encargado, no para ciudadanos)
+        $reporters = collect();
+        if (!$user->hasRole('ciudadano') || $user->hasAnyRole(['admin', 'encargado'])) {
+            $reporters = Person::whereIn(
+                    'id',
+                    Report::select('persona_id')->whereNotNull('persona_id')->distinct()->pluck('persona_id')
+                )
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']);
+        }
         $incidentTypes = IncidentType::where('activo', true)->orderBy('nombre')->get(['id','nombre']);
 
         return view('report.index', compact('reports', 'reporters', 'incidentTypes'))

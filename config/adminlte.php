@@ -315,8 +315,9 @@ return [
 
         // Sidebar items:
         [
-            'type' => 'sidebar-menu-search',
-            'text' => 'Buscar',
+            'text' => 'Inicio',
+            'url' => 'home',
+            'icon' => 'fas fa-fw fa-home',
         ],
         [
             'text' => 'blog',
@@ -358,7 +359,7 @@ return [
             'can'  => 'veterinario|admin|cuidador',
         ],
         
-        ['header' => 'DIAGNOSTICO'],
+        ['header' => 'DIAGNOSTICO','can'=> 'admin|encargado|veterinario|cuidador'],
         [
             'text' => 'Evaluaciones Médicas',
             'url' => 'medical-evaluations',
@@ -379,7 +380,7 @@ return [
             'can'  => 'admin|veterinario',
         ],
         
-        ['header' => 'DISPOSICION'],
+        ['header' => 'DISPOSICION', 'can'=> 'admin|encargado|rescatista|veterinario'],
         [
             'text' => 'Traslados',
             'url' => 'transfers',
@@ -471,7 +472,7 @@ return [
             'url' => 'centers',
             'icon' => 'fas fa-fw fa-clinic-medical',
             'can'  => 'admin',
-        ],
+        ]
         /*[
             'text' => 'Mi perfil',
             'url' => 'profile',
@@ -687,3 +688,4 @@ return [
 
     'livewire' => false,
 ];
+

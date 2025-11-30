@@ -17,15 +17,49 @@ class ReleaseController extends Controller
         private readonly AnimalReleaseTransactionalService $releaseService
     ) {
         $this->middleware('auth');
+        // Ciudadanos solo pueden ver (index, show)
+        $this->middleware('role:ciudadano')->only(['index','show']);
+        // Solo admin/encargado pueden crear, editar, actualizar y eliminar
+        $this->middleware('role:admin|encargado')->except(['index','show']);
     }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): View
     {
-        $releases = Release::paginate();
+        $query = Release::with(['animalFile.animal', 'animalFile.species', 'animalFile.animalStatus']);
 
-        return view('release.index', compact('releases'))
+        // Filtros
+        if ($request->filled('nombre_animal')) {
+            $query->whereHas('animalFile.animal', function($q) use ($request) {
+                $q->where('nombre', 'like', '%'.$request->input('nombre_animal').'%');
+            });
+        }
+
+        if ($request->filled('especie_id')) {
+            $query->whereHas('animalFile', function($q) use ($request) {
+                $q->where('especie_id', $request->input('especie_id'));
+            });
+        }
+
+        if ($request->filled('aprobada')) {
+            $query->where('aprobada', (bool)$request->input('aprobada'));
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('created_at', '>=', $request->input('fecha_desde'));
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('created_at', '<=', $request->input('fecha_hasta'));
+        }
+
+        $releases = $query->orderBy('created_at', 'desc')->paginate(12)->withQueryString();
+
+        // Datos para filtros
+        $species = \App\Models\Species::orderBy('nombre')->get();
+
+        return view('release.index', compact('releases', 'species'))
             ->with('i', ($request->input('page', 1) - 1) * $releases->perPage());
     }
 

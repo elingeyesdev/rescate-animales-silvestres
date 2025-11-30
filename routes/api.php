@@ -12,6 +12,12 @@ use App\Http\Controllers\Api\AnimalMedicalEvaluationApiController;
 use App\Http\Controllers\Api\AnimalHistoryApiController;
 use App\Http\Controllers\Api\TransferApiController;
 use App\Http\Controllers\Api\ReleaseApiController;
+use App\Http\Controllers\Api\CenterApiController;
+use App\Http\Controllers\Api\SpeciesApiController;
+use App\Http\Controllers\Api\AnimalStatusApiController;
+use App\Http\Controllers\Api\VeterinarianApiController;
+use App\Http\Controllers\Api\TreatmentTypeApiController;
+use App\Http\Controllers\Api\CareTypeApiController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -28,4 +34,10 @@ Route::name('api.')->group(function () {
     Route::apiResource('transfers', TransferApiController::class)->only(['index', 'show', 'store']);
     Route::apiResource('releases', ReleaseApiController::class)->only(['index', 'show', 'store']);
     Route::apiResource('users', UserApiController::class);
+    Route::apiResource('centers', CenterApiController::class)->only(['index', 'show']);
+    Route::apiResource('species', SpeciesApiController::class)->only(['index', 'show']);
+    Route::apiResource('animal-statuses', AnimalStatusApiController::class)->only(['index', 'show']);
+    Route::apiResource('veterinarians', VeterinarianApiController::class)->only(['index', 'show']);
+    Route::apiResource('treatment-types', TreatmentTypeApiController::class)->only(['index', 'show']);
+    Route::apiResource('care-types', CareTypeApiController::class)->only(['index', 'show']);
 });
