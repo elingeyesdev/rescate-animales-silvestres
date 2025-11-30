@@ -1,18 +1,20 @@
+
 # 📘 Documentación del Proyecto (Docker + Laravel + Nginx + PostgreSQL)
 
-Este documento explica de forma simple y profesional cómo ejecutar el proyecto con Docker, cómo funcionan los puertos, cómo se usa el entrypoint y cómo manejar los seeds.
+Este documento explica de forma simple y profesional cómo ejecutar el proyecto con Docker, cómo funcionan los puertos, cómo agregar variables de entorno, cómo actúa el entrypoint y cómo manejar los seeds.
 
 ---
 
 ## 📑 Índice
 
-1. [⚙️ Puertos para Pruebas Locales](#️-puertos-para-pruebas-locales)
-2. [🟣 Contenedor Laravel y Nginx](#-contenedor-laravel-y-nginx)
-3. [📝 Script de Inicio (entrypoint)](#-script-de-inicio-docker-entrypointsh)
-4. [📄 Importancia de `.env.example`](#-importancia-de-envexample)
-5. [🌱 Seeds en Laravel](#-seeds-en-laravel)
-6. [🚀 Despliegue del Proyecto](#-despliegue-del-proyecto)
-7. [📜 Ver Logs del Contenedor](#-ver-logs-del-contenedor)
+1. [⚙️ Puertos para Pruebas Locales](#️-puertos-para-pruebas-locales)  
+2. [🟣 Contenedor Laravel y Nginx](#-contenedor-laravel-y-nginx)  
+3. [📝 Script de Inicio (entrypoint)](#-script-de-inicio-docker-entrypointsh)  
+4. [📄 Importancia de `.env.example`](#-importancia-de-envexample)  
+5. [🌱 Seeds en Laravel](#-seeds-en-laravel)  
+6. [🌐 Variables de Entorno en Docker Compose](#-variables-de-entorno-en-docker-compose)  
+7. [🚀 Despliegue del Proyecto](#-despliegue-del-proyecto)  
+8. [📜 Ver Logs del Contenedor](#-ver-logs-del-contenedor)
 
 ---
 
@@ -33,9 +35,9 @@ nginx:
 ````
 
 * **8080** = puerto local (puede cambiarse)
-* **80** = puerto interno (no cambiar)
+* **80** = puerto interno de Nginx (no cambiar)
 
-Si 8080 está ocupado:
+Si está ocupado:
 
 ```yaml
 "8081:80"
@@ -59,7 +61,7 @@ http://localhost:8080
 "5432:5432"
 ```
 
-Cambio recomendado si tienes otro PostgreSQL activo:
+Si tienes otro PostgreSQL activo:
 
 ```yaml
 "5440:5432"
@@ -77,13 +79,11 @@ Debe coincidir el nombre del contenedor:
 container_name: <Proyecto>-laravel
 ```
 
-En `nginx.conf`:
+Usado en `nginx.conf`:
 
 ```nginx
 fastcgi_pass <Proyecto>-laravel:9000;
 ```
-
-Si cambias el nombre del proyecto, cambia ambos.
 
 ---
 
@@ -96,30 +96,30 @@ Si cambias el nombre del proyecto, cambia ambos.
 
 # 📝 Script de Inicio (`docker-entrypoint.sh`)
 
-Este script automatiza la puesta en marcha del proyecto:
+Este script automatiza:
 
-* Crea `.env` si no existe
-* Instala dependencias con Composer
-* Genera la `APP_KEY`
-* Ajusta permisos
-* Ejecuta migraciones
-* Inicia PHP-FPM
+* Crear `.env`
+* Instalar dependencias
+* Generar `APP_KEY`
+* Asignar permisos
+* Correr migraciones
+* Iniciar PHP-FPM
 
-Esto evita configuraciones manuales cada vez que inicia el contenedor.
+Evita configuraciones manuales en cada arranque.
 
 ---
 
 # 📄 Importancia de `.env.example`
 
-El `.env.example` actúa como **plantilla** para generar el `.env`.
+`.env.example` funciona como **plantilla base** para el `.env`.
 
-Permite:
+Ventajas:
 
-* Tener una configuración base para cualquier entorno
-* Evitar subir credenciales reales
-* Crear un `.env` válido automáticamente
+* Evita subir contraseñas reales
+* Estándar para cualquier entorno
+* Permite al entrypoint crear el `.env` automáticamente
 
-Sin este archivo, el contenedor no sabría qué variables inicializar.
+Sin este archivo, el contenedor no sabría qué variables generar.
 
 ---
 
@@ -128,14 +128,11 @@ Sin este archivo, el contenedor no sabría qué variables inicializar.
 <details>
 <summary><strong>Seeders comentados en el entrypoint</strong></summary>
 
-En el script:
-
 ```sh
-# echo "🌱 Ejecutando Seeder..."
 # php artisan db:seed --force || true
 ```
 
-Descomentar **solo si necesitas cargar datos iniciales**.
+Actívalo solo si necesitas cargar datos iniciales.
 
 </details>
 
@@ -144,14 +141,14 @@ Descomentar **solo si necesitas cargar datos iniciales**.
 <details>
 <summary><strong>Registrar Seeders en Laravel</strong></summary>
 
-Los archivos dentro de:
+Los seeders dentro de:
 
 ```
 database/seeders/
 ```
 
-**no se ejecutan automáticamente**.
-Debes registrarlos en `DatabaseSeeder.php`:
+no se ejecutan solos.
+Debes agregarlos en `DatabaseSeeder.php`:
 
 ```php
 public function run(): void
@@ -164,52 +161,68 @@ public function run(): void
 }
 ```
 
-Si no están ahí, el comando:
-
-```
-php artisan db:seed --force
-```
-
-no ejecutará nada.
-
 </details>
+
+---
+
+# 🌐 Variables de Entorno en Docker Compose
+
+Puedes agregar más variables a Laravel desde `docker-compose.yml` usando la sección:
+
+```yaml
+environment:
+  DB_HOST: db
+  DB_DATABASE: <Proyecto>_db
+  DB_USERNAME: admin
+  DB_PASSWORD: admin123
+```
+
+### ➕ ¿Cómo agregar más variables?
+
+Simplemente añade nuevas líneas:
+
+```yaml
+environment:
+  APP_ENV: local
+  LOG_CHANNEL: stack
+  QUEUE_CONNECTION: database
+  MAIL_MAILER: smtp
+  MAIL_HOST: smtp.gmail.com
+```
+
+### ⚠ Importante
+
+* Estas variables **sobrescriben** las del `.env` dentro del contenedor.
+* Si agregas nuevas variables, asegúrate de que existan también en tu `.env.example`.
 
 ---
 
 # 🚀 Despliegue del Proyecto
 
-Para iniciar todo:
+Ejecutar:
 
 ```
 docker compose up --build -d
 ```
 
-El proceso puede tardar porque se ejecuta todo el `docker-entrypoint.sh`.
+Este comando puede tardar porque ejecuta todo el entrypoint.
 
 ---
 
-# 🐢 ¿Se queda atascado en “📦 Instalando dependencias de Composer…”?
+# 🐢 ¿Se queda en “📦 Instalando dependencias de Composer…”?
 
 Si ves:
 
 ```
-📦 Instalando dependencias de Composer...
 Nothing to install, update or remove
 ```
 
-y no avanza, es porque la carpeta `vendor/` fue copiada desde tu máquina.
+y no avanza, es porque tu carpeta `vendor/` está afectando al contenedor.
 
 ### ✔ Solución
 
-1. Elimina `vendor/`:
-
 ```
 rm -rf vendor
-```
-
-2. Reconstruye:
-
-```
 docker compose up --build -d
 ```
 
@@ -224,7 +237,9 @@ docker logs <Proyecto>-laravel -f
 Ejemplo:
 
 ```
-docker logs rescate-laravel -f
+docker logs <Proyecto>-laravel -f
 ```
 
-También puedes usar **Docker Desktop** → *Containers*.
+O usando **Docker Desktop** → *Containers*.
+
+
