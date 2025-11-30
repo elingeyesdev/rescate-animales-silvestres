@@ -14,6 +14,13 @@ use Illuminate\View\View;
 
 class CareController extends Controller
 {
+    public function __construct()
+    {
+        // Cuidadores, veterinarios, encargados y administradores pueden ver y crear cuidados
+        $this->middleware('role:cuidador|veterinario|encargado|admin');
+        // Solo encargados o administradores pueden editar/eliminar cuidados existentes
+        $this->middleware('role:encargado|admin')->only(['edit','update','destroy']);
+    }
     /**
      * Display a listing of the resource.
      */

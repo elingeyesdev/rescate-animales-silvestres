@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 /**
  * Class Person
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property $nombre
  * @property $ci
  * @property $telefono
+ * @property $foto_path
  * @property $es_cuidador
  * @property $created_at
  * @property $updated_at
@@ -33,7 +35,7 @@ class Person extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['usuario_id', 'nombre', 'ci', 'telefono', 'es_cuidador'];
+    protected $fillable = ['usuario_id', 'nombre', 'ci', 'telefono', 'foto_path', 'es_cuidador', 'cuidador_center_id', 'cuidador_aprobado', 'cuidador_motivo_revision'];
 
 
     /**
@@ -49,7 +51,7 @@ class Person extends Model
      */
     public function reports()
     {
-        return $this->hasMany(\App\Models\Report::class, 'id', 'persona_id');
+        return $this->hasMany(\App\Models\Report::class, 'persona_id', 'id');
     }
     
     /**
@@ -57,7 +59,7 @@ class Person extends Model
      */
     public function rescuers()
     {
-        return $this->hasMany(\App\Models\Rescuer::class, 'id', 'persona_id');
+        return $this->hasMany(\App\Models\Rescuer::class, 'persona_id', 'id');
     }
     
     /**
@@ -65,7 +67,50 @@ class Person extends Model
      */
     public function veterinarians()
     {
-        return $this->hasMany(\App\Models\Veterinarian::class, 'id', 'persona_id');
+        return $this->hasMany(\App\Models\Veterinarian::class, 'persona_id', 'id');
     }
-    
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function cuidadorCenter()
+    {
+        return $this->belongsTo(\App\Models\Center::class, 'cuidador_center_id', 'id');
+    }
+
+    /**
+     * Rol de mayor jerarquía que tiene la persona.
+     *
+     * Jerarquía de mayor a menor:
+     * 1. admin
+     * 2. encargado
+     * 3. veterinario
+     * 4. rescatista
+     * 5. cuidador
+     * 6. ciudadano
+     */
+    public function getHighestRoleAttribute(): string
+    {
+        $user = $this->user;
+        if (! $user || ! method_exists($user, 'getRoleNames')) {
+            return '-';
+        }
+
+        /** @var Collection $roles */
+        $roles = $user->getRoleNames();
+        if ($roles->isEmpty()) {
+            return '-';
+        }
+
+        $priority = ['admin', 'encargado', 'veterinario', 'rescatista', 'cuidador', 'ciudadano'];
+
+        foreach ($priority as $role) {
+            if ($roles->contains($role)) {
+                return ucfirst($role);
+            }
+        }
+
+        // Si tiene otros roles no previstos en la jerarquía, devolver el primero
+        return ucfirst($roles->first());
+    }
 }

@@ -5,17 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Report;
 use App\Models\Person;
 use App\Models\Center;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\ReportRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use App\Services\Animal\AnimalTransferTransactionalService;
 use App\Services\Report\ReportUrgencyService;
 use App\Models\AnimalCondition;
 use App\Models\IncidentType;
 use App\Models\AnimalHistory;
+use App\Mail\NewReportNotification;
 
 class ReportController extends Controller
 {
@@ -24,6 +27,8 @@ class ReportController extends Controller
         private readonly ReportUrgencyService $urgencyService
     ) {
         $this->middleware('auth');
+        // Solo ciertos roles gestionan reportes en el panel interno
+        $this->middleware('role:ciudadano|rescatista|encargado|admin');
     }
     /**
      * Display a listing of the resource.
@@ -113,6 +118,21 @@ class ReportController extends Controller
             $data['urgencia'] = $this->urgencyService->compute($data);
 
             $report = Report::create($data);
+            $report->load(['person', 'condicionInicial', 'incidentType']);
+
+            // Enviar correo a todos los encargados y administradores
+            $adminsAndEncargados = User::whereHas('roles', function ($query) {
+                $query->whereIn('name', ['admin', 'encargado']);
+            })->get();
+
+            foreach ($adminsAndEncargados as $user) {
+                try {
+                    Mail::to($user->email)->send(new NewReportNotification($report));
+                } catch (\Exception $e) {
+                    // Log error pero no interrumpir el flujo
+                    \Log::error('Error enviando correo de nuevo reporte: ' . $e->getMessage());
+                }
+            }
 
             // Registrar evento de reporte en el historial (sin hoja)
             $hist = new AnimalHistory();

@@ -24,8 +24,11 @@ class PersonRequest extends FormRequest
         return [
 			'nombre' => 'required|string',
 			'ci' => 'required|string',
-			'telefono' => 'string',
-			'es_cuidador' => 'required|boolean',
+			'telefono' => 'nullable|string',
+			'es_cuidador' => 'nullable|boolean',
+			'cuidador_center_id' => 'nullable|exists:centers,id',
+			'cuidador_aprobado' => 'nullable|boolean',
+			'cuidador_motivo_revision' => 'nullable|string',
         ];
     }
 }

@@ -7,11 +7,22 @@ use App\Models\Person;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\VeterinarianRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
+use App\Mail\VeterinarianApplicationResponse;
 
 class VeterinarianController extends Controller
 {
+    public function __construct()
+    {
+        // Solo administradores o encargados pueden ver veterinarios
+        $this->middleware('role:admin|encargado');
+        // Solo administradores pueden crear o eliminar registros de veterinarios
+        $this->middleware('role:admin')->only(['create','store','destroy']);
+    }
     /**
      * Display a listing of the resource.
      */
@@ -26,9 +37,11 @@ class VeterinarianController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $veterinarian = new Veterinarian();
+        // Preseleccionar persona si viene desde el listado de personas
+        $veterinarian->persona_id = $request->query('persona_id');
         $people = Person::orderBy('nombre')->get(['id','nombre']);
         return view('veterinarian.create', compact('veterinarian','people'));
     }
@@ -42,7 +55,12 @@ class VeterinarianController extends Controller
         if ($request->hasFile('cv')) {
             $data['cv_documentado'] = $request->file('cv')->store('cv', 'public');
         }
-        Veterinarian::create($data);
+        $veterinarian = Veterinarian::create($data);
+
+        // Si ya se crea aprobado, asignar rol al usuario vinculado
+        if ($veterinarian->aprobado === true && $veterinarian->person?->user) {
+            $veterinarian->person->user->assignRole('veterinario');
+        }
 
         return Redirect::route('veterinarians.index')
             ->with('success', 'Veterinario creado correctamente.');
@@ -74,10 +92,40 @@ class VeterinarianController extends Controller
     public function update(VeterinarianRequest $request, Veterinarian $veterinarian): RedirectResponse
     {
         $data = $request->validated();
+
+        // Si es un encargado (y no admin), solo puede cambiar aprobación y motivo de revisión
+        $user = Auth::user();
+        if ($user && $user->hasRole('encargado') && ! $user->hasRole('admin')) {
+            $data = Arr::only($data, ['aprobado', 'motivo_revision']);
+        }
+
         if ($request->hasFile('cv')) {
             $data['cv_documentado'] = $request->file('cv')->store('cv', 'public');
         }
+        $oldApproved = $veterinarian->aprobado;
         $veterinarian->update($data);
+        $veterinarian->refresh();
+        $veterinarian->load('person.user');
+
+        // Enganchar aprobación con roles de Spatie
+        $userModel = $veterinarian->person?->user;
+        if ($userModel) {
+            if ($veterinarian->aprobado === true) {
+                $userModel->assignRole('veterinario');
+            } elseif ($veterinarian->aprobado === false || $veterinarian->aprobado === null) {
+                $userModel->removeRole('veterinario');
+            }
+        }
+
+        // Enviar correo al ciudadano si cambió el estado de aprobación y hay motivo de revisión
+        if ($oldApproved !== $veterinarian->aprobado && !empty($veterinarian->motivo_revision) && $userModel && $userModel->email) {
+            try {
+                $approved = $veterinarian->aprobado === true;
+                Mail::to($userModel->email)->send(new VeterinarianApplicationResponse($veterinarian, $approved));
+            } catch (\Exception $e) {
+                \Log::error('Error enviando correo de respuesta de solicitud de veterinario: ' . $e->getMessage());
+            }
+        }
 
         return Redirect::route('veterinarians.index')
             ->with('success', 'Veterinario actualizado correctamente');

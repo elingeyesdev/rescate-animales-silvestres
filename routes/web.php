@@ -31,6 +31,7 @@ use App\Http\Controllers\Transactions\AnimalMedicalEvaluationTransactionalContro
 use App\Http\Controllers\Transactions\AnimalCareTransactionalController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AnimalHistoryController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
     return redirect('login'); // pantalla inicial: login
@@ -39,6 +40,8 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->middleware('auth')->name('home');
+
+Route::resource('profile', ProfileController::class)->only(['index', 'update'])->middleware('auth');
 Route::resource('centers', CenterController::class);
 Route::resource('animals', AnimalController::class)->middleware('auth');
 Route::resource('animal-profiles', AnimalProfileController::class);

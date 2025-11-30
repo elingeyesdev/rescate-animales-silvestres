@@ -13,6 +13,8 @@ class AnimalHistoryController extends Controller
 	)
 	{
 		$this->middleware('auth');
+        // Historial visible para cuidadores, rescatistas, veterinarios, encargados y administradores
+        $this->middleware('role:cuidador|rescatista|veterinario|encargado|admin');
 	}
 
 	public function index(\Illuminate\Http\Request $request): View
@@ -24,14 +26,42 @@ class AnimalHistoryController extends Controller
             ->with('i', ($request->input('page', 1) - 1) * $histories->perPage());
     }
 
-	public function show(AnimalHistory $animalHistory): View
+	public function show($id): View
 	{
+		// Intentar encontrar por ID de AnimalHistory primero
+		$animalHistory = AnimalHistory::find($id);
+		
+		// Si no se encuentra, asumir que es un animal_file_id
+		if (!$animalHistory) {
+			$animalFileId = (int) $id;
+			
+			// Verificar que existe el AnimalFile
+			$animalFile = \App\Models\AnimalFile::find($animalFileId);
+			if (!$animalFile) {
+				abort(404, 'Animal file not found');
+			}
+			
+			// Buscar un historial existente para este animal_file_id
+			$animalHistory = AnimalHistory::where('animal_file_id', $animalFileId)
+				->orderByDesc('id')
+				->first();
+
+			// Si no existe, crear uno temporal solo para mostrar (no se guarda)
+			if (!$animalHistory) {
+				$animalHistory = new AnimalHistory();
+				$animalHistory->animal_file_id = $animalFileId;
+				$animalHistory->id = 0; // ID temporal
+			}
+		}
+
 		$animalHistory->loadMissing(['animalFile.animal']);
-        $timeline = $animalHistory->animal_file_id
-            ? $this->timelineService->buildForAnimalFile($animalHistory->animal_file_id)
+        $animalFileId = $animalHistory->animal_file_id;
+        
+        $timeline = $animalFileId
+            ? $this->timelineService->buildForAnimalFile($animalFileId)
             : [];
-        $mapRoute = $animalHistory->animal_file_id
-            ? $this->timelineService->buildLocationRoute($animalHistory->animal_file_id)
+        $mapRoute = $animalFileId
+            ? $this->timelineService->buildLocationRoute($animalFileId)
             : ['points' => []];
 
         return view('animal-history.show', [

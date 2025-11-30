@@ -7,11 +7,22 @@ use App\Models\Person;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\RescuerRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
+use App\Mail\RescuerApplicationResponse;
 
 class RescuerController extends Controller
 {
+    public function __construct()
+    {
+        // Solo administradores o encargados pueden ver rescatistas
+        $this->middleware('role:admin|encargado');
+        // Solo administradores pueden crear o eliminar registros de rescatistas
+        $this->middleware('role:admin')->only(['create','store','destroy']);
+    }
     /**
      * Display a listing of the resource.
      */
@@ -26,9 +37,10 @@ class RescuerController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $rescuer = new Rescuer();
+        $rescuer->persona_id = $request->query('persona_id');
         $people = Person::orderBy('nombre')->get(['id','nombre']);
         return view('rescuer.create', compact('rescuer','people'));
     }
@@ -42,7 +54,12 @@ class RescuerController extends Controller
         if ($request->hasFile('cv')) {
             $data['cv_documentado'] = $request->file('cv')->store('cv', 'public');
         }
-        Rescuer::create($data);
+        $rescuer = Rescuer::create($data);
+
+        // Si ya se crea aprobado, asignar rol al usuario vinculado
+        if ($rescuer->aprobado === true && $rescuer->person?->user) {
+            $rescuer->person->user->assignRole('rescatista');
+        }
 
         return Redirect::route('rescuers.index')
             ->with('success', 'Rescatista creado correctamente.');
@@ -74,10 +91,40 @@ class RescuerController extends Controller
     public function update(RescuerRequest $request, Rescuer $rescuer): RedirectResponse
     {
         $data = $request->validated();
+
+        // Si es un encargado (y no admin), solo puede cambiar aprobación y motivo de revisión
+        $user = Auth::user();
+        if ($user && $user->hasRole('encargado') && ! $user->hasRole('admin')) {
+            $data = Arr::only($data, ['aprobado', 'motivo_revision']);
+        }
+
         if ($request->hasFile('cv')) {
             $data['cv_documentado'] = $request->file('cv')->store('cv', 'public');
         }
+        $oldApproved = $rescuer->aprobado;
         $rescuer->update($data);
+        $rescuer->refresh();
+        $rescuer->load('person.user');
+
+        // Enganchar aprobación con roles de Spatie
+        $userModel = $rescuer->person?->user;
+        if ($userModel) {
+            if ($rescuer->aprobado === true) {
+                $userModel->assignRole('rescatista');
+            } elseif ($rescuer->aprobado === false || $rescuer->aprobado === null) {
+                $userModel->removeRole('rescatista');
+            }
+        }
+
+        // Enviar correo al ciudadano si cambió el estado de aprobación y hay motivo de revisión
+        if ($oldApproved !== $rescuer->aprobado && !empty($rescuer->motivo_revision) && $userModel && $userModel->email) {
+            try {
+                $approved = $rescuer->aprobado === true;
+                Mail::to($userModel->email)->send(new RescuerApplicationResponse($rescuer, $approved));
+            } catch (\Exception $e) {
+                \Log::error('Error enviando correo de respuesta de solicitud de rescatista: ' . $e->getMessage());
+            }
+        }
 
         return Redirect::route('rescuers.index')
             ->with('success', 'Rescatista actualizado correctamente');

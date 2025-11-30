@@ -143,6 +143,25 @@ return new class extends Migration
                 }
             }
         }
+        //Tipos de alimentación
+        if (Schema::hasTable('feeding_types')) {
+            $now = now();
+            $feedingTypes = [
+                ['nombre' => 'Carnívoro', 'descripcion' => 'Alimentación basada en carne.'],
+                ['nombre' => 'Herbívoro', 'descripcion' => 'Alimentación basada en vegetales.'],
+                ['nombre' => 'Omnívoro', 'descripcion' => 'Alimentación basada en carne y vegetales.'],
+                ['nombre' => 'Insectívoro', 'descripcion' => 'Alimentación basada en insectos.'],
+                ['nombre' => 'Desconocido', 'descripcion' => 'Alimentación desconocida.'],
+            ];
+        }
+        foreach ($feedingTypes as $ft) {
+            if (!DB::table('feeding_types')->where('nombre', $ft['nombre'])->exists()) {
+                DB::table('feeding_types')->insert([
+                    'nombre' => $ft['nombre'],
+                    'descripcion' => $ft['descripcion']
+                ]);
+            }
+        }
     }
 
     public function down(): void
@@ -191,6 +210,14 @@ return new class extends Migration
                 'Ave',
                 'Mamífero',
                 'Reptil',
+            ])->delete();
+        }
+
+        if (Schema::hasTable('feeding_types')) {
+            DB::table('feeding_types')->whereIn('nombre', [
+                'Carnívoro',
+                'Herbívoro',
+                'Omnívoro',
             ])->delete();
         }
     }

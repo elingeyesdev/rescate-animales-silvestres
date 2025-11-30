@@ -15,6 +15,11 @@ use App\Models\Veterinarian;
 
 class MedicalEvaluationController extends Controller
 {
+    public function __construct()
+    {
+        // Veterinarios aprobados, encargados y administradores pueden gestionar evaluaciones
+        $this->middleware('role:veterinario|encargado|admin');
+    }
     /**
      * Display a listing of the resource.
      */

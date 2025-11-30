@@ -22,7 +22,12 @@ class TransferController extends Controller
     public function __construct(
         private readonly AnimalTransferTransactionalService $transferService
     ) {
+        // Debe estar autenticado
         $this->middleware('auth');
+        // Rescatistas, encargados y administradores pueden ver y crear traslados
+        $this->middleware('role:rescatista|encargado|admin')->only(['index','create','store','show']);
+        // Solo encargados y administradores pueden editar/eliminar traslados existentes
+        $this->middleware('role:encargado|admin')->only(['edit','update','destroy']);
     }
     /**
      * Display a listing of the resource.

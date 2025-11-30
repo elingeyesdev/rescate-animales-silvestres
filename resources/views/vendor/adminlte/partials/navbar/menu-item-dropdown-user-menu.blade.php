@@ -25,6 +25,11 @@
 		@endif
 		<span @if(config('adminlte.usermenu_image')) class="d-none d-md-inline" @endif>
 			{{ Auth::user()->name }}
+            @if(method_exists(Auth::user(), 'adminlte_desc') && Auth::user()->adminlte_desc())
+                <small class="text-muted d-none d-lg-inline">
+                    ({{ Auth::user()->adminlte_desc() }})
+                </small>
+            @endif
 		</span>
 	</a>
 

@@ -25,6 +25,10 @@
                                     {{ $rescuer->person?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
+                                    <strong>Motivo de postulación:</strong>
+                                    {{ $rescuer->motivo_postulacion ?: '-' }}
+                                </div>
+                                <div class="form-group mb-2 mb20">
                                     <strong>CV:</strong>
                                     @if($rescuer->cv_documentado)
                                         <a href="{{ asset('storage/' . $rescuer->cv_documentado) }}" target="_blank">Ver CV</a>
@@ -39,6 +43,20 @@
                                 <div class="form-group mb-2 mb20">
                                     <strong>Motivo revisión:</strong>
                                     {{ $rescuer->motivo_revision ?: '-' }}
+                                </div>
+                                <div class="form-group mb-2 mb20">
+                                    <strong>Estado de la postulación:</strong>
+                                    @if($rescuer->aprobado === true)
+                                        Postulación aceptada.
+                                    @elseif($rescuer->aprobado === false && $rescuer->motivo_revision)
+                                        Postulación no aceptada. Motivo: {{ $rescuer->motivo_revision }}
+                                    @elseif($rescuer->aprobado === false)
+                                        Postulación no aceptada.
+                                    @elseif($rescuer->aprobado === null)
+                                        Postulación en proceso de revisión.
+                                    @else
+                                        -
+                                    @endif
                                 </div>
 
                     </div>

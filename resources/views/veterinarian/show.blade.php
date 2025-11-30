@@ -21,8 +21,16 @@
                     <div class="card-body bg-white">
                         
                                 <div class="form-group mb-2 mb20">
+                                    <strong>Persona:</strong>
+                                    {{ $veterinarian->person?->nombre ?? '-' }}
+                                </div>
+                                <div class="form-group mb-2 mb20">
                                     <strong>Especialidad:</strong>
-                                    {{ $veterinarian->especialidad }}
+                                    {{ $veterinarian->especialidad ?: '-' }}
+                                </div>
+                                <div class="form-group mb-2 mb20">
+                                    <strong>Motivo de postulación:</strong>
+                                    {{ $veterinarian->motivo_postulacion ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>CV:</strong>
@@ -41,8 +49,18 @@
                                     {{ $veterinarian->motivo_revision ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Persona:</strong>
-                                    {{ $veterinarian->person?->nombre ?? '-' }}
+                                    <strong>Estado de la postulación:</strong>
+                                    @if($veterinarian->aprobado === true)
+                                        Postulación aceptada.
+                                    @elseif($veterinarian->aprobado === false && $veterinarian->motivo_revision)
+                                        Postulación no aceptada. Motivo: {{ $veterinarian->motivo_revision }}
+                                    @elseif($veterinarian->aprobado === false)
+                                        Postulación no aceptada.
+                                    @elseif($veterinarian->aprobado === null)
+                                        Postulación en proceso de revisión.
+                                    @else
+                                        -
+                                    @endif
                                 </div>
 
                     </div>

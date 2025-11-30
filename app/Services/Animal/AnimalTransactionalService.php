@@ -142,7 +142,7 @@ class AnimalTransactionalService
                                 ],
                             ],
                             'observaciones' => [
-                                'texto' => 'Primer traslado desde reporte de hallazgo (asociado al crear Hoja de Vida)',
+                                'texto' => 'Primer traslado desde reporte de hallazgo',
                             ],
                         ]);
                     }

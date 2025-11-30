@@ -35,12 +35,11 @@
                                 <thead class="thead">
                                     <tr>
                                         <th>No</th>
-                                        
-									<th >Especialidad</th>
-								<th >CV</th>
-								<th >Aprobado</th>
-								<th >Persona</th>
-
+                                        <th>Persona</th>
+                                        <th>Especialidad</th>
+                                        <th>Motivo de postulación</th>
+                                        <th>CV</th>
+                                        <th>Aprobado</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -48,18 +47,17 @@
                                     @foreach ($veterinarians as $veterinarian)
                                         <tr>
                                             <td>{{ ++$i }}</td>
-                                            
-										<td >{{ $veterinarian->especialidad }}</td>
-									<td >
+                                            <td>{{ $veterinarian->person?->nombre }}</td>
+                                            <td>{{ $veterinarian->especialidad }}</td>
+                                            <td>{{ \Illuminate\Support\Str::limit($veterinarian->motivo_postulacion ?? '-', 80) }}</td>
+                                            <td>
                                                 @if($veterinarian->cv_documentado)
                                                     <a href="{{ asset('storage/' . $veterinarian->cv_documentado) }}" target="_blank">Ver CV</a>
                                                 @else
                                                     -
                                                 @endif
                                             </td>
-									<td >{{ $veterinarian->aprobado === null ? '-' : ($veterinarian->aprobado ? 'Sí' : 'No') }}</td>
-									<td >{{ $veterinarian->person?->nombre }}</td>
-
+                                            <td>{{ $veterinarian->aprobado === null ? '-' : ($veterinarian->aprobado ? 'Sí' : 'No') }}</td>
                                             <td>
                                                 <form action="{{ route('veterinarians.destroy', $veterinarian->id) }}" method="POST">
                                                     <a class="btn btn-sm btn-primary " href="{{ route('veterinarians.show', $veterinarian->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Show') }}</a>

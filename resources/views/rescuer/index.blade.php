@@ -35,11 +35,10 @@
                                 <thead class="thead">
                                     <tr>
                                         <th>No</th>
-                                        
-								<th >Persona</th>
-								<th >CV</th>
-								<th >Aprobado</th>
-
+                                        <th>Persona</th>
+                                        <th>Motivo de postulación</th>
+                                        <th>CV</th>
+                                        <th>Aprobado</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -47,17 +46,16 @@
                                     @foreach ($rescuers as $rescuer)
                                         <tr>
                                             <td>{{ ++$i }}</td>
-                                            
-									<td >{{ $rescuer->person?->nombre }}</td>
-									<td >
+                                            <td>{{ $rescuer->person?->nombre }}</td>
+                                            <td>{{ \Illuminate\Support\Str::limit($rescuer->motivo_postulacion ?? '-', 80) }}</td>
+                                            <td>
                                                 @if($rescuer->cv_documentado)
                                                     <a href="{{ asset('storage/' . $rescuer->cv_documentado) }}" target="_blank">Ver CV</a>
                                                 @else
                                                     -
                                                 @endif
                                             </td>
-									<td >{{ $rescuer->aprobado === null ? '-' : ($rescuer->aprobado ? 'Sí' : 'No') }}</td>
-
+                                            <td>{{ $rescuer->aprobado === null ? '-' : ($rescuer->aprobado ? 'Sí' : 'No') }}</td>
                                             <td>
                                                 <form action="{{ route('rescuers.destroy', $rescuer->id) }}" method="POST">
                                                     <a class="btn btn-sm btn-primary " href="{{ route('rescuers.show', $rescuer->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Show') }}</a>

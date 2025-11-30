@@ -11,6 +11,11 @@ use Illuminate\View\View;
 
 class IncidentTypeController extends Controller
 {
+    public function __construct()
+    {
+        // Solo administradores pueden gestionar tipos de incidentes
+        $this->middleware('role:admin');
+    }
     /**
      * Display a listing of the resource.
      */
