@@ -1,16 +1,18 @@
 <div class="row padding-1 p-1">
     <div class="col-md-12">
-        
-        <div class="form-group mb-2 mb20">
-            <label for="usuario_id" class="form-label">{{ __('Usuario Id') }}</label>
-            <input type="text" name="usuario_id" class="form-control @error('usuario_id') is-invalid @enderror" value="{{ old('usuario_id', $person?->usuario_id) }}" id="usuario_id" placeholder="Usuario Id">
-            {!! $errors->first('usuario_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
         <div class="form-group mb-2 mb20">
             <label for="nombre" class="form-label">{{ __('Nombre') }}</label>
             <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre', $person?->nombre) }}" id="nombre" placeholder="Nombre">
             {!! $errors->first('nombre', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
+        @if($person && $person->user)
+        <div class="form-group mb-2 mb20">
+            <label for="email" class="form-label">{{ __('Email') }}</label>
+            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $person->user->email) }}" id="email" placeholder="Email">
+            {!! $errors->first('email', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+            <small class="form-text text-muted">Puedes cambiar el correo electrónico del usuario asociado a esta persona.</small>
+        </div>
+        @endif
         <div class="form-group mb-2 mb20">
             <label for="ci" class="form-label">{{ __('Ci') }}</label>
             <input type="text" name="ci" class="form-control @error('ci') is-invalid @enderror" value="{{ old('ci', $person?->ci) }}" id="ci" placeholder="Ci">

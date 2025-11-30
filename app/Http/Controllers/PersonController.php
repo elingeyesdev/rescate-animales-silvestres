@@ -158,6 +158,14 @@ class PersonController extends Controller
             $data['cuidador_motivo_revision'] = $validated['cuidador_motivo_revision'];
         }
         
+        // Actualizar email del usuario si se proporciona
+        if ($request->filled('email') && $person->user) {
+            $person->user->update(['email' => $request->input('email')]);
+        }
+        
+        // Remover email de $data para que no se intente actualizar en la tabla people
+        unset($data['email']);
+        
         $person->update($data);
 
         // Lógica de asignación de rol cuidador

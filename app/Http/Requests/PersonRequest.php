@@ -21,10 +21,14 @@ class PersonRequest extends FormRequest
      */
     public function rules(): array
     {
+        $personId = $this->route('person') ? $this->route('person')->id : null;
+        $userId = $this->route('person') && $this->route('person')->user ? $this->route('person')->user->id : null;
+        
         return [
 			'nombre' => 'required|string',
 			'ci' => 'required|string',
 			'telefono' => 'nullable|string',
+			'email' => 'nullable|email|unique:users,email,' . ($userId ?? 'NULL') . ',id',
 			'es_cuidador' => 'nullable|boolean',
 			'cuidador_center_id' => 'nullable|exists:centers,id',
 			'cuidador_aprobado' => 'nullable|boolean',

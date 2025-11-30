@@ -28,13 +28,8 @@
         </div>
     @endif
 
-    <p>Una vez que se acerque al centro y un administrador o encargado valide su presencia, se le asignará el rol de cuidador y podrá acceder a las funcionalidades correspondientes, incluyendo:</p>
-    <ul>
-        <li>Ver hojas de vida de animales (solo lectura)</li>
-        <li>Ver historial de animales (solo lectura)</li>
-        <li>Crear registros de cuidado de animales</li>
-    </ul>
-
+    <p>Una vez que se acerque al centro y un administrador o encargado valide su presencia, se le asignará el rol de cuidador y podrá acceder a las funcionalidades correspondientes, incluyendo la creación de registros de cuidado de animales.</p>
+    
     <p>Si tiene alguna pregunta o necesita más información, no dude en contactarnos.</p>
     
     <p>

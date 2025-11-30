@@ -65,12 +65,6 @@
                                     <strong>{{ __('Dirección') }}:</strong> {{ $report->direccion ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Latitud') }}:</strong> {{ $report->latitud ?: '-' }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Longitud') }}:</strong> {{ $report->longitud ?: '-' }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
                                     <strong>{{ __('Observaciones') }}:</strong> {{ $report->observaciones ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">

@@ -132,17 +132,46 @@
                             @php $points = $mapRoute['points'] ?? []; @endphp
                             @if(!empty($points))
                                 <div id="animalRouteMap" style="height: 380px; border-radius: 6px; overflow: hidden;"></div>
-                                <div class="mt-2 small text-muted">
-                                    <strong>{{ __('Leyenda') }}:</strong>
-                                    <span class="ml-2">
-                                        <span class="legend-dot legend-dot-hallazgo"></span> {{ __('Hallazgo') }}
-                                    </span>
-                                    <span class="ml-3">
-                                        <span class="legend-dot legend-dot-transfer"></span> {{ __('Traslado / Centro') }}
-                                    </span>
-                                    <span class="ml-3">
-                                        <span class="legend-dot legend-dot-release"></span> {{ __('Liberación') }}
-                                    </span>
+                                <div class="mt-3 p-3 bg-light border rounded">
+                                    <strong class="d-block mb-2">{{ __('Leyenda de Eventos') }}:</strong>
+                                    <div class="row">
+                                        <div class="col-md-3 mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <span class="legend-dot legend-dot-hallazgo mr-2"></span>
+                                                <div>
+                                                    <strong>{{ __('Hallazgo') }}</strong>
+                                                    <div class="small text-muted">{{ __('Punto donde se encontró al animal') }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <span class="legend-dot legend-dot-transfer mr-2"></span>
+                                                <div>
+                                                    <strong>{{ __('Traslado / Centro') }}</strong>
+                                                    <div class="small text-muted">{{ __('Centro de rescate o traslado') }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <span class="legend-dot legend-dot-release mr-2"></span>
+                                                <div>
+                                                    <strong>{{ __('Liberación') }}</strong>
+                                                    <div class="small text-muted">{{ __('Punto de liberación del animal') }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-map-marker-alt text-danger mr-2" style="font-size: 18px;"></i>
+                                                <div>
+                                                    <strong>{{ __('Ubicación Actual') }}</strong>
+                                                    <div class="small text-muted">{{ __('Última ubicación registrada') }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             @else
                                 <div class="alert alert-info">
@@ -187,6 +216,25 @@
         .legend-dot-hallazgo{ background-color:#16a34a; }
         .legend-dot-transfer{ background-color:#2563eb; }
         .legend-dot-release{ background-color:#f59e0b; }
+        .custom-marker {
+            background: transparent;
+            border: none;
+        }
+        .current-location-marker {
+            background: transparent;
+            border: none;
+        }
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 3px 6px rgba(0,0,0,0.4), 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+            50% {
+                box-shadow: 0 3px 6px rgba(0,0,0,0.4), 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+            100% {
+                box-shadow: 0 3px 6px rgba(0,0,0,0.4), 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
     </style>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -262,7 +310,11 @@
             }).addTo(routeMap);
 
             const latlngs = [];
-            points.forEach(function (p) {
+            const markers = [];
+            let currentLocationMarker = null;
+
+            // Procesar puntos y crear markers
+            points.forEach(function (p, index) {
                 const lat = parseFloat(p.lat);
                 const lon = parseFloat(p.lon);
                 if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
@@ -270,32 +322,157 @@
                 latlngs.push(latlng);
 
                 let color = '#2563eb'; // traslado por defecto
-                if (p.type === 'report') color = '#16a34a';
-                if (p.type === 'release') color = '#f59e0b';
+                let iconClass = 'fa-map-marker-alt';
+                let eventType = 'Traslado';
+                let eventDescription = 'Centro de rescate o traslado';
+                if (p.type === 'report') {
+                    color = '#16a34a';
+                    iconClass = 'fa-flag';
+                    eventType = 'Hallazgo';
+                    eventDescription = 'Punto donde se encontró al animal';
+                } else if (p.type === 'release') {
+                    color = '#f59e0b';
+                    iconClass = 'fa-dove';
+                    eventType = 'Liberación';
+                    eventDescription = 'Punto de liberación del animal';
+                } else if (p.type === 'transfer') {
+                    color = '#2563eb';
+                    iconClass = 'fa-truck';
+                    eventType = 'Traslado / Centro';
+                    eventDescription = 'Centro de rescate o traslado';
+                }
 
-                const marker = L.circleMarker(latlng, {
-                    radius: 7,
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.9
-                }).addTo(routeMap);
+                // Crear marker con icono personalizado y tooltip
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: '<div style="background-color: ' + color + '; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;" title="' + eventType + ': ' + eventDescription + '"><i class="fas ' + iconClass + '" style="color: white; font-size: 10px;"></i></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
 
-                let popup = '';
-                if (p.label) popup += '<strong>' + p.label + '</strong>';
-                if (p.center_name) popup += '<br>Centro: ' + p.center_name;
-                if (p.address) popup += '<br>Dirección: ' + p.address;
-                if (p.date) popup += '<br>Fecha: ' + p.date;
-                if (p.observaciones) popup += '<br>Obs: ' + p.observaciones;
-                if (popup) marker.bindPopup(popup);
+                const marker = L.marker(latlng, { icon: icon }).addTo(routeMap);
+                markers.push(marker);
+                
+                // Agregar tooltip al marker para mostrar información al hacer hover
+                let tooltipText = eventType;
+                if (p.label) tooltipText += ': ' + p.label;
+                if (p.center_name) tooltipText += ' - ' + p.center_name;
+                if (p.date) tooltipText += ' (' + p.date + ')';
+                marker.bindTooltip(tooltipText, {
+                    permanent: false,
+                    direction: 'top',
+                    offset: [0, -10]
+                });
+
+                // Construir popup con más información
+                let popup = '<div style="min-width: 200px;">';
+                if (p.label) popup += '<strong style="color: ' + color + '; font-size: 14px;">' + p.label + '</strong>';
+                if (p.type === 'report') {
+                    popup += '<div class="mt-2"><i class="fas fa-info-circle"></i> <strong>Evento:</strong> Hallazgo del animal</div>';
+                } else if (p.type === 'transfer') {
+                    popup += '<div class="mt-2"><i class="fas fa-info-circle"></i> <strong>Evento:</strong> Traslado</div>';
+                } else if (p.type === 'release') {
+                    popup += '<div class="mt-2"><i class="fas fa-info-circle"></i> <strong>Evento:</strong> Liberación</div>';
+                }
+                if (p.center_name) popup += '<div class="mt-1"><i class="fas fa-building"></i> <strong>Centro:</strong> ' + p.center_name + '</div>';
+                if (p.address) popup += '<div class="mt-1"><i class="fas fa-map-pin"></i> <strong>Dirección:</strong> ' + p.address + '</div>';
+                if (p.date) popup += '<div class="mt-1"><i class="fas fa-calendar"></i> <strong>Fecha:</strong> ' + p.date + '</div>';
+                if (p.observaciones) popup += '<div class="mt-1"><i class="fas fa-comment"></i> <strong>Observaciones:</strong> ' + p.observaciones + '</div>';
+                popup += '</div>';
+                
+                marker.bindPopup(popup);
+
+                // Marcar el último punto como ubicación actual
+                if (index === points.length - 1) {
+                    const currentIcon = L.divIcon({
+                        className: 'current-location-marker',
+                        html: '<div style="background-color: #dc3545; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite;"><i class="fas fa-map-marker-alt" style="color: white; font-size: 14px;"></i></div>',
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14]
+                    });
+                    currentLocationMarker = L.marker(latlng, { icon: currentIcon, zIndexOffset: 1000 }).addTo(routeMap);
+                    
+                    // Construir popup para ubicación actual con información del tipo de evento
+                    let currentPopup = '<div style="min-width: 200px;">';
+                    currentPopup += '<strong style="color: #dc3545; font-size: 16px;">📍 Ubicación Actual</strong>';
+                    currentPopup += '<div class="mt-2" style="font-weight: bold; color: ' + color + ';">';
+                    if (p.type === 'report') {
+                        currentPopup += '<i class="fas fa-flag"></i> Tipo: Hallazgo del animal';
+                    } else if (p.type === 'transfer') {
+                        currentPopup += '<i class="fas fa-truck"></i> Tipo: Traslado';
+                    } else if (p.type === 'release') {
+                        currentPopup += '<i class="fas fa-dove"></i> Tipo: Liberación';
+                    } else {
+                        currentPopup += '<i class="fas fa-map-marker-alt"></i> Tipo: ' + (p.label || 'Evento');
+                    }
+                    currentPopup += '</div>';
+                    if (p.label) currentPopup += '<div class="mt-1"><i class="fas fa-tag"></i> <strong>Etiqueta:</strong> ' + p.label + '</div>';
+                    if (p.center_name) currentPopup += '<div class="mt-1"><i class="fas fa-building"></i> <strong>Centro:</strong> ' + p.center_name + '</div>';
+                    if (p.address) currentPopup += '<div class="mt-1"><i class="fas fa-map-pin"></i> <strong>Dirección:</strong> ' + p.address + '</div>';
+                    if (p.date) currentPopup += '<div class="mt-1"><i class="fas fa-calendar"></i> <strong>Fecha:</strong> ' + p.date + '</div>';
+                    if (p.observaciones) currentPopup += '<div class="mt-1"><i class="fas fa-comment"></i> <strong>Observaciones:</strong> ' + p.observaciones + '</div>';
+                    currentPopup += '</div>';
+                    
+                    currentLocationMarker.bindPopup(currentPopup);
+                    
+                    // Agregar tooltip al marcador de ubicación actual
+                    let currentTooltipText = '📍 Ubicación Actual - ' + eventType;
+                    if (p.label) currentTooltipText += ': ' + p.label;
+                    if (p.center_name) currentTooltipText += ' - ' + p.center_name;
+                    if (p.date) currentTooltipText += ' (' + p.date + ')';
+                    currentLocationMarker.bindTooltip(currentTooltipText, {
+                        permanent: false,
+                        direction: 'top',
+                        offset: [0, -14]
+                    });
+                }
             });
 
+            // Dibujar ruta con routing que respeta las calles
             if (latlngs.length >= 2) {
-                const poly = L.polyline(latlngs, {
-                    color: '#2563eb',
-                    weight: 4,
-                    opacity: 0.8
-                }).addTo(routeMap);
-                routeMap.fitBounds(poly.getBounds().pad(0.2));
+                // Usar OSRM para obtener ruta que respeta las calles
+                const osrmUrl = 'https://router.project-osrm.org/route/v1/driving/';
+                let waypoints = latlngs.map(p => p[1] + ',' + p[0]).join(';');
+                
+                fetch(osrmUrl + waypoints + '?overview=full&geometries=geojson')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                            const route = data.routes[0];
+                            const coordinates = route.geometry.coordinates.map(c => [c[1], c[0]]); // OSRM devuelve [lon, lat], Leaflet usa [lat, lon]
+                            
+                            const routePolyline = L.polyline(coordinates, {
+                                color: '#2563eb',
+                                weight: 5,
+                                opacity: 0.7,
+                                smoothFactor: 1
+                            }).addTo(routeMap);
+                            
+                            // Ajustar vista para mostrar toda la ruta
+                            const bounds = routePolyline.getBounds();
+                            routeMap.fitBounds(bounds.pad(0.15));
+                        } else {
+                            // Fallback: polyline directo si OSRM falla
+                            const fallbackPoly = L.polyline(latlngs, {
+                                color: '#2563eb',
+                                weight: 4,
+                                opacity: 0.6,
+                                dashArray: '10, 5'
+                            }).addTo(routeMap);
+                            routeMap.fitBounds(fallbackPoly.getBounds().pad(0.2));
+                        }
+                    })
+                    .catch(error => {
+                        console.warn('Error obteniendo ruta desde OSRM, usando polyline directo:', error);
+                        // Fallback: polyline directo si hay error
+                        const fallbackPoly = L.polyline(latlngs, {
+                            color: '#2563eb',
+                            weight: 4,
+                            opacity: 0.6,
+                            dashArray: '10, 5'
+                        }).addTo(routeMap);
+                        routeMap.fitBounds(fallbackPoly.getBounds().pad(0.2));
+                    });
             } else if (latlngs.length === 1) {
                 routeMap.setView(latlngs[0], 15);
             }

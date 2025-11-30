@@ -123,6 +123,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="#colaborar" data-toggle="tab">Quiero colaborar</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#contactar" data-toggle="tab">Contactar administración</a>
+                            </li>
                         </ul>
                     </div>
                     <div class="card-body">
@@ -617,6 +620,61 @@
                                         @endif
                                     </div>
                                 </div>
+                            </div>
+
+                            {{-- TAB CONTACTAR ADMINISTRACIÓN --}}
+                            <div class="tab-pane" id="contactar">
+                                <h4 class="mb-3">Contactar a administración</h4>
+                                <p class="text-muted mb-4">
+                                    Si tienes alguna consulta, problema o necesitas comunicarte directamente con un administrador o encargado, puedes enviar un mensaje aquí.
+                                </p>
+                                
+                                <form action="{{ route('contact-messages.store') }}" method="POST">
+                                    @csrf
+                                    <div class="form-group">
+                                        <label for="motivo">Motivo del contacto <span class="text-danger">*</span></label>
+                                        <select name="motivo" id="motivo" class="form-control @error('motivo') is-invalid @enderror" required>
+                                            <option value="">Selecciona un motivo</option>
+                                            @foreach(\App\Models\ContactMessage::getMotivos() as $key => $label)
+                                                <option value="{{ $key }}" {{ old('motivo') === $key ? 'selected' : '' }}>
+                                                    {{ $label }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('motivo')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="mensaje">Mensaje <span class="text-danger">*</span></label>
+                                        <textarea 
+                                            name="mensaje" 
+                                            id="mensaje" 
+                                            class="form-control @error('mensaje') is-invalid @enderror" 
+                                            rows="6" 
+                                            placeholder="Escribe tu mensaje aquí (mínimo 10 caracteres, máximo 1000 caracteres)..."
+                                            required
+                                            minlength="10"
+                                            maxlength="1000">{{ old('mensaje') }}</textarea>
+                                        <small class="form-text text-muted">
+                                            Mínimo 10 caracteres, máximo 1000 caracteres.
+                                        </small>
+                                        @error('mensaje')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-paper-plane"></i> Enviar mensaje
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
