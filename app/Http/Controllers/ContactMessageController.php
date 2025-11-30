@@ -34,11 +34,14 @@ class ContactMessageController extends Controller
             abort(403);
         }
 
-        $contactMessage->update([
-            'leido' => true,
-            'leido_at' => now(),
-            'leido_por' => Auth::id(),
-        ]);
+        // Guardar usando query directa
+        \Illuminate\Support\Facades\DB::table('contact_messages')
+            ->where('id', $contactMessage->id)
+            ->update([
+                'leido' => true,
+                'leido_at' => now(),
+                'leido_por' => Auth::id(),
+            ]);
 
         return redirect()->back()->with('success', 'Mensaje marcado como leído.');
     }

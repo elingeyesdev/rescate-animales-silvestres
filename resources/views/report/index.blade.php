@@ -28,7 +28,7 @@
                     <div class="card-body bg-white">
                         <form method="GET" class="mb-3 js-auto-filter-form">
                             <div class="form-row">
-                                <div class="col-md-3">
+                                <div class="{{ Auth::user()->hasAnyRole(['admin', 'encargado']) ? 'col-md-3' : 'col-md-4' }}">
                                     <label class="mb-1">
                                         {{ __('Urgencia') }}
                                         <button type="button" class="btn btn-link btn-sm p-0 ml-1 align-baseline" data-toggle="tooltip" title="{{ __('Qué tan pronto se debe rescatar al animal. 1–2: Baja (situación estable), 3: Media (requiere seguimiento), 4–5: Alta (atención rápida).') }}">¿{{ __('Qué es urgencia') }}?</button>
@@ -40,6 +40,7 @@
                                         <option value="baja" {{ request('urgencia_nivel')==='baja'?'selected':'' }}>{{ __('Baja') }}</option>
                                     </select>
                                 </div>
+                                @if(Auth::user()->hasAnyRole(['admin', 'encargado']))
                                 <div class="col-md-3">
                                     <label class="mb-1">{{ __('Reportante') }}</label>
                                     <select name="persona_id" class="form-control">
@@ -51,7 +52,8 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                @endif
+                                <div class="{{ Auth::user()->hasAnyRole(['admin', 'encargado']) ? 'col-md-3' : 'col-md-4' }}">
                                     <label class="mb-1">{{ __('Tipo de incidente') }}</label>
                                     <select name="tipo_incidente_id" class="form-control">
                                         <option value="">{{ __('Todos') }}</option>
@@ -62,7 +64,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="{{ Auth::user()->hasAnyRole(['admin', 'encargado']) ? 'col-md-3' : 'col-md-4' }}">
                                     <label class="mb-1">{{ __('Aprobado') }}</label>
                                     <select name="aprobado" class="form-control">
                                         <option value="">{{ __('Todos') }}</option>
@@ -139,6 +141,14 @@
                                             <p class="mb-0"><strong>{{ __('Fecha:') }}</strong> {{ optional($report->created_at)->format('d/m/Y') }}</p>
                                         </div>
                                         <div class="card-footer">
+                                            @php
+                                                $isOnlyCitizen = Auth::user()->hasRole('ciudadano') && !Auth::user()->hasAnyRole(['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador']);
+                                            @endphp
+                                            @if($isOnlyCitizen)
+                                            <a class="btn btn-primary btn-sm w-100" href="{{ route('reports.show', $report->id) }}">
+                                                <i class="fa fa-fw fa-eye"></i> {{ __('Ver') }}
+                                            </a>
+                                            @else
                                             <form action="{{ route('reports.destroy', $report->id) }}" method="POST" class="mb-0 d-flex w-100">
                                                 <a class="btn btn-primary btn-sm" href="{{ route('reports.show', $report->id) }}">
                                                     <i class="fa fa-fw fa-eye"></i> {{ __('Ver') }}
@@ -152,6 +162,7 @@
                                                     <i class="fa fa-fw fa-trash"></i> {{ __('Eliminar') }}
                                                 </button>
                                             </form>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

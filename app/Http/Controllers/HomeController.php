@@ -9,6 +9,7 @@ use App\Models\Person;
 use App\Models\Rescuer;
 use App\Models\Veterinarian;
 use App\Models\Transfer;
+use App\Models\Release;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,13 @@ class HomeController extends Controller
 
         // Datos comunes para todos los roles
         $data['user'] = $user;
+        
+        // Estadísticas generales visibles para todos
+        $data['totalAnimals'] = AnimalFile::count();
+        $data['releasedAnimals'] = Release::count();
+        $data['totalReports'] = Report::count();
+        $data['approvedReports'] = Report::where('aprobado', true)->count();
+        $data['totalTransfers'] = Transfer::count();
 
         // Datos según el rol
         if ($user->hasRole('admin') || $user->hasRole('encargado')) {
