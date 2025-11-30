@@ -1,0 +1,60 @@
+services:
+  laravel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rescate-laravel
+    volumes:
+      - .:/var/www
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: db       # Nombre del servicio del contenedor de postgres
+      DB_PORT: 5432
+      DB_DATABASE: rescate_db
+      DB_USERNAME: admin
+      DB_PASSWORD: admin123
+    depends_on:
+      - db
+    networks:
+      - rescate-net
+  nginx:
+    image: nginx:latest
+    container_name: rescate
+    # expose:
+    #   - "80" #---> no es necesario para despliegue local, solo para el reverse proxy
+    ports:
+      - "8080:80" #---> despliegue local con puerto 8080
+    volumes:
+      - .:/var/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - laravel
+    networks:
+      - rescate-net
+      - internal-network
+      - proxy-network
+  db:
+    image: postgres:latest
+    container_name: rescate-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rescate_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432" #---> para acceso local a la base de datos, comentar esto para despliegue en producción
+    volumes:
+      - db-data:/var/lib/postgresql
+    networks:
+      - rescate-net
+
+networks:
+  rescate-net:
+    driver: bridge
+  internal-network:
+    external: true
+  proxy-network:
+    external: true
+
+volumes:
+  db-data:
