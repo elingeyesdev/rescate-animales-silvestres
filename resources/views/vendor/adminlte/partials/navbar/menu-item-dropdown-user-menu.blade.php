@@ -17,7 +17,7 @@
 
 	{{-- User menu toggler with visible power icon --}}
 	<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-		<i class="fas fa-power-off text-danger mr-1"></i>
+		<i class="fas fa-user-circle text-primary mr-1"></i>
 		@if(config('adminlte.usermenu_image'))
 			<img src="{{ Auth::user()->adminlte_image() }}"
 				 class="user-image img-circle elevation-2"

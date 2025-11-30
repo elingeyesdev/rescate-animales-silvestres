@@ -48,7 +48,7 @@
                             @endif
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-3 d-flex justify-content-between align-items-center">
                             <div class="btn-group" role="group" aria-label="{{ __('Vista de historial') }}">
                                 <button type="button" class="btn btn-outline-primary btn-sm active" id="btnTimelineView">
                                     {{ __('Línea de tiempo') }}
@@ -57,6 +57,11 @@
                                     {{ __('Mapa de traslados') }}
                                 </button>
                             </div>
+                            <a href="{{ route('animal-histories.pdf', $animalHistory->animal_file_id) }}" 
+                               class="btn btn-danger btn-sm" 
+                               target="_blank">
+                                <i class="fas fa-file-pdf"></i> {{ __('Imprimir PDF') }}
+                            </a>
                         </div>
 
                         <div id="timelineContainer">
@@ -106,11 +111,12 @@
                                                 </div>
                                                 <div class="col-md-4 text-right">
                                                     @if(!empty($t['image_url']))
-                                                        <img src="{{ asset('storage/' . $t['image_url']) }}"
-                                                             data-full="{{ asset('storage/' . $t['image_url']) }}"
-                                                             alt="Imagen"
-                                                             class="history-thumb"
-                                                             style="max-height: 200px; max-width: 100%; height: auto; width: auto; cursor: zoom-in;">
+                                                        <div class="history-thumb-container">
+                                                            <img src="{{ asset('storage/' . $t['image_url']) }}"
+                                                                 data-full="{{ asset('storage/' . $t['image_url']) }}"
+                                                                 alt="Imagen"
+                                                                 class="history-thumb">
+                                                        </div>
                                                     @endif
                                                 </div>
                                             </div>
@@ -133,7 +139,7 @@
                             @if(!empty($points))
                                 <div id="animalRouteMap" style="height: 380px; border-radius: 6px; overflow: hidden;"></div>
                                 <div class="mt-3 p-3 bg-light border rounded">
-                                    <strong class="d-block mb-2">{{ __('Leyenda de Eventos') }}:</strong>
+                                    <strong class="d-block mb-2">{{ __('Eventos') }}:</strong>
                                     <div class="row">
                                         <div class="col-md-3 mb-2">
                                             <div class="d-flex align-items-center">
@@ -223,6 +229,31 @@
         .current-location-marker {
             background: transparent;
             border: none;
+        }
+        /* Contenedor para imágenes de la línea de tiempo */
+        .history-thumb-container {
+            width: 200px;
+            height: 200px;
+            margin-left: auto;
+            margin-right: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Imágenes de la línea de tiempo con tamaño uniforme */
+        .history-thumb {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            cursor: zoom-in;
+            transition: transform 0.2s ease;
+        }
+        .history-thumb:hover {
+            transform: scale(1.05);
         }
         @keyframes pulse {
             0% {

@@ -37,6 +37,16 @@ class Person extends Model
      */
     protected $fillable = ['usuario_id', 'nombre', 'ci', 'telefono', 'foto_path', 'es_cuidador', 'cuidador_center_id', 'cuidador_aprobado', 'cuidador_motivo_revision'];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'es_cuidador' => 'boolean',
+        'cuidador_aprobado' => 'boolean',
+    ];
+
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

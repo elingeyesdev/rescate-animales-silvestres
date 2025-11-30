@@ -41,6 +41,7 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->middleware('auth')->name('home');
+Route::get('animal-histories/{animal_history}/pdf', [AnimalHistoryController::class, 'pdf'])->name('animal-histories.pdf')->middleware('auth');
 
 Route::resource('profile', ProfileController::class)->only(['index', 'update'])->middleware('auth');
 Route::resource('contact-messages', ContactMessageController::class)->only(['store', 'update'])->middleware('auth');

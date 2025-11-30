@@ -21,6 +21,14 @@ class PersonRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Si viene la acción del modal de cuidador, no validar campos requeridos normales
+        if ($this->has('action') && $this->filled('action') && $this->filled('cuidador_motivo_revision')) {
+            return [
+                'action' => 'required|in:approve,reject',
+                'cuidador_motivo_revision' => 'required|string|min:3',
+            ];
+        }
+        
         $personId = $this->route('person') ? $this->route('person')->id : null;
         $userId = $this->route('person') && $this->route('person')->user ? $this->route('person')->user->id : null;
         

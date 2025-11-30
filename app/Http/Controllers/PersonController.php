@@ -132,30 +132,44 @@ class PersonController extends Controller
      */
     public function update(PersonRequest $request, Person $person): RedirectResponse
     {
-        $data = $request->validated();
-        
-        // Si es un encargado (y no admin), solo puede cambiar campos de aprobación de cuidador
-        $user = Auth::user();
-        if ($user && $user->hasRole('encargado') && !$user->hasRole('admin')) {
-            // El encargado solo puede modificar cuidador_aprobado y cuidador_motivo_revision
-            $allowedFields = ['cuidador_aprobado', 'cuidador_motivo_revision'];
-            $data = array_intersect_key($data, array_flip($allowedFields));
-        }
-        
         // Detectar si viene la acción de aprobar/rechazar cuidador desde el modal
-        if ($request->has('action') && $request->has('cuidador_motivo_revision')) {
+        // Verificar ANTES de la validación de PersonRequest
+        $hasAction = $request->has('action') && $request->filled('action');
+        $hasMotivo = $request->filled('cuidador_motivo_revision');
+        $isCuidadorAction = $hasAction && $hasMotivo;
+        
+        if ($isCuidadorAction) {
+            // Validar específicamente para la acción de cuidador (bypass PersonRequest)
             $validated = $request->validate([
                 'action' => 'required|in:approve,reject',
                 'cuidador_motivo_revision' => 'required|string|min:3',
             ]);
             
-            if ($validated['action'] === 'approve') {
-                $data['cuidador_aprobado'] = true;
-            } else {
-                $data['cuidador_aprobado'] = false;
-            }
+            // Preparar datos para actualización
+            $data = [
+                'cuidador_aprobado' => $validated['action'] === 'approve' ? true : false,
+                'cuidador_motivo_revision' => trim($validated['cuidador_motivo_revision']),
+            ];
             
-            $data['cuidador_motivo_revision'] = $validated['cuidador_motivo_revision'];
+            // Asegurarse de que es_cuidador esté en true (es necesario para la aprobación)
+            // Si se aprueba, es_cuidador debe ser true
+            if ($validated['action'] === 'approve') {
+                $data['es_cuidador'] = true;
+            } else {
+                // Si se rechaza, mantener es_cuidador como está pero limpiar aprobación
+                $data['es_cuidador'] = $person->es_cuidador ?? false;
+            }
+        } else {
+            // Validación normal usando PersonRequest
+            $data = $request->validated();
+            
+            // Si es un encargado (y no admin), solo puede cambiar campos de aprobación de cuidador
+            $user = Auth::user();
+            if ($user && $user->hasRole('encargado') && !$user->hasRole('admin')) {
+                // El encargado solo puede modificar cuidador_aprobado y cuidador_motivo_revision
+                $allowedFields = ['cuidador_aprobado', 'cuidador_motivo_revision'];
+                $data = array_intersect_key($data, array_flip($allowedFields));
+            }
         }
         
         // Actualizar email del usuario si se proporciona
@@ -166,28 +180,58 @@ class PersonController extends Controller
         // Remover email de $data para que no se intente actualizar en la tabla people
         unset($data['email']);
         
-        $person->update($data);
+        // Actualizar la persona - usar fill y save para asegurar que se guarden todos los campos
+        $person->fill($data);
+        $saved = $person->save();
+        
+        // Si no se guardó correctamente, lanzar error
+        if (!$saved) {
+            return Redirect::back()
+                ->withInput()
+                ->with('error', 'Error al actualizar la información del cuidador.');
+        }
+        
+        // Refrescar el modelo para obtener los valores actualizados
+        $person->refresh();
 
         // Lógica de asignación de rol cuidador
         // Solo se asigna el rol si:
         // 1. es_cuidador = true
         // 2. cuidador_motivo_revision NO es null (fue completado por admin/encargado)
+        // 3. cuidador_aprobado = true (si fue aprobado)
         if ($person->user) {
-            if ($person->es_cuidador && !empty($person->cuidador_motivo_revision)) {
+            // Usar comparación estricta con los valores cast del modelo
+            $esCuidador = (bool) $person->es_cuidador;
+            $aprobado = (bool) $person->cuidador_aprobado;
+            $tieneMotivo = !empty(trim($person->cuidador_motivo_revision ?? ''));
+            
+            $shouldHaveRole = $esCuidador && $tieneMotivo && $aprobado;
+            
+            if ($shouldHaveRole) {
                 // Asignar rol cuidador
                 $role = Role::firstOrCreate(['name' => 'cuidador', 'guard_name' => 'web']);
-                $person->user->assignRole($role);
+                if (!$person->user->hasRole('cuidador')) {
+                    $person->user->assignRole($role);
+                }
             } else {
                 // Remover rol si no cumple las condiciones
-                $person->user->removeRole('cuidador');
+                if ($person->user->hasRole('cuidador')) {
+                    $person->user->removeRole('cuidador');
+                }
             }
         }
 
         // Si fue una acción de aprobación/rechazo, mostrar mensaje específico
-        if ($request->has('action')) {
-            $message = $request->input('action') === 'approve' 
-                ? 'Solicitud de cuidador aprobada correctamente.'
-                : 'Solicitud de cuidador rechazada correctamente.';
+        if ($isCuidadorAction) {
+            $action = $request->input('action');
+            if ($action === 'approve') {
+                $message = 'Solicitud de cuidador aprobada correctamente.';
+                if ($person->user && $person->user->hasRole('cuidador')) {
+                    $message .= ' El rol de cuidador ha sido asignado.';
+                }
+            } else {
+                $message = 'Solicitud de cuidador rechazada correctamente.';
+            }
             return Redirect::route('people.show', $person->id)
                 ->with('success', $message);
         }

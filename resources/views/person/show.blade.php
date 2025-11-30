@@ -205,7 +205,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="{{ route('people.update', $person->id) }}" method="POST">
+                <form action="{{ route('people.update', $person->id) }}" method="POST" id="formCuidadorAprobacion">
                     @method('PUT')
                     @csrf
                     <div class="modal-body">
@@ -236,14 +236,82 @@
                         <input type="hidden" name="action" id="actionCuidador" value="">
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-danger" onclick="document.getElementById('actionCuidador').value='reject';">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fa fa-times"></i> Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger" id="btnRechazarCuidador">
                             <i class="fa fa-times-circle"></i> Rechazar
                         </button>
-                        <button type="submit" class="btn btn-success" onclick="document.getElementById('actionCuidador').value='approve';">
+                        <button type="button" class="btn btn-success" id="btnAprobarCuidador">
                             <i class="fa fa-check-circle"></i> Aprobar
                         </button>
                     </div>
                 </form>
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var form = document.getElementById('formCuidadorAprobacion');
+                    var actionInput = document.getElementById('actionCuidador');
+                    var btnRechazar = document.getElementById('btnRechazarCuidador');
+                    var btnAprobar = document.getElementById('btnAprobarCuidador');
+                    var motivoTextarea = document.getElementById('cuidador_motivo_revision');
+                    
+                    function submitForm(action) {
+                        // Validar que el motivo esté lleno
+                        if (!motivoTextarea || !motivoTextarea.value || motivoTextarea.value.trim().length < 3) {
+                            alert('Por favor, ingrese un motivo de revisión con al menos 3 caracteres.');
+                            if (motivoTextarea) {
+                                motivoTextarea.focus();
+                                motivoTextarea.classList.add('is-invalid');
+                            }
+                            return false;
+                        }
+                        
+                        // Establecer el valor de action
+                        if (actionInput) {
+                            actionInput.value = action;
+                        }
+                        
+                        // Deshabilitar botones para evitar doble envío
+                        if (btnRechazar) btnRechazar.disabled = true;
+                        if (btnAprobar) btnAprobar.disabled = true;
+                        
+                        // Enviar formulario
+                        if (form) {
+                            form.submit();
+                        }
+                        return true;
+                    }
+                    
+                    if (btnRechazar) {
+                        btnRechazar.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            submitForm('reject');
+                        });
+                    }
+                    
+                    if (btnAprobar) {
+                        btnAprobar.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            submitForm('approve');
+                        });
+                    }
+                    
+                    // Validación en tiempo real del textarea
+                    if (motivoTextarea) {
+                        motivoTextarea.addEventListener('input', function() {
+                            if (this.value.trim().length >= 3) {
+                                this.classList.remove('is-invalid');
+                                this.classList.add('is-valid');
+                            } else {
+                                this.classList.remove('is-valid');
+                                this.classList.add('is-invalid');
+                            }
+                        });
+                    }
+                });
+                </script>
             </div>
         </div>
     </div>

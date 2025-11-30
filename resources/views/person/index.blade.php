@@ -117,7 +117,7 @@
                                     $roleLabel = $person->highest_role ?? 'Sin rol';
                                     $fotoUrl = !empty($person->foto_path)
                                         ? asset('storage/' . $person->foto_path)
-                                        : asset('vendor/adminlte/dist/img/user2-160x160.jpg');
+                                        : 'https://ui-avatars.com/api/?name=' . urlencode($person->nombre ?: 'Sin nombre');
                                 @endphp
                                 <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch flex-column">
                                     <div class="card bg-light d-flex flex-fill person-card">

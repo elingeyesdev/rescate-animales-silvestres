@@ -537,6 +537,7 @@ return [
     */
 
     'filters' => [
+        App\Menu\Filters\SpatieRoleFilter::class, // Filtro personalizado para roles de Spatie (debe ir primero)
         JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\HrefFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\SearchFilter::class,

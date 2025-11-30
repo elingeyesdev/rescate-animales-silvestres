@@ -27,11 +27,14 @@
                             @php
                                 $fotoUrl = !empty($person->foto_path)
                                     ? asset('storage/' . $person->foto_path)
-                                    : asset('vendor/adminlte/dist/img/user2-160x160.jpg');
+                                    : 'https://ui-avatars.com/api/?name=' . urlencode($person->nombre ?: 'Sin nombre') . '&size=100&background=random&color=fff&bold=true';
                             @endphp
-                            <img class="profile-user-img img-fluid img-circle"
-                                 src="{{ $fotoUrl }}"
-                                 alt="Foto de perfil">
+                            <div style="width: 100px; height: 100px; margin: 0 auto; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #e9ecef;">
+                                <img class="profile-user-img"
+                                     src="{{ $fotoUrl }}"
+                                     alt="Foto de perfil"
+                                     style="width: 100px !important; height: 100px !important; object-fit: cover !important; display: block !important; flex-shrink: 0;">
+                            </div>
                         </div>
 
                         <h3 class="profile-username text-center">{{ $person->nombre ?: 'Sin nombre' }}</h3>
@@ -216,20 +219,22 @@
                                             @if(!empty($person->foto_path))
                                                 <div class="mt-2">
                                                     <strong>Foto actual:</strong><br>
-                                                    <img id="foto_preview"
-                                                         src="{{ asset('storage/' . $person->foto_path) }}"
-                                                         alt="Foto actual"
-                                                         class="img-thumbnail"
-                                                         style="max-width: 120px;">
+                                                    <div style="width: 100px; height: 100px; margin: 10px auto 0; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #e9ecef;">
+                                                        <img id="foto_preview"
+                                                             src="{{ asset('storage/' . $person->foto_path) }}"
+                                                             alt="Foto actual"
+                                                             style="width: 100px !important; height: 100px !important; object-fit: cover !important; display: block !important; flex-shrink: 0;">
+                                                    </div>
                                                 </div>
                                             @else
                                                 <div class="mt-2" id="foto_preview_container" style="display:none;">
                                                     <strong>Vista previa:</strong><br>
-                                                    <img id="foto_preview"
-                                                         src="#"
-                                                         alt="Vista previa"
-                                                         class="img-thumbnail"
-                                                         style="max-width: 120px;">
+                                                    <div style="width: 100px; height: 100px; margin: 10px auto 0; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #e9ecef;">
+                                                        <img id="foto_preview"
+                                                             src="#"
+                                                             alt="Vista previa"
+                                                             style="width: 100px !important; height: 100px !important; object-fit: cover !important; display: block !important; flex-shrink: 0;">
+                                                    </div>
                                                 </div>
                                             @endif
                                         </div>
@@ -414,7 +419,7 @@
                                                         @enderror
 
                                                         <div class="mt-2" id="cv_rescatista_preview_container" style="display:none;">
-                                                            <strong>Vista previa (solo imágenes):</strong><br>
+                                                            <strong>Vista previa:</strong><br>
                                                             <img id="cv_rescatista_preview"
                                                                  src="#"
                                                                  alt="Vista previa CV rescatista"
@@ -557,7 +562,7 @@
                                                         @enderror
 
                                                         <div class="mt-2" id="cv_veterinario_preview_container" style="display:none;">
-                                                            <strong>Vista previa (solo imágenes):</strong><br>
+                                                            <strong>Vista previa:</strong><br>
                                                             <img id="cv_veterinario_preview"
                                                                  src="#"
                                                                  alt="Vista previa CV veterinario"
@@ -776,5 +781,52 @@
         })();
     </script>
 @endsection
+
+@push('js')
+<script>
+    // Asegurar que las imágenes circulares tengan el mismo tamaño y estilo
+    document.addEventListener('DOMContentLoaded', function() {
+        const profileImages = document.querySelectorAll('.profile-user-img, #foto_preview');
+        profileImages.forEach(function(img) {
+            // Forzar tamaño exacto
+            img.style.setProperty('width', '100px', 'important');
+            img.style.setProperty('height', '100px', 'important');
+            img.style.setProperty('object-fit', 'cover', 'important');
+            img.style.setProperty('display', 'block', 'important');
+            img.style.setProperty('flex-shrink', '0', 'important');
+            img.style.setProperty('min-width', '100px', 'important');
+            img.style.setProperty('min-height', '100px', 'important');
+            // Remover clases que puedan interferir
+            img.classList.remove('img-fluid', 'img-thumbnail', 'img-circle');
+        });
+    });
+</script>
+<style>
+    /* Contenedor circular fijo para todas las imágenes */
+    .profile-user-img,
+    #foto_preview {
+        width: 100px !important;
+        height: 100px !important;
+        object-fit: cover !important;
+        display: block !important;
+        flex-shrink: 0 !important;
+        min-width: 100px !important;
+        min-height: 100px !important;
+    }
+    
+    /* Asegurar que los contenedores también tengan el mismo tamaño */
+    .profile-user-img-container,
+    #foto_preview_container > div {
+        width: 100px !important;
+        height: 100px !important;
+        border-radius: 50% !important;
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-color: #e9ecef !important;
+    }
+</style>
+@endpush
 
 
