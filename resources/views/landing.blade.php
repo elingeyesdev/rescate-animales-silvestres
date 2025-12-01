@@ -37,7 +37,6 @@
         .brand-badge i { font-size: 18px; }
         .cta { display: flex; gap: .75rem; }
         
-        .btn-hero { padding: 1rem 1.25rem; font-weight: 600; }
         @keyframes pulseGlow { 0%{ box-shadow: 0 0 0 0 rgba(255,193,7,0.55);} 70%{ box-shadow: 0 0 0 12px rgba(255,193,7,0);} 100%{ box-shadow: 0 0 0 0 rgba(255,193,7,0);} }
         .btn-pulse { animation: pulseGlow 2.2s infinite; }
         .content { display: grid; grid-template-columns: 1.1fr .9fr; gap: 2rem; align-items: center; padding-top: 1.5rem; }
@@ -87,8 +86,8 @@
                     <div>Rescate Animales</div>
                 </div>
                 <div class="cta">
-                    <a href="{{ route('login') }}" class="btn btn-outline-primary d-flex align-items-center justify-content-center">Ingresar</a>
-                    <a href="{{ route('reporte-rapido') }}" class="btn btn-warning btn-hero btn-pulse d-flex align-items-center justify-content-center"><i class="fas fa-bolt"></i> Reporte rápido</a>
+                    <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-sign-in-alt"></i> Ingresar</a>
+                    <a href="{{ route('reports.create') }}" class="btn btn-warning btn-sm btn-pulse"><i class="fas fa-bolt"></i> Registro rápido</a>
                 </div>
             </div>
 
@@ -97,8 +96,8 @@
                     <h1 class="title">Rescate y bienestar de la fauna</h1>
                     <p class="subtitle">Conecta hallazgos, traslados, evaluaciones y liberaciones en un solo lugar. Tu participación ayuda a devolver a cada animal a su hábitat.</p>
                     <div class="actions">
-                        <a href="{{ route('login') }}" class="btn btn-primary btn-hero"><i class="fas fa-sign-in-alt"></i> Ingresar</a>
-                        <a href="{{ route('reporte-rapido') }}" class="btn btn-warning btn-hero btn-pulse"><i class="fas fa-bolt"></i> Reporte rápido</a>
+                        <a href="{{ route('login') }}" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Ingresar</a>
+                        <a href="{{ route('reports.create') }}" class="btn btn-warning btn-pulse"><i class="fas fa-bolt"></i> Registro rápido</a>
                     </div>
 
                     <div class="features">
@@ -148,8 +147,8 @@
                 <div class="carousel-header">
                     <div class="carousel-title">Animales liberados</div>
                 </div>
-                <button type="button" class="carousel-arrow left disabled btn btn-outline-primary" id="relArrowPrev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
-                <button type="button" class="carousel-arrow right btn btn-outline-primary" id="relArrowNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+                <button type="button" class="carousel-arrow left disabled" id="relArrowPrev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+                <button type="button" class="carousel-arrow right" id="relArrowNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
                 <div class="carousel-track" id="relTrack">
                     @php($slots = 8)
                     @if(isset($recentReleases) && $recentReleases->count() > 0)

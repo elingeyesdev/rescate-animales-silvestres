@@ -122,7 +122,7 @@
                                             <div class="form-group mb-2 mb20">
                                                 <label for="imagen" class="form-label">{{ __('Evidencia (imagen)') }}</label>
                                                 <div class="custom-file">
-                                                    <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
+                                                    <input type="file" accept="image/jpeg,image/jpg,image/png" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
                                                     <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>
                                                 </div>
                                                 {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
@@ -219,13 +219,17 @@
                                       const preview = document.getElementById('tx-preview-eval-imagen');
                                       input?.addEventListener('change', function(){
                                         const file = this.files && this.files[0];
-                                        if (file && file.type && file.type.startsWith('image/')) {
+                                        if (file && file.type && file.type.startsWith('image/') && file.type !== 'image/webp') {
                                           if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
                                           currentObjectURL = URL.createObjectURL(file);
                                           if (preview) {
                                             preview.src = currentObjectURL;
                                             preview.style.display = '';
                                           }
+                                        } else if (file && file.type === 'image/webp') {
+                                          alert('El formato de imagen .webp no está permitido. Por favor, usa JPG, JPEG o PNG.');
+                                          this.value = '';
+                                          return;
                                         } else {
                                           if (currentObjectURL) { URL.revokeObjectURL(currentObjectURL); currentObjectURL = null; }
                                           if (preview) { preview.removeAttribute('src'); preview.style.display = 'none'; }

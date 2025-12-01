@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Reporte Rápido - Rescate Animales</title>
+    <title>Registro Rápido - Rescate Animales</title>
     <link rel="icon" type="image/png" href="{{ asset('Fotos/Patota.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('Fotos/Patota.png') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -26,7 +26,7 @@
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-12 text-center">
-                        <h1 class="m-0">Reporte Rápido de Emergencia</h1>
+                        <h1 class="m-0">Registro Rápido de Emergencia</h1>
                     </div>
                 </div>
             </div>
@@ -89,7 +89,7 @@
                                             <div class="form-group">
                                                 <label>Fotografía</label>
                                                 <div class="custom-file">
-                                                    <input type="file" class="custom-file-input" id="foto" name="foto" accept="image/*">
+                                                    <input type="file" class="custom-file-input" id="foto" name="foto" accept="image/jpeg,image/jpg,image/png">
                                                     <label class="custom-file-label" for="foto">Seleccionar archivo</label>
                                                 </div>
                                             </div>

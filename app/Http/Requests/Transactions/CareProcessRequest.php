@@ -22,7 +22,7 @@ class CareProcessRequest extends FormRequest
             'descripcion' => 'nullable|string',
             'fecha' => 'nullable|date',
             'observaciones' => 'nullable|string',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120', new \App\Rules\NotWebpImage()],
         ];
     }
 }

@@ -35,7 +35,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContactMessageController;
 
 Route::get('/', function () {
-    return redirect('login'); // pantalla inicial: login
+    if (Auth::check()) {
+        return redirect('home');
+    }
+    return redirect('landing');
 });
 
 Auth::routes();
@@ -67,7 +70,9 @@ Route::resource('animal-profiles', AnimalProfileController::class);
 Route::resource('dispositions', DispositionController::class);
 Route::resource('health-records', HealthRecordController::class);
 Route::put('reports/{report}/approve', [ReportController::class, 'approve'])->name('reports.approve')->middleware('auth');
-Route::resource('reports', ReportController::class)->middleware('auth');
+Route::get('reports/claim', [ReportController::class, 'claim'])->name('reports.claim');
+Route::post('reports/claim', [ReportController::class, 'claimStore'])->name('reports.claim.store');
+Route::resource('reports', ReportController::class);
 Route::resource('animal-statuses', AnimalStatusController::class);
 Route::resource('care-types', CareTypeController::class);
 Route::resource('cares', CareController::class);

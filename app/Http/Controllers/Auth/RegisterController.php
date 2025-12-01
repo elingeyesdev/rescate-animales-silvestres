@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Person;
+use App\Models\Report;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 
@@ -109,10 +110,18 @@ class RegisterController extends Controller
     /**
      * The user has been registered.
      * Logout immediately and send to login page to start session explicitly.
+     * Guardar el reporte pendiente en sesión para asociarlo después del login.
      */
     protected function registered(Request $request, $user)
     {
+        // Guardar el reporte pendiente en sesión antes de hacer logout
+        $reportId = session('pending_report_id');
+        if ($reportId) {
+            $request->session()->put('pending_report_id', $reportId);
+        }
+        
         $this->guard()->logout();
-        return redirect('/login');
+        return redirect('/login')
+            ->with('info', 'Registro exitoso. Por favor inicia sesión para asociar tu reporte.');
     }
 }

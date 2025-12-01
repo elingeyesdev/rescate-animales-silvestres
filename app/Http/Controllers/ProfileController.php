@@ -15,6 +15,7 @@ use Spatie\Permission\Models\Role;
 use App\Mail\NewRescuerApplicationNotification;
 use App\Mail\NewVeterinarianApplicationNotification;
 use App\Mail\CaregiverCommitmentConfirmation;
+use App\Rules\NotWebpImage;
 
 class ProfileController extends Controller
 {
@@ -66,7 +67,7 @@ class ProfileController extends Controller
             'telefono' => 'nullable|string|max:255',
 
             // Foto de la persona
-            'foto'                => 'nullable|file|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto'                => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120', new \App\Rules\NotWebpImage()],
 
             // Cuidador voluntario
             'es_cuidador'         => 'nullable|boolean',
@@ -81,7 +82,7 @@ class ProfileController extends Controller
             'especialidad'        => 'nullable|string|max:255',
 
             // CV y motivo (para rescatista o veterinario)
-            'cv'                  => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,webp|max:5120',
+            'cv'                  => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:5120', new \App\Rules\NotWebpImage()],
             'motivo_postulacion'  => 'nullable|string',
         ]);
 

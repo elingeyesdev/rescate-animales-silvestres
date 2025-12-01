@@ -30,7 +30,7 @@ class AnimalWithFileRequest extends FormRequest
             'estado_inicial_id' => 'nullable|exists:animal_conditions,id',
             // AnimalFile (sin animal_id, se asigna en servicio)
             'especie_id' => 'required|exists:species,id',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:4096', new \App\Rules\NotWebpImage()],
             'estado_id' => 'required|exists:animal_statuses,id',
         ];
     }

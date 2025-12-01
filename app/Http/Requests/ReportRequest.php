@@ -24,7 +24,7 @@ class ReportRequest extends FormRequest
         $isUpdate = in_array($this->method(), ['PUT', 'PATCH']);
         $rules = [
             // persona_id and aprobado are set server-side (aprobado solo en update)
-            'imagen' => ($isUpdate ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'imagen' => [($isUpdate ? 'nullable' : 'required'), 'image', 'mimes:jpg,jpeg,png', 'max:4096', new \App\Rules\NotWebpImage()],
             'observaciones' => 'nullable|string',
             // ubicación solo se exige en creación
             'latitud' => $isUpdate ? 'nullable|numeric' : 'required|numeric',

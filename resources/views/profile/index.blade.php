@@ -204,13 +204,14 @@
                                             <div class="custom-file">
                                                 <input type="file"
                                                        class="custom-file-input @error('foto') is-invalid @enderror"
-                                                       id="foto" name="foto">
+                                                       id="foto" name="foto"
+                                                       accept="image/jpeg,image/jpg,image/png">
                                                 <label class="custom-file-label" for="foto">
                                                     Seleccionar foto
                                                 </label>
                                             </div>
                                             <small class="form-text text-muted">
-                                                Se utilizará como imagen principal de tu perfil. Formatos: jpg, jpeg, png, webp. Máx. 5MB.
+                                                Se utilizará como imagen principal de tu perfil. Formatos: jpg, jpeg, png. Máx. 5MB.
                                             </small>
                                             @error('foto')
                                             <span class="invalid-feedback d-block" role="alert"><strong>{{ $message }}</strong></span>
@@ -415,13 +416,14 @@
                                                         <div class="custom-file">
                                                             <input type="file"
                                                                    class="custom-file-input @error('cv') is-invalid @enderror"
-                                                                   id="cv_rescatista" name="cv">
+                                                                   id="cv_rescatista" name="cv"
+                                                                   accept=".pdf,.doc,.docx,image/jpeg,image/jpg,image/png">
                                                             <label class="custom-file-label" for="cv_rescatista">
                                                                 Seleccionar archivo
                                                             </label>
                                                         </div>
                                                         <small class="form-text text-muted">
-                                                            Formatos admitidos: pdf, doc, docx, jpg, jpeg, png, webp. Máx. 5MB.
+                                                            Formatos admitidos: pdf, doc, docx, jpg, jpeg, png. Máx. 5MB.
                                                         </small>
                                                         @error('cv')
                                                         <span class="invalid-feedback d-block" role="alert"><strong>{{ $message }}</strong></span>
@@ -558,13 +560,14 @@
                                                         <div class="custom-file">
                                                             <input type="file"
                                                                    class="custom-file-input @error('cv') is-invalid @enderror"
-                                                                   id="cv_veterinario" name="cv">
+                                                                   id="cv_veterinario" name="cv"
+                                                                   accept=".pdf,.doc,.docx,image/jpeg,image/jpg,image/png">
                                                             <label class="custom-file-label" for="cv_veterinario">
                                                                 Seleccionar archivo
                                                             </label>
                                                         </div>
                                                         <small class="form-text text-muted">
-                                                            Formatos admitidos: pdf, doc, docx, jpg, jpeg, png, webp. Máx. 5MB.
+                                                            Formatos admitidos: pdf, doc, docx, jpg, jpeg, png. Máx. 5MB.
                                                         </small>
                                                         @error('cv')
                                                         <span class="invalid-feedback d-block" role="alert"><strong>{{ $message }}</strong></span>
@@ -726,7 +729,11 @@
                     if (!file) {
                         return;
                     }
-                    if (!file.type.startsWith('image/')) {
+                    if (!file.type.startsWith('image/') || file.type === 'image/webp') {
+                        if (file.type === 'image/webp') {
+                            alert('El formato de imagen .webp no está permitido. Por favor, usa JPG, JPEG o PNG.');
+                            fotoInput.value = '';
+                        }
                         return;
                     }
                     const reader = new FileReader();
@@ -760,7 +767,11 @@
                         img.src = '#';
                         return;
                     }
-                    if (!file.type.startsWith('image/')) {
+                    if (!file.type.startsWith('image/') || file.type === 'image/webp') {
+                        if (file.type === 'image/webp') {
+                            alert('El formato de imagen .webp no está permitido. Por favor, usa JPG, JPEG o PNG.');
+                            input.value = '';
+                        }
                         container.style.display = 'none';
                         img.src = '#';
                         return;

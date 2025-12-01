@@ -22,7 +22,7 @@
         <div class="form-group mb-2 mb20">
             <label for="imagen" class="form-label">{{ __('Imagen') }}</label>
             <div class="custom-file">
-                <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
+                <input type="file" accept="image/jpeg,image/jpg,image/png" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
                 <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>
             </div>
             {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
@@ -170,11 +170,15 @@ document.addEventListener('DOMContentLoaded', function () {
       preview.className = 'mt-2';
       container.appendChild(preview);
     }
-    if (file && file.type && file.type.startsWith('image/')) {
+    if (file && file.type && file.type.startsWith('image/') && file.type !== 'image/webp') {
       preview.src = URL.createObjectURL(file);
       preview.style.display = 'block';
     } else if (preview) {
       preview.style.display = 'none';
+      if (file && file.type === 'image/webp') {
+        alert('El formato de imagen .webp no está permitido. Por favor, usa JPG, JPEG o PNG.');
+        input.value = '';
+      }
     }
   });
   const obs = document.getElementById('observaciones');

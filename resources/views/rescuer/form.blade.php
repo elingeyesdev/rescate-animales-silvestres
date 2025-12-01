@@ -14,7 +14,7 @@
         <div class="form-group mb-2 mb20">
             <label for="cv" class="form-label">{{ __('Archivo CV (PDF/DOC o Imagen)') }}</label>
             <div class="custom-file">
-                <input type="file" name="cv" accept=".pdf,.doc,.docx,image/*" class="custom-file-input @error('cv') is-invalid @enderror" id="cv">
+                <input type="file" name="cv" accept=".pdf,.doc,.docx,image/jpeg,image/jpg,image/png" class="custom-file-input @error('cv') is-invalid @enderror" id="cv">
                 <label class="custom-file-label" for="cv">{{ __('Seleccionar archivo') }}</label>
             </div>
             {!! $errors->first('cv', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
@@ -32,10 +32,14 @@
                 if (label) label.textContent = fileName;
                 if (preview) {
                     const file = this.files && this.files[0] ? this.files[0] : null;
-                    if (file && file.type && file.type.startsWith('image/')) {
+                    if (file && file.type && file.type.startsWith('image/') && file.type !== 'image/webp') {
                         preview.src = URL.createObjectURL(file);
                         preview.style.display = 'inline-block';
                     } else {
+                        if (file && file.type === 'image/webp') {
+                            alert('El formato de imagen .webp no está permitido. Por favor, usa JPG, JPEG o PNG.');
+                            this.value = '';
+                        }
                         preview.src = '';
                         preview.style.display = 'none';
                     }

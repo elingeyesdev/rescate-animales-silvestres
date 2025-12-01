@@ -15,14 +15,19 @@ class SpatieRoleFilter implements FilterInterface
      */
     public function transform($item)
     {
-        // Si el item no tiene 'can', mostrarlo siempre
-        if (!isset($item['can'])) {
-            return $item;
+        // Si el usuario no está autenticado, ocultar todos los items del sidebar
+        // (excepto headers que no son clickeables)
+        if (!Auth::check()) {
+            // Permitir headers pero ocultar items clickeables
+            if (isset($item['type']) && $item['type'] === 'header') {
+                return null; // También ocultar headers cuando no hay usuario autenticado
+            }
+            return null;
         }
 
-        // Si el usuario no está autenticado, ocultar el item
-        if (!Auth::check()) {
-            return null;
+        // Si el item no tiene 'can', mostrarlo siempre (pero solo si el usuario está autenticado)
+        if (!isset($item['can'])) {
+            return $item;
         }
 
         $user = Auth::user();

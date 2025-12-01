@@ -26,9 +26,10 @@ class ReportController extends Controller
         private readonly AnimalTransferTransactionalService $transferService,
         private readonly ReportUrgencyService $urgencyService
     ) {
-        $this->middleware('auth');
+        // Permitir create y store sin autenticación (para usuarios anónimos desde landing)
+        $this->middleware('auth')->except(['create', 'store']);
         // Solo ciertos roles gestionan reportes en el panel interno
-        $this->middleware('role:ciudadano|rescatista|encargado|admin');
+        $this->middleware('role:ciudadano|rescatista|encargado|admin')->except(['create', 'store']);
         // Ciudadanos solo pueden ver y crear, no editar ni eliminar
         $this->middleware('role:admin|encargado|rescatista')->only(['edit', 'update', 'destroy']);
     }
@@ -116,15 +117,22 @@ class ReportController extends Controller
     {
         try {
             $data = $request->validated();
+            $isAuthenticated = Auth::check();
 
-            // Persona del usuario autenticado (obligatoria para guardar)
-            $personId = Person::where('usuario_id', Auth::id())->value('id');
-            if (empty($personId)) {
-                return Redirect::back()
-                    ->withInput()
-                    ->withErrors(['persona_id' => 'Tu usuario no está vinculado a una persona. Comunícate con el administrador.']);
+            // Si el usuario está autenticado, obtener su persona_id
+            if ($isAuthenticated) {
+                $personId = Person::where('usuario_id', Auth::id())->value('id');
+                if (empty($personId)) {
+                    return Redirect::back()
+                        ->withInput()
+                        ->withErrors(['persona_id' => 'Tu usuario no está vinculado a una persona. Comunícate con el administrador.']);
+                }
+                $data['persona_id'] = $personId;
+            } else {
+                // Usuario no autenticado: guardar sin persona_id
+                $data['persona_id'] = null;
             }
-            $data['persona_id'] = $personId;
+            
             $data['aprobado'] = 0;
            
             if ($request->hasFile('imagen')) {
@@ -176,7 +184,8 @@ class ReportController extends Controller
             $hist->save();
 
             // Si se marcó traslado inmediato, registrar primer traslado (sin hoja)
-            if ($request->boolean('traslado_inmediato')) {
+            // Solo si hay persona_id (usuario autenticado)
+            if ($request->boolean('traslado_inmediato') && $report->persona_id) {
                 $tData = [
                     'persona_id' => $report->persona_id,
                     'centro_id' => $request->input('centro_id'),
@@ -188,6 +197,13 @@ class ReportController extends Controller
                     'reporte_id' => $report->id,
                 ];
                 $this->transferService->create($tData);
+            }
+
+            // Si el usuario NO está autenticado, guardar el reporte en sesión y preguntar si quiere conservarlo
+            if (!$isAuthenticated) {
+                session(['pending_report_id' => $report->id]);
+                return Redirect::route('reports.claim')
+                    ->with('success', 'El hallazgo se registró correctamente. ¿Deseas conservar este reporte como tuyo?');
             }
 
             return Redirect::route('reports.index')
@@ -295,5 +311,47 @@ class ReportController extends Controller
 
         return Redirect::route('reports.index')
             ->with('success', 'El hallazgo se eliminó correctamente');
+    }
+
+    /**
+     * Mostrar página para reclamar el reporte (si el usuario no estaba autenticado)
+     */
+    public function claim(): View
+    {
+        $reportId = session('pending_report_id');
+        if (!$reportId) {
+            return view('reports.claim', ['report' => null]);
+        }
+
+        $report = Report::with(['condicionInicial', 'incidentType'])->find($reportId);
+        return view('reports.claim', compact('report'));
+    }
+
+    /**
+     * Procesar la decisión del usuario sobre conservar el reporte
+     */
+    public function claimStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:yes,no',
+        ]);
+
+        $reportId = session('pending_report_id');
+        if (!$reportId) {
+            return Redirect::route('landing')
+                ->with('info', 'No hay reportes pendientes de asociar.');
+        }
+
+        if ($validated['action'] === 'no') {
+            // El usuario no quiere conservar el reporte, limpiar sesión y redirigir
+            session()->forget('pending_report_id');
+            return Redirect::route('landing')
+                ->with('success', 'El reporte se ha registrado correctamente. Gracias por tu colaboración.');
+        }
+
+        // El usuario quiere conservar el reporte, mantener en sesión y redirigir a login
+        // El reporte ya está en sesión, solo redirigir
+        return Redirect::route('login')
+            ->with('info', 'Por favor, inicia sesión o regístrate para asociar este reporte a tu cuenta.');
     }
 }

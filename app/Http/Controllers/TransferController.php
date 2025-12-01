@@ -57,7 +57,21 @@ class TransferController extends Controller
         $tab = $request->string('tab')->toString() ?: 'first';
         $transfers = Transfer::with(['person','center'])->paginate();
         $centers = Center::orderBy('nombre')->get(['id','nombre','latitud','longitud']);
-        $people = Person::orderBy('nombre')->get(['id','nombre']);
+        
+        // Filtrar personas: excluir a los que son solo ciudadanos
+        // Obtener IDs de usuarios que son solo ciudadanos
+        $onlyCitizenUserIds = \App\Models\User::whereHas('roles', function ($query) {
+            $query->where('name', 'ciudadano');
+        })->whereDoesntHave('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador']);
+        })->pluck('id');
+        
+        // Obtener personas que NO tienen usuarios solo ciudadanos
+        $people = Person::where(function ($query) use ($onlyCitizenUserIds) {
+            $query->whereNotIn('usuario_id', $onlyCitizenUserIds)
+                  ->orWhereNull('usuario_id');
+        })->orderBy('nombre')
+          ->get(['id','nombre']);
 
         // Preparar datos SOLO para la pestaña activa
         $reportsFirst = collect();
@@ -97,7 +111,21 @@ class TransferController extends Controller
         $rescuers = Rescuer::with('person')->where('aprobado', true)->orderBy('id')->get();
         $centers = Center::orderBy('nombre')->get(['id','nombre','latitud','longitud']);
         $animals = Animal::orderByDesc('id')->get(['id','nombre']);
-        $people = \App\Models\Person::orderBy('nombre')->get(['id','nombre']);
+        
+        // Filtrar personas: excluir a los que son solo ciudadanos
+        // Obtener IDs de usuarios que son solo ciudadanos
+        $onlyCitizenUserIds = \App\Models\User::whereHas('roles', function ($query) {
+            $query->where('name', 'ciudadano');
+        })->whereDoesntHave('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador']);
+        })->pluck('id');
+        
+        // Obtener personas que NO tienen usuarios solo ciudadanos
+        $people = \App\Models\Person::where(function ($query) use ($onlyCitizenUserIds) {
+            $query->whereNotIn('usuario_id', $onlyCitizenUserIds)
+                  ->orWhereNull('usuario_id');
+        })->orderBy('nombre')
+          ->get(['id','nombre']);
         return view('transfer.create', compact('transfer','rescuers','centers','animals','people'));
     }
 
@@ -174,7 +202,21 @@ class TransferController extends Controller
         $rescuers = Rescuer::with('person')->where('aprobado', true)->orderBy('id')->get();
         $centers = Center::orderBy('nombre')->get(['id','nombre']);
         $animals = Animal::orderByDesc('id')->get(['id','nombre']);
-        $people = \App\Models\Person::orderBy('nombre')->get(['id','nombre']);
+        
+        // Filtrar personas: excluir a los que son solo ciudadanos
+        // Obtener IDs de usuarios que son solo ciudadanos
+        $onlyCitizenUserIds = \App\Models\User::whereHas('roles', function ($query) {
+            $query->where('name', 'ciudadano');
+        })->whereDoesntHave('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador']);
+        })->pluck('id');
+        
+        // Obtener personas que NO tienen usuarios solo ciudadanos
+        $people = \App\Models\Person::where(function ($query) use ($onlyCitizenUserIds) {
+            $query->whereNotIn('usuario_id', $onlyCitizenUserIds)
+                  ->orWhereNull('usuario_id');
+        })->orderBy('nombre')
+          ->get(['id','nombre']);
         return view('transfer.edit', compact('transfer','rescuers','centers','animals','people'));
     }
 

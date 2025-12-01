@@ -255,9 +255,6 @@
                             <input type="hidden" name="action" id="actionReport{{ $report->id }}" value="">
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                <i class="fa fa-times"></i> {{ __('Cancelar') }}
-                            </button>
                             <button type="button" class="btn btn-danger" id="btnRechazarReport{{ $report->id }}">
                                 <i class="fa fa-times-circle"></i> {{ __('Rechazar') }}
                             </button>
