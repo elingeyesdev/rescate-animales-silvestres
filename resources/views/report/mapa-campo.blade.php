@@ -58,7 +58,7 @@
                                     </div>
                                     <div class="mb-1">
                                         <span style="display: inline-block; width: 20px; height: 20px; background-color: #ff4444; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); vertical-align: middle;"></span>
-                                        <span class="ml-2">{{ __('Hallazgo relacionado con incendio') }}</span>
+                                        <span class="ml-2">{{ __('Hallazgo en incendio') }}</span>
                                     </div>
                                     <div class="mb-1">
                                         <span style="display: inline-block; width: 20px; height: 20px; background-color: #ff8800; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); vertical-align: middle;"></span>
@@ -179,7 +179,7 @@
                         </div>
                         ${report.incendio_id ? `
                             <div style="font-size: 12px; margin-bottom: 4px; color: #ff4444;">
-                                <i class="fas fa-fire"></i> <strong>Relacionado con incendio ID: ${report.incendio_id}</strong>
+                                <i class="fas fa-fire"></i> <strong>Hallazgo en incendio</strong>
                             </div>
                         ` : ''}
                         ${incidenteNombre ? `

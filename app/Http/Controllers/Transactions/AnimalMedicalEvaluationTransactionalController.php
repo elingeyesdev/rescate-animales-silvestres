@@ -104,7 +104,7 @@ class AnimalMedicalEvaluationTransactionalController extends Controller
 
 		$this->service->registerEvaluation($data, $image);
 
-		return Redirect::route('animal-histories.index')
+		return Redirect::route('medical-evaluations.index')
 			->with('success', 'Evaluación médica registrada.');
 	}
 }

@@ -33,12 +33,9 @@ class ReleaseRequest extends FormRequest
                 'exists:animal_files,id',
                 Rule::unique('releases', 'animal_file_id')->ignore($id),
             ],
+            'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:4096', new \App\Rules\NotWebpImage()],
         ];
-        if (in_array($this->method(), ['PUT','PATCH'])) {
-            $rules['aprobada'] = 'required|boolean';
-        } else {
-            $rules['aprobada'] = 'nullable|boolean';
-        }
+        // Las liberaciones siempre están aprobadas (solo administradores pueden crearlas)
         return $rules;
     }
 }

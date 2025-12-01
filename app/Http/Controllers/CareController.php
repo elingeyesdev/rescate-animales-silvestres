@@ -26,10 +26,18 @@ class CareController extends Controller
      */
     public function index(Request $request): View
     {
-        $cares = Care::with(['animalFile.animal','careType'])->paginate();
+        $cares = Care::with(['animalFile.animal','animalFile.species','animalFile.animalStatus','careType'])
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
+            ->get();
 
-        return view('care.index', compact('cares'))
-            ->with('i', ($request->input('page', 1) - 1) * $cares->perPage());
+        // Agrupar cuidados por animal_file_id (usar 'sin_animal' para los que no tienen animal_file_id)
+        $groupedCares = $cares->groupBy(function($care) {
+            return $care->hoja_animal_id ?? 'sin_animal';
+        });
+
+        return view('care.index', compact('groupedCares'))
+            ->with('i', 0);
     }
 
     /**

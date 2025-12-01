@@ -5,15 +5,17 @@ namespace App\Services\Animal;
 use App\Models\AnimalFile;
 use App\Models\AnimalHistory;
 use App\Models\Release;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class AnimalReleaseTransactionalService
 {
 	private array $allowedStatuses = ['estable','bueno','muy bueno','excelente'];
 
-	public function create(array $data): Release
+	public function create(array $data, ?UploadedFile $image = null): Release
 	{
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $image) {
             $animalFile = AnimalFile::with('animalStatus','animal')->findOrFail($data['animal_file_id']);
 
             if ($animalFile->release()->exists()) {
@@ -25,6 +27,13 @@ class AnimalReleaseTransactionalService
                 throw new \DomainException('El animal no está en un estado de salud apto para liberación.');
             }
 
+            if ($image) {
+                $data['imagen_url'] = $image->store('evidencias/releases', 'public');
+            }
+
+            // Las liberaciones siempre están aprobadas (solo administradores pueden crearlas)
+            $data['aprobada'] = true;
+
             $release = Release::create($data);
 
 			AnimalHistory::create([
@@ -33,7 +42,6 @@ class AnimalReleaseTransactionalService
 				'valores_nuevos' => [
 					'liberacion' => [
 						'id' => $release->id,
-						'aprobada' => (bool)$release->aprobada,
 						'direccion' => $release->direccion,
 						'latitud' => $release->latitud,
 						'longitud' => $release->longitud,

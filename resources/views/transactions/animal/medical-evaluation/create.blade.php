@@ -174,7 +174,7 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group mb-2 mb20">
-                                                <label for="imagen" class="form-label">{{ __('Evidencia (imagen)') }}</label>
+                                                <label for="imagen" class="form-label">{{ __('Evidencia') }}</label>
                                                 <div class="custom-file">
                                                     <input type="file" accept="image/jpeg,image/jpg,image/png" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
                                                     <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>
@@ -201,7 +201,7 @@
                                             <div class="form-group mb-2 mb20">
                                                 <label class="form-label d-block">{{ __('¿Apto para traslado inmediato?') }}</label>
                                                 <div class="icheck-primary d-inline mr-3">
-                                                    <input type="radio" id="apto_si" name="apto_traslado" value="si" {{ old('apto_traslado')==='si'?'checked':'' }}>
+                                                    <input type="radio" id="apto_si" name="apto_traslado" value="si" {{ old('apto_traslado')==='si'?'checked':'checked' }}>
                                                     <label for="apto_si">{{ __('Sí') }}</label>
                                                 </div>
                                                 <div class="icheck-primary d-inline mr-3">

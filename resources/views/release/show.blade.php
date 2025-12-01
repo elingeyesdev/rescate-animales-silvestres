@@ -75,10 +75,6 @@
                                     <strong>{{ __('Dirección') }}:</strong>
                                     {{ $release->direccion ?: '-' }}
                                 </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Aprobada') }}:</strong>
-                                    {{ (int)$release->aprobada === 1 ? __('Sí') : __('No') }}
-                                </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-2 mb20">

@@ -362,7 +362,7 @@ class ReportController extends Controller
                 'incendio_id' => 1,
                 'direccion' => 'San Jose de Chiquitos, Santa Cruz, Bolivia',
                 'condicion_inicial' => [
-                    'nombre' => 'Hallazgo relacionado con incendio',
+                    'nombre' => 'Hallazgo en incendio',
                 ],
                 'incident_type' => [
                     'nombre' => 'Incendio forestal',

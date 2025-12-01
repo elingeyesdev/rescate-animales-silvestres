@@ -41,9 +41,7 @@ class ReleaseController extends Controller
             });
         }
 
-        if ($request->filled('aprobada')) {
-            $query->where('aprobada', (bool)$request->input('aprobada'));
-        }
+        // Filtro de aprobación eliminado - todas las liberaciones están aprobadas
 
         if ($request->filled('fecha_desde')) {
             $query->whereDate('created_at', '>=', $request->input('fecha_desde'));
@@ -68,16 +66,27 @@ class ReleaseController extends Controller
     public function create(): View
     {
         $release = new Release();
-        $animalFiles = AnimalFile::query()
+        $animalFiles = AnimalFile::with(['animal.report.person','animalStatus'])
             ->join('animal_statuses', 'animal_files.estado_id', '=', 'animal_statuses.id')
             ->leftJoin('releases', 'releases.animal_file_id', '=', 'animal_files.id')
             ->join('animals', 'animal_files.animal_id', '=', 'animals.id')
             ->whereRaw('LOWER(animal_statuses.nombre) = ?', ['estable'])
             ->whereNull('releases.animal_file_id')
             ->orderBy('animals.nombre')
-            ->get(['animal_files.id as id', 'animals.nombre as nombre']);
+            ->get(['animal_files.id', 'animal_files.animal_id', 'animal_files.estado_id', 'animal_files.imagen_url']);
 
-        return view('release.create', compact('release','animalFiles'));
+        // Datos para cards de Paso 1
+        $afCards = $animalFiles->map(function ($af) {
+            return [
+                'id' => $af->id,
+                'img' => $af->imagen_url ? asset('storage/'.$af->imagen_url) : null,
+                'status' => $af->animalStatus?->nombre,
+                'reporter' => $af->animal?->report?->person?->nombre,
+                'name' => ($af->animal?->nombre ?? ('#' . $af->animal?->id)),
+            ];
+        })->values()->toArray();
+
+        return view('release.create', compact('release','animalFiles','afCards'));
     }
 
     /**
@@ -86,7 +95,9 @@ class ReleaseController extends Controller
     public function store(ReleaseRequest $request): RedirectResponse
     {
         try {
-            $this->releaseService->create($request->validated());
+            $data = $request->validated();
+            $image = $request->file('imagen');
+            $this->releaseService->create($data, $image);
         } catch (\DomainException $e) {
             return Redirect::back()->withInput()->with('error', $e->getMessage());
         } catch (\Throwable $e) {
@@ -113,7 +124,7 @@ class ReleaseController extends Controller
     public function edit($id): View
     {
         $release = Release::find($id);
-        $animalFiles = AnimalFile::query()
+        $animalFiles = AnimalFile::with(['animal.report.person','animalStatus'])
             ->join('animal_statuses', 'animal_files.estado_id', '=', 'animal_statuses.id')
             ->leftJoin('releases', 'releases.animal_file_id', '=', 'animal_files.id')
             ->join('animals', 'animal_files.animal_id', '=', 'animals.id')
@@ -127,9 +138,20 @@ class ReleaseController extends Controller
                   ->orWhere('releases.id', $release->id);
             })
             ->orderBy('animals.nombre')
-            ->get(['animal_files.id as id', 'animals.nombre as nombre']);
+            ->get(['animal_files.id', 'animal_files.animal_id', 'animal_files.estado_id', 'animal_files.imagen_url']);
 
-        return view('release.edit', compact('release','animalFiles'));
+        // Datos para cards de Paso 1
+        $afCards = $animalFiles->map(function ($af) {
+            return [
+                'id' => $af->id,
+                'img' => $af->imagen_url ? asset('storage/'.$af->imagen_url) : null,
+                'status' => $af->animalStatus?->nombre,
+                'reporter' => $af->animal?->report?->person?->nombre,
+                'name' => ($af->animal?->nombre ?? ('#' . $af->animal?->id)),
+            ];
+        })->values()->toArray();
+
+        return view('release.edit', compact('release','animalFiles','afCards'));
     }
 
     /**
@@ -137,7 +159,21 @@ class ReleaseController extends Controller
      */
     public function update(ReleaseRequest $request, Release $release): RedirectResponse
     {
-        $release->update($request->validated());
+        $data = $request->validated();
+        $image = $request->file('imagen');
+        
+        if ($image) {
+            // Eliminar imagen anterior si existe
+            if ($release->imagen_url) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($release->imagen_url);
+            }
+            $data['imagen_url'] = $image->store('evidencias/releases', 'public');
+        }
+        
+        // Las liberaciones siempre están aprobadas (solo administradores pueden editarlas)
+        $data['aprobada'] = true;
+        
+        $release->update($data);
 
         return Redirect::route('releases.index')
             ->with('success', 'Liberación actualizada correctamente');

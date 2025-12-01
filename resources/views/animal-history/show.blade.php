@@ -382,7 +382,6 @@
                 } else if (p.type === 'transfer') {
                     color = '#2563eb';
                     iconClass = 'fa-truck';
-                    eventType = 'Traslado / Centro';
                     eventDescription = 'Centro de rescate o traslado';
                 }
 

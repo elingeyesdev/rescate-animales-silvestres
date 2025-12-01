@@ -81,7 +81,6 @@ class FirePredictionService
      */
     protected function getSimulatedPrediction(int $focoIncendioId): ?array
     {
-        // Datos simulados basados en el JSON proporcionado
         // Para foco_incendio_id = 1
         if ($focoIncendioId == 1) {
             return [
