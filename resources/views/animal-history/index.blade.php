@@ -60,6 +60,12 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        @if($histories->isEmpty())
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle"></i> {{ __('No se encontraron registros en el historial de animales.') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
                 {!! $histories->withQueryString()->links() !!}

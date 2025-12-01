@@ -10,12 +10,17 @@
             <div class="col-md-12">
                 <div class="card card-default">
                     <div class="card-header">
-                        <span class="card-title">
-                            {{ __('Detalle de Historial') }}
-                            @if($animalHistory->animalFile?->animal?->nombre)
-                                {{ ' ' . __('de') . ' ' . $animalHistory->animalFile->animal->nombre }}
-                            @endif
-                        </span>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="card-title">
+                                {{ __('Detalles del animal') }}
+                                @if($animalHistory->animalFile?->animal?->nombre)
+                                    {{ ' ' . __('de') . ' ' . $animalHistory->animalFile->animal->nombre }}
+                                @endif
+                            </span>
+                            <a href="{{ route('animal-histories.index') }}" class="btn btn-info btn-sm">
+                                <i class="fas fa-arrow-left"></i> {{ __('Volver') }}
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body bg-white">
                         @php
@@ -191,10 +196,6 @@
                             </button>
                             <img id="overlayImg" src="" alt="Imagen" style="max-width:90%; max-height:90%; border-radius:4px; box-shadow:0 6px 24px rgba(0,0,0,.35);">
                         </div>
-
-                        <a href="{{ route('animal-histories.index') }}" class="btn btn-secondary mt-3">
-                            {{ __('Back') }}
-                        </a>
                     </div>
                 </div>
             </div>

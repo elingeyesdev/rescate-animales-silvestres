@@ -10,6 +10,128 @@
 <div class="container-fluid">
     @if(Auth::user()->hasAnyRole(['admin', 'encargado']))
         {{-- DASHBOARD PARA ADMIN Y ENCARGADO --}}
+        
+
+        <div class="row">
+            {{-- Estadísticas rápidas --}}
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{ $pendingReportsCount ?? 0 }}</h3>
+                        <p>Hallazgos Pendientes</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <a href="{{ route('reports.index') }}" class="small-box-footer">
+                        Ver más <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ ($pendingRescuersCount ?? 0) + ($pendingVeterinariansCount ?? 0) + ($pendingCaregiversCount ?? 0) }}</h3>
+                        <p>Solicitudes Pendientes</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <a href="{{ route('people.index') }}" class="small-box-footer">
+                        Ver más <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ $totalAnimals ?? 0 }}</h3>
+                        <p>Animales en Sistema</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-paw"></i>
+                    </div>
+                    <a href="{{ route('animal-files.index') }}" class="small-box-footer">
+                        Ver más <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{ $unreadMessagesCount ?? 0 }}</h3>
+                        <p>Mensajes No Leídos</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <a href="#mensajes" class="small-box-footer">
+                        Ver más <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- Gráficos para Admin y Encargado --}}
+        @if(isset($reportsByMonth) || isset($animalsByStatus) || isset($applicationsByType))
+        <div class="row">
+            {{-- Gráfico de Hallazgos por Mes --}}
+            @if(isset($reportsByMonth))
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-line mr-1"></i>
+                            Hallazgos por Mes (Últimos 6 meses)
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="reportsChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Gráfico de Animales por Estado --}}
+            @if(isset($animalsByStatus))
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie mr-1"></i>
+                            Animales por Estado
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="animalsStatusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+            @endif
+        </div>
+
+        {{-- Gráfico de Solicitudes por Tipo --}}
+        @if(isset($applicationsByType))
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-bar mr-1"></i>
+                            Solicitudes por Tipo
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="applicationsChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+        @endif
         <div class="row">
             {{-- Mensajes de contacto no leídos --}}
             <div class="col-lg-12">
@@ -74,116 +196,6 @@
                                 No hay mensajes de contacto pendientes.
                             </div>
                         @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            {{-- Estadísticas rápidas --}}
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-info">
-                    <div class="inner">
-                        <h3>{{ $pendingReportsCount ?? 0 }}</h3>
-                        <p>Hallazgos Pendientes</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <a href="{{ route('reports.index') }}" class="small-box-footer">
-                        Ver más <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-warning">
-                    <div class="inner">
-                        <h3>{{ ($pendingRescuersCount ?? 0) + ($pendingVeterinariansCount ?? 0) + ($pendingCaregiversCount ?? 0) }}</h3>
-                        <p>Solicitudes Pendientes</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-user-check"></i>
-                    </div>
-                    <a href="{{ route('people.index') }}" class="small-box-footer">
-                        Ver más <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-success">
-                    <div class="inner">
-                        <h3>{{ \App\Models\AnimalFile::count() }}</h3>
-                        <p>Animales en Sistema</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-paw"></i>
-                    </div>
-                    <a href="{{ route('animal-files.index') }}" class="small-box-footer">
-                        Ver más <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-danger">
-                    <div class="inner">
-                        <h3>{{ $unreadMessagesCount ?? 0 }}</h3>
-                        <p>Mensajes No Leídos</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <a href="#mensajes" class="small-box-footer">
-                        Ver más <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        {{-- Gráficos --}}
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-line mr-1"></i>
-                            Hallazgos por Mes (Últimos 6 meses)
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="reportsChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-pie mr-1"></i>
-                            Animales por Estado
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="animalsStatusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-bar mr-1"></i>
-                            Solicitudes por Tipo
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="applicationsChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
                     </div>
                 </div>
             </div>
@@ -311,9 +323,10 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Gráfico de hallazgos por mes
+    @if(isset($reportsByMonth) && !empty($reportsByMonth))
     const reportsCtx = document.getElementById('reportsChart');
     if (reportsCtx) {
-        const reportsData = @json($reportsByMonth ?? []);
+        const reportsData = @json($reportsByMonth);
         const labels = Object.keys(reportsData);
         const data = Object.values(reportsData);
         
@@ -340,11 +353,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    @endif
 
     // Gráfico de animales por estado
+    @if(isset($animalsByStatus) && !empty($animalsByStatus))
     const animalsCtx = document.getElementById('animalsStatusChart');
     if (animalsCtx) {
-        const animalsData = @json($animalsByStatus ?? []);
+        const animalsData = @json($animalsByStatus);
         const statusLabels = Object.keys(animalsData);
         const statusData = Object.values(animalsData);
         
@@ -360,7 +375,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         'rgba(255, 206, 86, 0.8)',
                         'rgba(75, 192, 192, 0.8)',
                         'rgba(153, 102, 255, 0.8)',
-                        'rgba(255, 159, 64, 0.8)'
+                        'rgba(255, 159, 64, 0.8)',
+                        'rgba(199, 199, 199, 0.8)',
+                        'rgba(86, 119, 226, 0.8)',
+                        'rgba(22, 180, 43, 0.8)',
+                        'rgba(126, 196, 206, 0.8)',
+                        'rgba(133, 65, 107, 0.8)',
+                        'rgba(199, 199, 199, 0.8)',
                     ]
                 }]
             },
@@ -370,11 +391,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    @endif
 
     // Gráfico de solicitudes por tipo
+    @if(isset($applicationsByType) && !empty($applicationsByType))
     const applicationsCtx = document.getElementById('applicationsChart');
     if (applicationsCtx) {
-        const applicationsData = @json($applicationsByType ?? []);
+        const applicationsData = @json($applicationsByType);
         const appLabels = Object.keys(applicationsData);
         const appData = Object.values(applicationsData);
         
@@ -403,6 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    @endif
 });
 </script>
 @endif

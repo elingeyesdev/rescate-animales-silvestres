@@ -14,6 +14,15 @@
                             <span class="card-title">{{ __('Show') }} {{ __('Report') }}</span>
                         </div>
                         <div class="ml-auto">
+                            @if(Auth::user()->hasAnyRole(['admin', 'encargado']) && (int)$report->aprobado !== 1)
+                            <button type="button" 
+                                    class="btn btn-success btn-sm mr-2" 
+                                    data-toggle="modal" 
+                                    data-target="#modalAprobarReport{{ $report->id }}"
+                                    title="{{ __('Aprobar o rechazar este hallazgo') }}">
+                                <i class="fa fa-check"></i> {{ __('Aprobar/Rechazar') }}
+                            </button>
+                            @endif
                             <a class="btn btn-primary btn-sm" href="{{ route('reports.index') }}"> {{ __('Back') }}</a>
                         </div>
                     </div>
@@ -113,5 +122,85 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
+{{-- Modal de aprobación para el reporte --}}
+@if(Auth::user()->hasAnyRole(['admin', 'encargado']) && (int)$report->aprobado !== 1)
+<div class="modal fade" id="modalAprobarReport{{ $report->id }}" tabindex="-1" role="dialog" aria-labelledby="modalAprobarReport{{ $report->id }}Label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAprobarReport{{ $report->id }}Label">
+                    <i class="fa fa-check-circle"></i> {{ __('Aprobar/Rechazar Hallazgo') }}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('reports.approve', $report->id) }}" method="POST" id="formAprobarReport{{ $report->id }}">
+                @method('PUT')
+                @csrf
+                <input type="hidden" name="redirect_to" value="show">
+                <div class="modal-body">
+                    <p class="mb-0">{{ __('¿Desea aprobar o rechazar este hallazgo?') }}</p>
+                    <input type="hidden" name="action" id="actionReport{{ $report->id }}" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fa fa-times"></i> {{ __('Cancelar') }}
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btnRechazarReport{{ $report->id }}">
+                        <i class="fa fa-times-circle"></i> {{ __('Rechazar') }}
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnAprobarReport{{ $report->id }}">
+                        <i class="fa fa-check-circle"></i> {{ __('Aprobar') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('formAprobarReport{{ $report->id }}');
+    var actionInput = document.getElementById('actionReport{{ $report->id }}');
+    var btnRechazar = document.getElementById('btnRechazarReport{{ $report->id }}');
+    var btnAprobar = document.getElementById('btnAprobarReport{{ $report->id }}');
+    
+    function submitForm(action) {
+        // Establecer el valor de action
+        if (actionInput) {
+            actionInput.value = action;
+        }
+        
+        // Deshabilitar botones para evitar doble envío
+        if (btnRechazar) btnRechazar.disabled = true;
+        if (btnAprobar) btnAprobar.disabled = true;
+        
+        // Enviar formulario
+        if (form) {
+            form.submit();
+        }
+        return true;
+    }
+    
+    if (btnRechazar) {
+        btnRechazar.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            submitForm('reject');
+        });
+    }
+    
+    if (btnAprobar) {
+        btnAprobar.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            submitForm('approve');
+        });
+    }
+});
+</script>
+@endif
+
 @include('partials.page-pad')
 @endsection

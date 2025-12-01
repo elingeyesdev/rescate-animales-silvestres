@@ -117,7 +117,7 @@
                                     $roleLabel = $person->highest_role ?? 'Sin rol';
                                     $fotoUrl = !empty($person->foto_path)
                                         ? asset('storage/' . $person->foto_path)
-                                        : 'https://ui-avatars.com/api/?name=' . urlencode($person->nombre ?: 'Sin nombre');
+                                        : asset('storage/personas/persona.png');
                                 @endphp
                                 <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch flex-column">
                                     <div class="card bg-light d-flex flex-fill person-card">
@@ -136,7 +136,9 @@
                                                     </ul>
                                                 </div>
                                                 <div class="col-5 text-center">
-                                                    <img src="{{ $fotoUrl }}" alt="user-avatar" class="img-circle img-fluid">
+                                                    <div style="width: 80px; height: 80px; margin: 0 auto; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #e9ecef;">
+                                                        <img src="{{ $fotoUrl }}" alt="user-avatar" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -159,6 +161,12 @@
                                 </div>
                             @endforeach
                         </div>
+
+                        @if($people->isEmpty())
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle"></i> {{ __('No se encontraron personas.') }}
+                            </div>
+                        @endif
                     </div>
                     <!-- /.card-body -->
                     <div class="card-footer">

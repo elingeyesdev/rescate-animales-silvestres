@@ -177,6 +177,12 @@
                                 </div>
                             @endforeach
                         </div>
+
+                        @if($animalFiles->isEmpty())
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle"></i> {{ __('No se registró ninguna hoja de animal todavía.') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
                 {!! $animalFiles->withQueryString()->links() !!}

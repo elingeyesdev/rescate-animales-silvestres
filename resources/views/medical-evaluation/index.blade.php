@@ -68,6 +68,12 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        @if($medicalEvaluations->isEmpty())
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle"></i> {{ __('No se encontraron evaluaciones médicas.') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
                 {!! $medicalEvaluations->withQueryString()->links() !!}

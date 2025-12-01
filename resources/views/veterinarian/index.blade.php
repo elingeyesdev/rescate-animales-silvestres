@@ -72,6 +72,12 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        @if($veterinarians->isEmpty())
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle"></i> {{ __('No se encontraron veterinarios.') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
                 {!! $veterinarians->withQueryString()->links() !!}

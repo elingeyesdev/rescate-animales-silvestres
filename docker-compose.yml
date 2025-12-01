@@ -31,8 +31,8 @@ services:
       - laravel
     networks:
       - rescate-net
-      - internal-network
-      - proxy-network
+      #- internal-network
+      #- proxy-network
   db:
     image: postgres:latest
     container_name: rescate-db

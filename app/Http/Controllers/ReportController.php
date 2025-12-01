@@ -253,7 +253,6 @@ class ReportController extends Controller
 
         $validated = $request->validate([
             'action' => 'required|in:approve,reject',
-            'motivo' => 'required|string|min:3',
         ]);
 
         $report->aprobado = $validated['action'] === 'approve' ? 1 : 0;
@@ -266,11 +265,11 @@ class ReportController extends Controller
             ->first();
 
         if ($hist) {
-            // Actualizar observaciones con el motivo de aprobación/rechazo
+            // Actualizar observaciones con la acción de aprobación/rechazo
             $obs = $hist->observaciones ?? [];
             $obsTexto = is_array($obs) ? ($obs['texto'] ?? '') : (string)$obs;
             $accionTexto = $validated['action'] === 'approve' ? 'Aprobado' : 'Rechazado';
-            $obs['texto'] = $obsTexto . ' | ' . $accionTexto . ' por: ' . Auth::user()->person->nombre . '. Motivo: ' . $validated['motivo'];
+            $obs['texto'] = $obsTexto . ' | ' . $accionTexto . ' por: ' . Auth::user()->person->nombre;
             $hist->observaciones = $obs;
             $hist->save();
         }
@@ -279,6 +278,13 @@ class ReportController extends Controller
             ? 'El hallazgo ha sido aprobado correctamente.' 
             : 'El hallazgo ha sido rechazado correctamente.';
 
+        // Redirigir a la vista desde donde se llamó (index o show)
+        $redirectTo = $request->get('redirect_to', 'reports.index');
+        if ($redirectTo === 'show') {
+            return Redirect::route('reports.show', $report->id)
+                ->with('success', $message);
+        }
+        
         return Redirect::route('reports.index')
             ->with('success', $message);
     }

@@ -26,14 +26,14 @@
                         <div class="text-center">
                             @php
                                 $fotoUrl = !empty($person->foto_path)
-                                    ? asset('storage/' . $person->foto_path)
-                                    : 'https://ui-avatars.com/api/?name=' . urlencode($person->nombre ?: 'Sin nombre') . '&size=100&background=random&color=fff&bold=true';
+                                    ? asset('storage/' . $person->foto_path) 
+                                    : asset('storage/personas/persona.png');
                             @endphp
-                            <div style="width: 100px; height: 100px; margin: 0 auto; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #e9ecef;">
+                            <div class="profile-image-container" style="width: 100px; height: 100px; margin: 0 auto; border-radius: 50%; overflow: hidden; background-color: #e9ecef; position: relative;">
                                 <img class="profile-user-img"
                                      src="{{ $fotoUrl }}"
                                      alt="Foto de perfil"
-                                     style="width: 100px !important; height: 100px !important; object-fit: cover !important; display: block !important; flex-shrink: 0;">
+                                     style="width: 100px; height: 100px; min-width: 100px; min-height: 100px; max-width: 100px; max-height: 100px; object-fit: cover; object-position: center center; display: block; margin: 0; padding: 0; border: 0; position: absolute; top: 0; left: 0;">
                             </div>
                         </div>
 
@@ -206,7 +206,7 @@
                                                        class="custom-file-input @error('foto') is-invalid @enderror"
                                                        id="foto" name="foto">
                                                 <label class="custom-file-label" for="foto">
-                                                    Seleccionar foto (opcional)
+                                                    Seleccionar foto
                                                 </label>
                                             </div>
                                             <small class="form-text text-muted">
@@ -223,17 +223,26 @@
                                                         <img id="foto_preview"
                                                              src="{{ asset('storage/' . $person->foto_path) }}"
                                                              alt="Foto actual"
-                                                             style="width: 100px !important; height: 100px !important; object-fit: cover !important; display: block !important; flex-shrink: 0;">
+                                                             style="width: 100%; height: 100%; object-fit: cover; display: block;">
                                                     </div>
                                                 </div>
                                             @else
+                                                <div class="mt-2">
+                                                    <strong>Foto actual:</strong><br>
+                                                    <div style="width: 100px; height: 100px; margin: 10px auto 0; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #e9ecef;">
+                                                        <img id="foto_preview"
+                                                             src="{{ asset('storage/personas/persona.png') }}"
+                                                             alt="Foto por defecto"
+                                                             style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                                    </div>
+                                                </div>
                                                 <div class="mt-2" id="foto_preview_container" style="display:none;">
                                                     <strong>Vista previa:</strong><br>
                                                     <div style="width: 100px; height: 100px; margin: 10px auto 0; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #e9ecef;">
-                                                        <img id="foto_preview"
+                                                        <img id="foto_preview_new"
                                                              src="#"
                                                              alt="Vista previa"
-                                                             style="width: 100px !important; height: 100px !important; object-fit: cover !important; display: block !important; flex-shrink: 0;">
+                                                             style="width: 100%; height: 100%; object-fit: cover; display: block;">
                                                     </div>
                                                 </div>
                                             @endif
@@ -708,9 +717,10 @@
             // Vista previa de la foto de perfil
             const fotoInput = document.getElementById('foto');
             const fotoPreview = document.getElementById('foto_preview');
-            const fotoPreviewContainer = document.getElementById('foto_preview_container') || fotoPreview?.parentElement;
+            const fotoPreviewNew = document.getElementById('foto_preview_new');
+            const fotoPreviewContainer = document.getElementById('foto_preview_container');
 
-            if (fotoInput && fotoPreview) {
+            if (fotoInput) {
                 fotoInput.addEventListener('change', function (e) {
                     const file = e.target.files[0];
                     if (!file) {
@@ -721,9 +731,15 @@
                     }
                     const reader = new FileReader();
                     reader.onload = function (ev) {
-                        fotoPreview.src = ev.target.result;
-                        if (fotoPreviewContainer) {
-                            fotoPreviewContainer.style.display = 'block';
+                        // Si hay una nueva vista previa, actualizarla
+                        if (fotoPreviewNew) {
+                            fotoPreviewNew.src = ev.target.result;
+                            if (fotoPreviewContainer) {
+                                fotoPreviewContainer.style.display = 'block';
+                            }
+                        } else if (fotoPreview) {
+                            // Si no hay nueva vista previa, actualizar la actual
+                            fotoPreview.src = ev.target.result;
                         }
                     };
                     reader.readAsDataURL(file);
@@ -784,47 +800,75 @@
 
 @push('js')
 <script>
-    // Asegurar que las imágenes circulares tengan el mismo tamaño y estilo
+    // Asegurar que las imágenes circulares se ajusten correctamente
     document.addEventListener('DOMContentLoaded', function() {
-        const profileImages = document.querySelectorAll('.profile-user-img, #foto_preview');
+        const profileImages = document.querySelectorAll('.profile-user-img, #foto_preview, #foto_preview_new');
         profileImages.forEach(function(img) {
-            // Forzar tamaño exacto
-            img.style.setProperty('width', '100px', 'important');
-            img.style.setProperty('height', '100px', 'important');
-            img.style.setProperty('object-fit', 'cover', 'important');
-            img.style.setProperty('display', 'block', 'important');
-            img.style.setProperty('flex-shrink', '0', 'important');
-            img.style.setProperty('min-width', '100px', 'important');
-            img.style.setProperty('min-height', '100px', 'important');
+            // Asegurar que la imagen llene completamente el contenedor circular
+            const container = img.parentElement;
+            if (container && container.style.borderRadius === '50%' || container.style.borderRadius.includes('50%')) {
+                img.style.setProperty('width', '100%', 'important');
+                img.style.setProperty('height', '100%', 'important');
+                img.style.setProperty('object-fit', 'cover', 'important');
+                img.style.setProperty('object-position', 'center', 'important');
+                img.style.setProperty('display', 'block', 'important');
+                img.style.setProperty('margin', '0', 'important');
+                img.style.setProperty('padding', '0', 'important');
+                img.style.setProperty('border', 'none', 'important');
+            }
             // Remover clases que puedan interferir
             img.classList.remove('img-fluid', 'img-thumbnail', 'img-circle');
         });
     });
 </script>
 <style>
-    /* Contenedor circular fijo para todas las imágenes */
-    .profile-user-img,
-    #foto_preview {
-        width: 100px !important;
-        height: 100px !important;
-        object-fit: cover !important;
-        display: block !important;
-        flex-shrink: 0 !important;
-        min-width: 100px !important;
-        min-height: 100px !important;
-    }
-    
-    /* Asegurar que los contenedores también tengan el mismo tamaño */
-    .profile-user-img-container,
-    #foto_preview_container > div {
+    /* Asegurar que las imágenes dentro de contenedores circulares se ajusten correctamente */
+    .profile-image-container {
         width: 100px !important;
         height: 100px !important;
         border-radius: 50% !important;
         overflow: hidden !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        position: relative !important;
         background-color: #e9ecef !important;
+    }
+    
+    .box-profile .profile-user-img {
+        width: 100px !important;
+        height: 100px !important;
+        min-width: 100px !important;
+        min-height: 100px !important;
+        max-width: 100px !important;
+        max-height: 100px !important;
+        object-fit: cover !important;
+        object-position: center center !important;
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Para las otras imágenes del formulario */
+    #foto_preview,
+    #foto_preview_new {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center center !important;
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+    
+    /* Asegurar que los contenedores circulares mantengan su forma */
+    #foto_preview_container > div,
+    div[style*="border-radius: 50%"] {
+        border-radius: 50% !important;
+        overflow: hidden !important;
     }
 </style>
 @endpush

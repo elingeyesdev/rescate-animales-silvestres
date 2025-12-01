@@ -28,7 +28,7 @@
         </div>
         <!-- Fecha: se asigna automáticamente por el sistema -->
         <div class="form-group mb-2 mb20">
-            <label for="imagen" class="form-label">{{ __('Imagen (opcional)') }}</label>
+            <label for="imagen" class="form-label">{{ __('Imagen') }}</label>
             <div class="custom-file">
                 <input type="file" name="imagen" id="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" accept="image/*">
                 <label class="custom-file-label" for="imagen">{{ __('Seleccionar imagen') }}</label>

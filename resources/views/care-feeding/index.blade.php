@@ -71,6 +71,12 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        @if($careFeedings->isEmpty())
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle"></i> {{ __('No se encontraron registros de alimentación.') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
                 {!! $careFeedings->withQueryString()->links() !!}

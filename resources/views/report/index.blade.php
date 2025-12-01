@@ -219,6 +219,12 @@
                                 </div>
                             @endforeach
                         </div>
+
+                        @if($reports->isEmpty())
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle"></i> {{ __('No se ha registrado ningún hallazgo todavía.') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
                 {!! $reports->withQueryString()->links() !!}
@@ -245,48 +251,18 @@
                         @method('PUT')
                         @csrf
                         <div class="modal-body">
-                            <div class="form-group">
-                                <label for="action{{ $report->id }}">{{ __('Acción') }} <span class="text-danger">*</span></label>
-                                <select class="form-control @error('action') is-invalid @enderror" 
-                                        id="action{{ $report->id }}" 
-                                        name="action" 
-                                        required>
-                                    <option value="">{{ __('Seleccione una acción') }}</option>
-                                    <option value="approve" {{ old('action') === 'approve' ? 'selected' : '' }}>{{ __('Aprobar') }}</option>
-                                    <option value="reject" {{ old('action') === 'reject' ? 'selected' : '' }}>{{ __('Rechazar') }}</option>
-                                </select>
-                                @error('action')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                            <div class="form-group">
-                                <label for="motivo{{ $report->id }}">{{ __('Motivo') }} <span class="text-danger">*</span></label>
-                                <textarea 
-                                    class="form-control @error('motivo') is-invalid @enderror" 
-                                    id="motivo{{ $report->id }}" 
-                                    name="motivo" 
-                                    rows="4" 
-                                    placeholder="{{ __('Ingrese el motivo de aprobación o rechazo...') }}"
-                                    required
-                                    minlength="3">{{ old('motivo') }}</textarea>
-                                @error('motivo')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                                <small class="form-text text-muted">
-                                    {{ __('Este motivo será registrado en el historial del hallazgo.') }}
-                                </small>
-                            </div>
+                            <p class="mb-0">{{ __('¿Desea aprobar o rechazar este hallazgo?') }}</p>
+                            <input type="hidden" name="action" id="actionReport{{ $report->id }}" value="">
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">
                                 <i class="fa fa-times"></i> {{ __('Cancelar') }}
                             </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fa fa-check"></i> {{ __('Confirmar') }}
+                            <button type="button" class="btn btn-danger" id="btnRechazarReport{{ $report->id }}">
+                                <i class="fa fa-times-circle"></i> {{ __('Rechazar') }}
+                            </button>
+                            <button type="button" class="btn btn-success" id="btnAprobarReport{{ $report->id }}">
+                                <i class="fa fa-check-circle"></i> {{ __('Aprobar') }}
                             </button>
                         </div>
                     </form>
@@ -316,6 +292,51 @@
                 }
             });
         });
+
+        // Manejar aprobación/rechazo de reportes
+        @foreach ($reports as $report)
+            @if(Auth::user()->hasAnyRole(['admin', 'encargado']))
+            (function() {
+                var form = document.getElementById('formAprobarReport{{ $report->id }}');
+                var actionInput = document.getElementById('actionReport{{ $report->id }}');
+                var btnRechazar = document.getElementById('btnRechazarReport{{ $report->id }}');
+                var btnAprobar = document.getElementById('btnAprobarReport{{ $report->id }}');
+                
+                function submitForm(action) {
+                    // Establecer el valor de action
+                    if (actionInput) {
+                        actionInput.value = action;
+                    }
+                    
+                    // Deshabilitar botones para evitar doble envío
+                    if (btnRechazar) btnRechazar.disabled = true;
+                    if (btnAprobar) btnAprobar.disabled = true;
+                    
+                    // Enviar formulario
+                    if (form) {
+                        form.submit();
+                    }
+                    return true;
+                }
+                
+                if (btnRechazar) {
+                    btnRechazar.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        submitForm('reject');
+                    });
+                }
+                
+                if (btnAprobar) {
+                    btnAprobar.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        submitForm('approve');
+                    });
+                }
+            })();
+            @endif
+        @endforeach
     });
     </script>
 @endsection

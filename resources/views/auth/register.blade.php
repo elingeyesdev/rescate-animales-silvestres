@@ -33,7 +33,7 @@
         <div class="input-group mb-3">
             <input type="text" name="telefono"
                 class="form-control @error('telefono') is-invalid @enderror"
-                placeholder="Teléfono (opcional)" value="{{ old('telefono') }}">
+                placeholder="Teléfono" value="{{ old('telefono') }}">
             <div class="input-group-append">
                 <div class="input-group-text"><span class="fas fa-phone"></span></div>
             </div>

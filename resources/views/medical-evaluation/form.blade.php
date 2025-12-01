@@ -60,7 +60,7 @@
             @endif
         </div>
         <div class="form-group mb-2 mb20">
-            <label for="imagen" class="form-label">{{ __('Imagen (opcional)') }}</label>
+            <label for="imagen" class="form-label">{{ __('Imagen') }}</label>
             <div class="custom-file">
                 <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
                 <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>

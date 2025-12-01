@@ -68,6 +68,12 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        @if($cares->isEmpty())
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle"></i> {{ __('No se encontraron cuidados de animales.') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
                 {!! $cares->withQueryString()->links() !!}
