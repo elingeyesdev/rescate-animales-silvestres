@@ -31,7 +31,9 @@ class ReportController extends Controller
         // Solo ciertos roles gestionan reportes en el panel interno
         $this->middleware('role:ciudadano|rescatista|veterinario|encargado|admin')->except(['create', 'store']);
         // Ciudadanos solo pueden ver y crear, no editar ni eliminar
-        $this->middleware('role:admin|encargado|rescatista|veterinario')->only(['edit', 'update', 'destroy']);
+        $this->middleware('role:admin|encargado|rescatista|veterinario')->only(['edit', 'update']);
+        // Solo administradores pueden eliminar reportes
+        $this->middleware('role:admin')->only(['destroy']);
     }
     /**
      * Display a listing of the resource.

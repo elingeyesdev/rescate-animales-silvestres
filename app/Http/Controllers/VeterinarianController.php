@@ -20,8 +20,9 @@ class VeterinarianController extends Controller
     {
         // Solo administradores o encargados pueden ver veterinarios
         $this->middleware('role:admin|encargado');
-        // Solo administradores pueden crear o eliminar registros de veterinarios
-        $this->middleware('role:admin')->only(['create','store','destroy']);
+        // Administradores y encargados pueden crear veterinarios, solo admin puede eliminar
+        $this->middleware('role:admin|encargado')->only(['create','store']);
+        $this->middleware('role:admin')->only(['destroy']);
     }
     /**
      * Display a listing of the resource.

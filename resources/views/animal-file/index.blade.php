@@ -159,6 +159,7 @@
                                             </ul>
                                         </div>
                                         <div class="card-footer">
+                                            @if(Auth::user()->hasRole('admin'))
                                             <form action="{{ route('animal-files.destroy', $animalFile->id) }}" method="POST" class="mb-0 d-flex w-100">
                                                 <a class="btn btn-primary btn-sm" href="{{ route('animal-files.show', $animalFile->id) }}">
                                                     <i class="fa fa-fw fa-eye"></i> {{ __('Ver') }}
@@ -172,6 +173,18 @@
                                                     <i class="fa fa-fw fa-trash"></i> {{ __('Eliminar') }}
                                                 </button>
                                             </form>
+                                            @else
+                                            <div class="d-flex w-100">
+                                                <a class="btn btn-primary btn-sm" href="{{ route('animal-files.show', $animalFile->id) }}">
+                                                    <i class="fa fa-fw fa-eye"></i> {{ __('Ver') }}
+                                                </a>
+                                                @if(Auth::user()->hasRole('veterinario'))
+                                                <a class="btn btn-success btn-sm" href="{{ route('animal-files.edit', $animalFile->id) }}">
+                                                    <i class="fa fa-fw fa-edit"></i> {{ __('Editar') }}
+                                                </a>
+                                                @endif
+                                            </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

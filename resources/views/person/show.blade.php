@@ -268,9 +268,7 @@
                         <input type="hidden" name="action" id="actionCuidador" value="">
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            <i class="fa fa-times"></i> Cancelar
-                        </button>
+                        
                         <button type="button" class="btn btn-danger" id="btnRechazarCuidador">
                             <i class="fa fa-times-circle"></i> Rechazar
                         </button>

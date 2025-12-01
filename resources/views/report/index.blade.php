@@ -213,11 +213,13 @@
                                                     <i class="fa fa-fw fa-check"></i> {{ __('Aprobar') }}
                                                 </button>
                                                 @endif
+                                                @if(Auth::user()->hasRole('admin'))
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="btn btn-danger btn-sm js-confirm-delete">
                                                     <i class="fa fa-fw fa-trash"></i> {{ __('Eliminar') }}
                                                 </button>
+                                                @endif
                                             </form>
                                             @endif
                                         </div>
