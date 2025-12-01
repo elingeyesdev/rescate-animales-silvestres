@@ -314,6 +314,70 @@ class ReportController extends Controller
     }
 
     /**
+     * Mostrar el mapa de campo con todos los hallazgos e incendios
+     */
+    public function mapaCampo(): View
+    {
+        $user = Auth::user();
+        $query = Report::with(['person', 'condicionInicial', 'incidentType'])
+            ->whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->orderByDesc('id');
+
+        // Si el usuario es solo ciudadano (sin otros roles), mostrar solo sus hallazgos
+        if ($user->hasRole('ciudadano') && !$user->hasAnyRole(['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador'])) {
+            $personId = Person::where('usuario_id', $user->id)->value('id');
+            if ($personId) {
+                $query->where('persona_id', $personId);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        $reports = $query->get()->map(function ($report) {
+            return [
+                'id' => $report->id,
+                'latitud' => $report->latitud,
+                'longitud' => $report->longitud,
+                'urgencia' => $report->urgencia,
+                'incendio_id' => $report->incendio_id,
+                'direccion' => $report->direccion,
+                'condicion_inicial' => $report->condicionInicial ? [
+                    'nombre' => $report->condicionInicial->nombre,
+                ] : null,
+                'incident_type' => $report->incidentType ? [
+                    'nombre' => $report->incidentType->nombre,
+                ] : null,
+            ];
+        });
+
+        // Agregar reporte simulado si no hay ninguno con incendio_id = 1
+        $hasFireReport = $reports->contains(function ($report) {
+            return isset($report['incendio_id']) && $report['incendio_id'] == 1;
+        });
+
+        if (!$hasFireReport) {
+            // Coordenadas del foco de incendio: San Jose de Chiquitos
+            $reports->push([
+                'id' => 'simulado',
+                'latitud' => '-17.718397',
+                'longitud' => '-60.774994',
+                'urgencia' => 5,
+                'incendio_id' => 1,
+                'direccion' => 'San Jose de Chiquitos, Santa Cruz, Bolivia',
+                'condicion_inicial' => [
+                    'nombre' => 'Hallazgo relacionado con incendio',
+                ],
+                'incident_type' => [
+                    'nombre' => 'Incendio forestal',
+                ],
+            ]);
+        }
+
+        return view('report.mapa-campo', compact('reports'));
+    }
+
+    /**
      * Mostrar página para reclamar el reporte (si el usuario no estaba autenticado)
      */
     public function claim(): View

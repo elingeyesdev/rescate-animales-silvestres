@@ -45,6 +45,7 @@ class Report extends Model
         'tamano',
         'puede_moverse',
         'urgencia',
+        'incendio_id',
     ];
 
 

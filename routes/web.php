@@ -61,6 +61,12 @@ Route::post('/reporte-rapido', function () {
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->middleware('auth')->name('home');
 Route::get('animal-histories/{animal_history}/pdf', [AnimalHistoryController::class, 'pdf'])->name('animal-histories.pdf')->middleware('auth');
+Route::prefix('reports')->name('reports.')->group(function () {
+    Route::put('{report}/approve', [ReportController::class, 'approve'])->name('approve')->middleware('auth');
+    Route::get('claim', [ReportController::class, 'claim'])->name('claim');
+    Route::post('claim', [ReportController::class, 'claimStore'])->name('claim.store');
+    Route::get('mapa-campo', [ReportController::class, 'mapaCampo'])->name('mapa-campo')->middleware('auth');
+});
 
 Route::resource('profile', ProfileController::class)->only(['index', 'update'])->middleware('auth');
 Route::resource('contact-messages', ContactMessageController::class)->only(['store', 'update'])->middleware('auth');
@@ -69,9 +75,6 @@ Route::resource('animals', AnimalController::class)->middleware('auth');
 Route::resource('animal-profiles', AnimalProfileController::class);
 Route::resource('dispositions', DispositionController::class);
 Route::resource('health-records', HealthRecordController::class);
-Route::put('reports/{report}/approve', [ReportController::class, 'approve'])->name('reports.approve')->middleware('auth');
-Route::get('reports/claim', [ReportController::class, 'claim'])->name('reports.claim');
-Route::post('reports/claim', [ReportController::class, 'claimStore'])->name('reports.claim.store');
 Route::resource('reports', ReportController::class);
 Route::resource('animal-statuses', AnimalStatusController::class);
 Route::resource('care-types', CareTypeController::class);

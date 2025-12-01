@@ -13,6 +13,9 @@
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span id="card_title">{{ __('Hallazgos') }}</span>
                             <div class="float-right">
+                                <a href="{{ route('reports.mapa-campo') }}" class="btn btn-info btn-sm float-right mr-2" data-placement="left">
+                                    <i class="fas fa-map-marked-alt"></i> {{ __('Mapa de Campo') }}
+                                </a>
                                 <a href="{{ route('reports.create') }}" class="btn btn-primary btn-sm float-right" data-placement="left">
                                     {{ __('Crear nuevo') }}
                                 </a>

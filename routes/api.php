@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\AnimalStatusApiController;
 use App\Http\Controllers\Api\VeterinarianApiController;
 use App\Http\Controllers\Api\TreatmentTypeApiController;
 use App\Http\Controllers\Api\CareTypeApiController;
+use App\Http\Controllers\Api\FirePredictionApiController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -40,4 +41,5 @@ Route::name('api.')->group(function () {
     Route::apiResource('veterinarians', VeterinarianApiController::class)->only(['index', 'show']);
     Route::apiResource('treatment-types', TreatmentTypeApiController::class)->only(['index', 'show']);
     Route::apiResource('care-types', CareTypeApiController::class)->only(['index', 'show']);
+    Route::apiResource('fire-predictions', FirePredictionApiController::class)->only(['index']);
 });
