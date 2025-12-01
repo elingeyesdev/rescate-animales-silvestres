@@ -68,7 +68,7 @@
                             </div>
                         </div>
 
-                        <div id="mapaCampo" style="height: 600px; width: 100%; border-radius: 6px; border: 1px solid #dee2e6;"></div>
+                        <div id="mapaCampo" style="height: 400px; width: 100%; border-radius: 6px; border: 1px solid #dee2e6;"></div>
                     </div>
                 </div>
             </div>

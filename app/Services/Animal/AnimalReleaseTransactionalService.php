@@ -45,6 +45,7 @@ class AnimalReleaseTransactionalService
 						'direccion' => $release->direccion,
 						'latitud' => $release->latitud,
 						'longitud' => $release->longitud,
+						'imagen_url' => $release->imagen_url,
 					],
 				],
 				'observaciones' => [

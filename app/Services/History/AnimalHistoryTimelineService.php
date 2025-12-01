@@ -277,6 +277,15 @@ class AnimalHistoryTimelineService
                     'label' => 'Información',
                     'value' => implode(' | ', $parts),
                 ];
+                // Obtener imagen de liberación
+                if (!empty($lib['imagen_url'])) {
+                    $imageUrl = $lib['imagen_url'];
+                } elseif (!empty($lib['id'])) {
+                    $releaseModel = Release::find($lib['id']);
+                    if ($releaseModel && $releaseModel->imagen_url) {
+                        $imageUrl = $releaseModel->imagen_url;
+                    }
+                }
             }
 
 			// Creación de Hoja de Vida / Animal
@@ -431,11 +440,17 @@ class AnimalHistoryTimelineService
 				$lon = $lib['longitud'] ?? null;
 				if ($lat !== null && $lon !== null) {
 					$eventDate = $changed;
+					$imagenUrl = null;
 					if (!$eventDate && !empty($lib['id'])) {
 						$releaseModel = Release::find($lib['id']);
-						if ($releaseModel && $releaseModel->created_at) {
-							$eventDate = Carbon::parse($releaseModel->created_at);
+						if ($releaseModel) {
+							if ($releaseModel->created_at) {
+								$eventDate = Carbon::parse($releaseModel->created_at);
+							}
+							$imagenUrl = $releaseModel->imagen_url;
 						}
+					} else {
+						$imagenUrl = $lib['imagen_url'] ?? null;
 					}
 
 					$points[] = [
@@ -446,6 +461,7 @@ class AnimalHistoryTimelineService
 						'address' => $lib['direccion'] ?? null,
 						'approved' => array_key_exists('aprobada', $lib) ? (bool)$lib['aprobada'] : null,
 						'date' => $eventDate ? $eventDate->format('d/m/Y H:i') : null,
+						'imagen_url' => $imagenUrl,
 					];
 				}
 			}

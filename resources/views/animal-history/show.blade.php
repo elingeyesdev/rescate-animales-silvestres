@@ -421,6 +421,9 @@
                 if (p.address) popup += '<div class="mt-1"><i class="fas fa-map-pin"></i> <strong>Dirección:</strong> ' + p.address + '</div>';
                 if (p.date) popup += '<div class="mt-1"><i class="fas fa-calendar"></i> <strong>Fecha:</strong> ' + p.date + '</div>';
                 if (p.observaciones) popup += '<div class="mt-1"><i class="fas fa-comment"></i> <strong>Observaciones:</strong> ' + p.observaciones + '</div>';
+                if (p.type === 'release' && p.imagen_url) {
+                    popup += '<div class="mt-2"><img src="{{ asset("storage") }}/' + p.imagen_url + '" alt="Imagen de liberación" style="max-width: 200px; max-height: 150px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>';
+                }
                 popup += '</div>';
                 
                 marker.bindPopup(popup);
@@ -454,6 +457,9 @@
                     if (p.address) currentPopup += '<div class="mt-1"><i class="fas fa-map-pin"></i> <strong>Dirección:</strong> ' + p.address + '</div>';
                     if (p.date) currentPopup += '<div class="mt-1"><i class="fas fa-calendar"></i> <strong>Fecha:</strong> ' + p.date + '</div>';
                     if (p.observaciones) currentPopup += '<div class="mt-1"><i class="fas fa-comment"></i> <strong>Observaciones:</strong> ' + p.observaciones + '</div>';
+                    if (p.type === 'release' && p.imagen_url) {
+                        currentPopup += '<div class="mt-2"><img src="{{ asset("storage") }}/' + p.imagen_url + '" alt="Imagen de liberación" style="max-width: 200px; max-height: 150px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>';
+                    }
                     currentPopup += '</div>';
                     
                     currentLocationMarker.bindPopup(currentPopup);
