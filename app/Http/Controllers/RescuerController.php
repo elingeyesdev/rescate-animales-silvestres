@@ -42,7 +42,10 @@ class RescuerController extends Controller
     {
         $rescuer = new Rescuer();
         $rescuer->persona_id = $request->query('persona_id');
-        $people = Person::orderBy('nombre')->get(['id','nombre']);
+        // Excluir personas que ya son rescatistas
+        $people = Person::whereDoesntHave('rescuers')
+            ->orderBy('nombre')
+            ->get(['id','nombre']);
         return view('rescuer.create', compact('rescuer','people'));
     }
 

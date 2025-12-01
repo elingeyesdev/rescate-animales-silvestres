@@ -43,7 +43,10 @@ class VeterinarianController extends Controller
         $veterinarian = new Veterinarian();
         // Preseleccionar persona si viene desde el listado de personas
         $veterinarian->persona_id = $request->query('persona_id');
-        $people = Person::orderBy('nombre')->get(['id','nombre']);
+        // Excluir personas que ya son veterinarios
+        $people = Person::whereDoesntHave('veterinarians')
+            ->orderBy('nombre')
+            ->get(['id','nombre']);
         return view('veterinarian.create', compact('veterinarian','people'));
     }
 
