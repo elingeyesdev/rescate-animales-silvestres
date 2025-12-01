@@ -65,7 +65,7 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::put('{report}/approve', [ReportController::class, 'approve'])->name('approve')->middleware('auth');
     Route::get('claim', [ReportController::class, 'claim'])->name('claim');
     Route::post('claim', [ReportController::class, 'claimStore'])->name('claim.store');
-    Route::get('mapa-campo', [ReportController::class, 'mapaCampo'])->name('mapa-campo')->middleware('auth');
+    Route::get('mapa-campo', [ReportController::class, 'mapaCampo'])->name('mapa-campo')->middleware(['auth', 'role:admin|encargado']);
 });
 
 Route::resource('profile', ProfileController::class)->only(['index', 'update'])->middleware('auth');

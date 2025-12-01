@@ -319,20 +319,16 @@ class ReportController extends Controller
     public function mapaCampo(): View
     {
         $user = Auth::user();
+        
+        // Solo administradores y encargados pueden acceder
+        if (!$user->hasAnyRole(['admin', 'encargado'])) {
+            abort(403, 'No tienes permiso para acceder al mapa de campo.');
+        }
+        
         $query = Report::with(['person', 'condicionInicial', 'incidentType'])
             ->whereNotNull('latitud')
             ->whereNotNull('longitud')
             ->orderByDesc('id');
-
-        // Si el usuario es solo ciudadano (sin otros roles), mostrar solo sus hallazgos
-        if ($user->hasRole('ciudadano') && !$user->hasAnyRole(['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador'])) {
-            $personId = Person::where('usuario_id', $user->id)->value('id');
-            if ($personId) {
-                $query->where('persona_id', $personId);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
 
         $reports = $query->get()->map(function ($report) {
             return [

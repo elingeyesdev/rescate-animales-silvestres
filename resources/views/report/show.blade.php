@@ -26,7 +26,7 @@
                                 <i class="fa fa-check"></i> {{ __('Aprobar/Rechazar') }}
                             </button>
                             @endif
-                            <a class="btn btn-primary btn-sm" href="{{ route('reports.index') }}"> {{ __('Back') }}</a>
+                            <a class="btn btn-success btn-sm" href="{{ route('reports.index') }}"> {{ __('Back') }}</a>
                         </div>
                     </div>
 

@@ -146,7 +146,7 @@
                         <span class="info-box-text text-muted">Animales en Sistema</span>
                         <span class="info-box-number">{{ $totalAnimals ?? 0 }}</span>
                         <a href="{{ route('animal-files.index') }}" class="text-xs text-success font-weight-bold mt-2 d-block">
-                            Ver inventario <i class="fas fa-arrow-right ml-1"></i>
+                            Ver animales <i class="fas fa-arrow-right ml-1"></i>
                         </a>
                     </div>
                 </div>

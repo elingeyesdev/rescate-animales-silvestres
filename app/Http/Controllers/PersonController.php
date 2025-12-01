@@ -64,7 +64,7 @@ class PersonController extends Controller
             });
         }
 
-        $people = $query->paginate()->withQueryString();
+        $people = $query->with(['rescuers', 'veterinarians'])->paginate()->withQueryString();
         $roles = Role::orderBy('name')->get(['id', 'name']);
 
         return view('person.index', compact('people', 'roles'))
