@@ -41,7 +41,11 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/landing', function () {
-    return view('landing');
+    $recentReleases = \App\Models\Release::with(['animalFile.species', 'animalFile.animal'])
+        ->orderBy('created_at', 'desc')
+        ->take(12)
+        ->get();
+    return view('landing', compact('recentReleases'));
 })->name('landing');
 
 Route::get('/reporte-rapido', function () {

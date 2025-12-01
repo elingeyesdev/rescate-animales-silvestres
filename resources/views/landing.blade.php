@@ -56,6 +56,27 @@
         .blob.two { width: 300px; height: 300px; background: #e6f7ef; bottom: 10%; right: 15%; }
         .blob.three { width: 180px; height: 180px; background: #e3f4f9; bottom: 35%; left: 55%; }
         .footer { margin-top: 3rem; text-align: center; color: #6b7280; font-size: .9rem; }
+        .carousel { margin-top: 2rem; position: relative; }
+        .carousel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.75rem; }
+        .carousel-title { font-weight: 700; color: #374151; }
+        .carousel-track { display:flex; gap:1rem; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:.5rem; }
+        .carousel-track::-webkit-scrollbar { height: 8px; }
+        .carousel-track::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 6px; }
+        .release-card { scroll-snap-align:start; flex: 0 0 280px; border:1px solid var(--border); border-radius: 14px; background:#fff; overflow:hidden; }
+        .release-card-img { height:160px; background:#f3f4f6; display:flex; align-items:center; justify-content:center; }
+        .release-card-img img { width:100%; height:100%; object-fit:cover; display:block; }
+        .release-card-body { padding: .75rem; }
+        .release-meta { font-size:.85rem; color:#6b7280; }
+        .badge { display:inline-block; padding:.25rem .5rem; border-radius: 999px; font-size:.75rem; }
+        .badge-success { background: #28a745; color:#fff; }
+        .badge-info { background: var(--primary); color:#fff; }
+        .release-card.empty { border:1px dashed var(--border); }
+        .release-card.empty .release-card-img { background:#fafafa; }
+        .release-card.empty .release-card-body { text-align:center; color:#6b7280; }
+        .carousel-arrow { position:absolute; top:50%; transform:translateY(-50%); width:42px; height:42px; border-radius:999px; border:1px solid var(--border); background:#fff; color:var(--primary); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(17,24,39,0.08); cursor:pointer; }
+        .carousel-arrow.left { left:-10px; }
+        .carousel-arrow.right { right:-10px; }
+        .carousel-arrow.disabled { opacity:.45; pointer-events:none; }
         @media (max-width: 940px) { .content { grid-template-columns: 1fr; } .hero-visual { order: -1; } }
     </style>
     <script src="https://kit.fontawesome.com/a2e0f6ad5b.js" crossorigin="anonymous"></script>
@@ -116,10 +137,96 @@
                 </div>
             </div>
 
+            <div class="carousel">
+                <div class="carousel-header">
+                    <div class="carousel-title">Animales liberados</div>
+                </div>
+                <button type="button" class="carousel-arrow left disabled" id="relArrowPrev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+                <button type="button" class="carousel-arrow right" id="relArrowNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+                <div class="carousel-track" id="relTrack">
+                    @php($slots = 8)
+                    @if(isset($recentReleases) && $recentReleases->count() > 0)
+                        @foreach($recentReleases as $rel)
+                            @php($af = $rel->animalFile)
+                            <div class="release-card">
+                                <div class="release-card-img">
+                                    @if(!empty($af?->imagen_url))
+                                        <img src="{{ asset('storage/' . $af->imagen_url) }}" alt="animal">
+                                    @else
+                                        <i class="fas fa-paw" style="font-size: 28px; color:#9ca3af"></i>
+                                    @endif
+                                </div>
+                                <div class="release-card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="font-weight-bold">{{ $af?->animal?->nombre ?? $af?->species?->nombre ?? 'Animal' }}</div>
+                                        <span class="badge badge-success">Liberado</span>
+                                    </div>
+                                    <div class="release-meta mt-1">
+                                        <i class="fas fa-calendar-alt"></i> {{ optional($rel->created_at)->format('Y-m-d') }}
+                                    </div>
+                                    @if(!empty($rel->direccion))
+                                    <div class="release-meta"><i class="fas fa-map-marker-alt"></i> {{ $rel->direccion }}</div>
+                                    @endif
+                                    @if(!empty($rel->detalle))
+                                    <div class="release-meta"><i class="fas fa-info-circle"></i> {{ $rel->detalle }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                        @for($i = $recentReleases->count(); $i < $slots; $i++)
+                            <div class="release-card empty">
+                                <div class="release-card-img">
+                                    <i class="fas fa-dove" style="font-size: 28px; color:#9ca3af"></i>
+                                </div>
+                                <div class="release-card-body">
+                                    <div class="font-weight-bold">Sin liberaciones</div>
+                                    <div class="release-meta">Espacio disponible</div>
+                                </div>
+                            </div>
+                        @endfor
+                    @else
+                        @for($i = 0; $i < $slots; $i++)
+                            <div class="release-card empty">
+                                <div class="release-card-img">
+                                    <i class="fas fa-dove" style="font-size: 28px; color:#9ca3af"></i>
+                                </div>
+                                <div class="release-card-body">
+                                    <div class="font-weight-bold">Aún no hay animales liberados</div>
+                                    <div class="release-meta">Pronto verás liberaciones aquí</div>
+                                </div>
+                            </div>
+                        @endfor
+                    @endif
+                </div>
+            </div>
+
             <div class="footer">
                 © {{ date('Y') }} {{ config('app.name') }}
             </div>
         </div>
     </section>
+    <script>
+    (function(){
+        var track = document.getElementById('relTrack');
+        var prev = document.getElementById('relArrowPrev');
+        var next = document.getElementById('relArrowNext');
+        function updateArrows(){
+            if (!track) return;
+            var maxScroll = track.scrollWidth - track.clientWidth;
+            var atStart = track.scrollLeft <= 0;
+            var atEnd = track.scrollLeft >= maxScroll - 1;
+            if (prev) prev.classList.toggle('disabled', atStart);
+            if (next) next.classList.toggle('disabled', atEnd);
+        }
+        if (track && prev && next) {
+            var step = 320;
+            prev.addEventListener('click', function(){ track.scrollBy({ left: -step, behavior: 'smooth' }); });
+            next.addEventListener('click', function(){ track.scrollBy({ left: step, behavior: 'smooth' }); });
+            track.addEventListener('scroll', updateArrows);
+            window.addEventListener('resize', updateArrows);
+            updateArrows();
+        }
+    })();
+    </script>
 </body>
 </html>
