@@ -41,34 +41,30 @@ class AnimalTransactionalController extends Controller
         }
 
 		// Datos requeridos por el form de Animal (select oculto y tarjetas)
-		// Mostrar hallazgos aprobados que YA tengan primer traslado registrado.
+		// Mostrar solo hallazgos aprobados que NO estén asignados a un animal existente
 		$reports = Report::query()
-			->where('aprobado', 1)
-            ->whereIn('reports.id', function($q) {
-                $q->select('reporte_id')
-                  ->from('transfers')
-                  ->where('primer_traslado', true);
-            })
-			->leftJoin('animals', 'animals.reporte_id', '=', 'reports.id')
-			->groupBy('reports.id')
+			->where('reports.aprobado', 1)
+			->whereNotExists(function($query) {
+				$query->select(DB::raw(1))
+					->from('animals')
+					->whereColumn('animals.reporte_id', 'reports.id');
+			})
 			->orderByDesc('reports.id')
 			->get(['reports.id']);
 
         $reportCards = Report::query()
             ->where('reports.aprobado', 1)
-            ->whereIn('reports.id', function($q) {
-                $q->select('reporte_id')
-                  ->from('transfers')
-                  ->where('primer_traslado', true);
-            })
-            ->leftJoin('animals', 'animals.reporte_id', '=', 'reports.id')
+            ->whereNotExists(function($query) {
+				$query->select(DB::raw(1))
+					->from('animals')
+					->whereColumn('animals.reporte_id', 'reports.id');
+			})
             ->leftJoin('people', 'people.id', '=', 'reports.persona_id')
             ->leftJoin('animal_conditions', 'animal_conditions.id', '=', 'reports.condicion_inicial_id')
             ->select([
                 'reports.id',
                 'reports.imagen_url',
                 'reports.observaciones',
-                DB::raw('COUNT(animals.id) as asignados'),
                 DB::raw("COALESCE(people.nombre, '') as reportante_nombre"),
                 'reports.condicion_inicial_id',
                 DB::raw("COALESCE(animal_conditions.nombre, '') as condicion_nombre"),
@@ -80,14 +76,6 @@ class AnimalTransactionalController extends Controller
 		// Datos requeridos por el form de AnimalFile (salvo animales)
 		$species = Species::orderBy('nombre')->get(['id','nombre']);
 		$animalStatuses = AnimalStatus::orderBy('nombre')->get(['id','nombre']);
-
-		// Historiales de primer traslado pendientes (sin hoja asignada)
-		$pendingTransfers = AnimalHistory::query()
-			->whereNull('animal_file_id')
-			->whereNotNull('valores_nuevos')
-			->whereRaw("(valores_nuevos->'transfer'->>'primer_traslado')::text = 'true'")
-			->orderByDesc('id')
-			->get(['id','valores_nuevos']);
 
 		return view('transactions.animal.create', compact(
 			'animal',

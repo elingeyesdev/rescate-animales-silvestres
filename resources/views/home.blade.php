@@ -31,6 +31,59 @@
     .btn-action-custom:hover i {
         transform: scale(1.2); /* El icono crece un poco */
     }
+    
+    /* Alinear el content_header con el contenido principal */
+    .content-header {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Asegurar que el contenedor principal tenga el mismo padding horizontal que el card del index */
+    /* El card del index está dentro de section.content (padding 15px) + col-sm-12 (padding 15px) = 30px total */
+    .content-wrapper .content {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+    
+    /* Asegurar que el container-fluid tenga el mismo padding horizontal que el card del index */
+    /* El card del index tiene padding horizontal de: .content (15px) + .col-sm-12 (15px) = 30px */
+    .container-fluid {
+        width: 100%;
+        box-sizing: border-box;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+    
+    /* Igualar el padding vertical del card del index (page-pad) */
+    .container-fluid {
+        padding-top: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+        .container-fluid {
+            padding-top: 1.5rem;
+        }
+    }
+    
+    /* Aplicar el mismo margen inferior que tiene el index (30px según .report-grid > [class*='col-'] { margin-bottom: 30px; }) */
+    .container-fluid .row > [class*="col-"] {
+        margin-bottom: 30px;
+    }
+    
+    /* Asegurar que todos los divs internos tengan el mismo espaciado */
+    .info-box,
+    .card:not(.shadow-none) {
+        margin-bottom: 0 !important;
+    }
+    
+    /* Ajustar el margen de la sección de acciones rápidas */
+    .card.shadow-none.bg-transparent {
+        margin-bottom: 30px !important;
+    }
 </style>
 @stop
 
@@ -305,11 +358,7 @@
     @endphp
 
     @if($isOnlyCitizen || Auth::user()->hasAnyRole(['rescatista', 'veterinario', 'cuidador']))
-    <div class="row mt-4 align-items-stretch">
-        <div class="col-12 mb-3">
-            <h4 class="text-secondary font-weight-bold"><i class="fas fa-globe-americas mr-2"></i> Impacto Global</h4>
-        </div>
-        
+    <div class="row mt-0 align-items-stretch">        
         <div class="col-md-3 col-sm-6 col-12 d-flex">
             <div class="card bg-gradient-info text-white shadow-sm mb-3 w-100">
                 <div class="card-body">
@@ -348,7 +397,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h3 class="font-weight-bold text-warning">{{ $totalReports ?? 0 }}</h3>
-                            <p class="text-muted mb-0">Reportes Recibidos</p>
+                            <p class="text-muted mb-0">Hallazgos Recibidos</p>
                         </div>
                         <i class="fas fa-clipboard-list fa-2x text-warning opacity-50"></i>
                     </div>
@@ -390,7 +439,7 @@
             <div class="col-md-12">
                 <div class="card shadow-lg border-0 bg-white">
                     <div class="card-body text-center py-5">
-                        <img src="https://cdn-icons-png.flaticon.com/512/2368/2368447.png" alt="Welcome" class="img-fluid mb-3" style="width: 80px;">
+                        <i class="fas fa-paw fa-2x text-dark mb-3" style="width: 80px;"></i>
                         <h2 class="display-4 font-weight-bold text-dark">Hola, {{ Auth::user()->person->nombre ?? 'Usuario' }}</h2>
                         <p class="lead text-muted">Bienvenido al Sistema de Rescate y Gestión de Fauna.</p>
                         

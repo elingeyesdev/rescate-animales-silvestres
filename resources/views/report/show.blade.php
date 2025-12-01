@@ -9,11 +9,14 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center">
-                        <div>
-                            <span class="card-title">{{ __('Show') }} {{ __('Report') }}</span>
+                    <div class="card-header bg-success d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-clipboard-list mr-1"></i>
+                                {{ __('Información del Hallazgo') }}
+                            </h3>
                         </div>
-                        <div class="ml-auto">
+                        <div>
                             @if(Auth::user()->hasAnyRole(['admin', 'encargado']) && (int)$report->aprobado !== 1)
                             <button type="button" 
                                     class="btn btn-success btn-sm mr-2" 
@@ -53,7 +56,25 @@
                                     <strong>{{ __('Aprobado') }}:</strong> {{ (int)$report->aprobado === 1 ? __('Sí') : __('No') }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Tamaño') }}:</strong> {{ $report->tamano ?? '-' }}
+                                    <strong>{{ __('Tamaño') }}:</strong>
+                                    @php
+                                        $tamano = $report->tamano ?? null;
+                                        if ($tamano) {
+                                            // Convertir a minúsculas primero
+                                            $tamanoLower = mb_strtolower(trim($tamano));
+                                            // Mapear valores comunes a formato correcto
+                                            $mapa = [
+                                                'pequeno' => 'Pequeño',
+                                                'pequeño' => 'Pequeño',
+                                                'mediano' => 'Mediano',
+                                                'grande' => 'Grande'
+                                            ];
+                                            $tamanoFormateado = $mapa[$tamanoLower] ?? ucfirst($tamanoLower);
+                                        } else {
+                                            $tamanoFormateado = '-';
+                                        }
+                                    @endphp
+                                    {{ $tamanoFormateado }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>{{ __('¿Puede moverse?') }}:</strong> {{ is_null($report->puede_moverse) ? '-' : ($report->puede_moverse ? __('Sí') : __('No')) }}
@@ -77,9 +98,11 @@
                                     <strong>{{ __('Observaciones') }}:</strong> {{ $report->observaciones ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Imagen') }}:</strong>
+                                    <strong>{{ __('Imagen del hallazgo') }}:</strong>
                                     @if($report->imagen_url)
-                                        <div><img src="{{ asset('storage/' . $report->imagen_url) }}" alt="img" style="max-height:180px; border-radius:4px;"></div>
+                                        <div style="max-width: 100%; overflow: hidden; border-radius: 4px;">
+                                            <img src="{{ asset('storage/' . $report->imagen_url) }}" alt="img" style="max-width: 100%; max-height: 180px; height: auto; width: auto; object-fit: contain; border-radius: 4px;">
+                                        </div>
                                     @else
                                         <span>-</span>
                                     @endif
@@ -88,10 +111,10 @@
                         </div>
                         @if(!is_null($report->latitud) && !is_null($report->longitud))
                         <div class="form-group mb-2 mb20">
-                            <strong>{{ __('Ubicación') }}:</strong>
-                            <div class="row">
-                                <div class="col-12 col-md-6">
-                                    <div id="report_map" style="height: 320px; border-radius: 6px; overflow: hidden;"></div>
+                            <strong>{{ __('Ubicación del hallazgo') }}:</strong>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <div id="report_map" style="height: 400px; border-radius: 6px; overflow: hidden; width: 100%;"></div>
                                 </div>
                             </div>
                         </div>

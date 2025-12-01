@@ -62,7 +62,19 @@
                                     {{ __('Mapa de traslados') }}
                                 </button>
                             </div>
-                            <a href="{{ route('animal-histories.pdf', $animalHistory->animal_file_id) }}" 
+                            @php
+                                // Buscar el último AnimalHistory real para este animal_file_id
+                                // (similar a como se hace en el index y en el controlador)
+                                $animalFileId = $animalHistory->animal_file_id;
+                                $lastHistory = \App\Models\AnimalHistory::where('animal_file_id', $animalFileId)
+                                    ->orderByDesc('id')
+                                    ->first();
+                                
+                                // Si existe un historial real, usar su ID; si no, usar el animal_file_id directamente
+                                // (el controlador pdf() puede manejar ambos casos)
+                                $pdfParam = $lastHistory ? $lastHistory->id : $animalFileId;
+                            @endphp
+                            <a href="{{ route('animal-histories.pdf', $pdfParam) }}" 
                                class="btn btn-danger btn-sm" 
                                target="_blank">
                                 <i class="fas fa-file-pdf"></i> {{ __('Imprimir PDF') }}

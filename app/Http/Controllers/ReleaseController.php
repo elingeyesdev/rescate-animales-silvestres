@@ -102,7 +102,7 @@ class ReleaseController extends Controller
      */
     public function show($id): View
     {
-        $release = Release::find($id);
+        $release = Release::with(['animalFile.animal', 'animalFile.species', 'animalFile.animalStatus'])->findOrFail($id);
 
         return view('release.show', compact('release'));
     }

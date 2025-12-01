@@ -28,13 +28,19 @@ class AnimalTransactionalService
 		$storedPath = null;
 		$copiedFromReport = null;
 		try {
-            // Si viene de un reporte, validar que tenga primer traslado registrado
+            // Si viene de un reporte, validar que esté aprobado
             if (!empty($animalData['reporte_id'])) {
-                $hasFirstTransfer = Transfer::where('reporte_id', $animalData['reporte_id'])
-                    ->where('primer_traslado', true)
-                    ->exists();
-                if (!$hasFirstTransfer) {
-                    throw new \DomainException('No se puede crear la Hoja de Vida: el hallazgo aún no tiene registrado su primer traslado a un centro.');
+                $report = Report::find($animalData['reporte_id']);
+                if (!$report) {
+                    throw new \DomainException('El reporte especificado no existe.');
+                }
+                if (!$report->aprobado) {
+                    throw new \DomainException('No se puede crear la Hoja de Vida: el hallazgo debe estar aprobado.');
+                }
+                // Verificar que el reporte no esté ya asignado a otro animal
+                $existingAnimal = Animal::where('reporte_id', $animalData['reporte_id'])->first();
+                if ($existingAnimal) {
+                    throw new \DomainException('Este hallazgo ya está asignado a un animal existente.');
                 }
             }
 
@@ -60,7 +66,7 @@ class AnimalTransactionalService
 
             $animalFileData['animal_id'] = $animal->id;
 
-            // Si viene de un reporte con primer traslado, usar ese centro como centro actual
+            // Si viene de un reporte con primer traslado, usar ese centro como centro actual (opcional)
             if (!empty($animalData['reporte_id']) && empty($animalFileData['centro_id'])) {
                 $firstCenterId = Transfer::where('reporte_id', $animalData['reporte_id'])
                     ->where('primer_traslado', true)
@@ -113,7 +119,7 @@ class AnimalTransactionalService
                     ->whereRaw("(valores_nuevos->'report'->>'id')::text = ?", [$reportId])
                     ->update(['animal_file_id' => $animalFile->id]);
 
-                // Asegurar que exista al menos un historial de "primer traslado" ligado a esta hoja
+                // Si existe un primer traslado, asegurar que esté ligado a esta hoja en el historial
                 $hasFirstTransferHistory = AnimalHistory::where('animal_file_id', $animalFile->id)
                     ->whereNotNull('valores_nuevos')
                     ->whereRaw("(valores_nuevos->'transfer'->>'primer_traslado')::text = 'true'")
@@ -139,13 +145,13 @@ class AnimalTransactionalService
                                     'primer_traslado' => true,
                                     'latitud' => $firstTransfer->latitud,
                                     'longitud' => $firstTransfer->longitud,
-                                    'created_at' => $firstTransfer->created_at ? $firstTransfer->created_at->toDateTimeString() : null, // Guardar fecha original del traslado
+                                    'created_at' => $firstTransfer->created_at ? $firstTransfer->created_at->toDateTimeString() : null,
                                 ],
                             ],
                             'observaciones' => [
                                 'texto' => 'Primer traslado desde reporte de hallazgo',
                             ],
-                            'changed_at' => $firstTransfer->created_at, // Usar la fecha del traslado, no la del historial
+                            'changed_at' => $firstTransfer->created_at,
                         ]);
                     }
                 }
@@ -217,7 +223,7 @@ class AnimalTransactionalService
 
                 $afData['animal_id'] = $animal->id;
 
-                // Si viene de un reporte con primer traslado, usar ese centro como centro actual
+                // Si viene de un reporte con primer traslado, usar ese centro como centro actual (opcional)
                 if (!empty($animalData['reporte_id']) && empty($afData['centro_id'])) {
                     $firstCenterId = Transfer::where('reporte_id', $animalData['reporte_id'])
                         ->where('primer_traslado', true)

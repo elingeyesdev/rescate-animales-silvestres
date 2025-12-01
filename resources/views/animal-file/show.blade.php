@@ -9,42 +9,53 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center">
-                        <div>
-                            <span class="card-title">{{ __('Show') }} {{ __('Animal File') }}</span>
+                    <div class="card-header bg-info d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-paw mr-1"></i>
+                                {{ __('Información del Animal') }}
+                            </h3>
                         </div>
-                        <div class="ml-auto">
-                            <a class="btn btn-info btn-sm mr-2" href="{{ route('animal-histories.show', $animalFile->id) }}">
+                        <div>
+                            @php
+                                // Buscar el AnimalHistory más antiguo para este animal_file_id
+                                $oldestHistory = \App\Models\AnimalHistory::where('animal_file_id', $animalFile->id)
+                                    ->orderBy('id', 'asc') // El más antiguo (menor ID)
+                                    ->first();
+                                
+                                // Si existe un historial, usar su ID; si no, usar el animal_file_id
+                                // (el controlador puede manejar ambos casos)
+                                $historyId = $oldestHistory ? $oldestHistory->id : $animalFile->id;
+                            @endphp
+                            <a class="btn btn-info btn-sm mr-2" href="{{ route('animal-histories.show', $historyId) }}">
                                 <i class="fas fa-history"></i> {{ __('Ver historial') }}
                             </a>
                             <a class="btn btn-primary btn-sm" href="{{ route('animal-files.index') }}"> {{ __('Back') }}</a>
                         </div>
                     </div>
-
                     <div class="card-body bg-white">
-                        <h5 class="mb-3">{{ __('Información del Animal') }}</h5>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Nombre:</strong>
+                                    <strong>{{ __('Nombre') }}:</strong>
                                     {{ $animalFile->animal?->nombre ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Sexo:</strong>
+                                    <strong>{{ __('Sexo') }}:</strong>
                                     {{ $animalFile->animal?->sexo ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Especie:</strong>
+                                    <strong>{{ __('Especie') }}:</strong>
                                     {{ $animalFile->species?->nombre ?? '-' }}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Estado:</strong>
+                                    <strong>{{ __('Estado') }}:</strong>
                                     {{ $animalFile->animalStatus?->nombre ?? '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Imagen:</strong>
+                                    <strong>{{ __('Imagen') }}:</strong>
                                     @if($animalFile->imagen_url)
                                         <div style="max-width: 100%; overflow: hidden; border-radius: 4px;">
                                             <img src="{{ asset('storage/' . $animalFile->imagen_url) }}" alt="img" style="max-width: 100%; max-height: 180px; height: auto; width: auto; object-fit: contain; border-radius: 4px;">
@@ -69,8 +80,11 @@
                         } else { $urgClass = 'secondary'; }
                     @endphp
                     <div class="card">
-                        <div class="card-header">
-                            <span class="card-title">{{ __('Información del Hallazgo') }}</span>
+                        <div class="card-header bg-success">
+                            <h3 class="card-title">
+                                <i class="fas fa-clipboard-list mr-1"></i>
+                                {{ __('Información del Hallazgo') }}
+                            </h3>
                         </div>
                         <div class="card-body bg-white">
                             <div class="row">
@@ -93,7 +107,24 @@
                                     </div>
                                     <div class="form-group mb-2 mb20">
                                         <strong>{{ __('Tamaño') }}:</strong>
-                                        {{ $report->tamano ?? '-' }}
+                                        @php
+                                            $tamano = $report->tamano ?? null;
+                                            if ($tamano) {
+                                                // Convertir a minúsculas primero
+                                                $tamanoLower = mb_strtolower(trim($tamano));
+                                                // Mapear valores comunes a formato correcto
+                                                $mapa = [
+                                                    'pequeno' => 'Pequeño',
+                                                    'pequeño' => 'Pequeño',
+                                                    'mediano' => 'Mediano',
+                                                    'grande' => 'Grande'
+                                                ];
+                                                $tamanoFormateado = $mapa[$tamanoLower] ?? ucfirst($tamanoLower);
+                                            } else {
+                                                $tamanoFormateado = '-';
+                                            }
+                                        @endphp
+                                        {{ $tamanoFormateado }}
                                     </div>
                                     <div class="form-group mb-2 mb20">
                                         <strong>{{ __('¿Puede moverse?') }}:</strong>
@@ -170,10 +201,5 @@
         });
         </script>
     @endif
-    @include('partials.page-pad')
-                </div>
-            </div>
-        </div>
-    </section>
     @include('partials.page-pad')
 @endsection

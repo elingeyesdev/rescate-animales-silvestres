@@ -51,7 +51,7 @@
                                     @endforeach
                                 </div>
                                 @if((($reportCards ?? collect())->count() === 0) && (($reports ?? collect())->count() === 0))
-                                    <div class="alert alert-info mt-2">{{ __('No hay hallazgos aprobados con cupo disponibles. Cree o apruebe un hallazgo primero.') }}</div>
+                                    <div class="alert alert-info mt-2">{{ __('No hay hallazgos aprobados disponibles sin asignar. Cree o apruebe un hallazgo primero.') }}</div>
                                 @endif
                                 <button type="button" id="btn_continuar" class="btn btn-primary mt-2" disabled>{{ __('Continuar') }}</button>
                             </div>
