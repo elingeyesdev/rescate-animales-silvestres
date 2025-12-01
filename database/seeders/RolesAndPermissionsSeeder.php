@@ -37,6 +37,12 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Veterinaria
             'realizar_evaluaciones_medicas',
+
+            // Traslados
+            'gestionar_traslados',
+
+            // Liberaciones
+            'gestionar_liberaciones',
         ];
 
         foreach ($permissions as $permission) {
@@ -87,11 +93,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'gestionar_animales',
         ]);
 
-        // Veterinario: evaluaciones médicas y gestión de animales
+        // Veterinario: evaluaciones médicas, cuidados, alimentación, traslados y liberaciones
         $veterinarioRole->syncPermissions([
             'ver_animales',
             'gestionar_animales',
             'realizar_evaluaciones_medicas',
+            'registrar_cuidados',
+            'registrar_alimentacion',
+            'gestionar_traslados',
+            'gestionar_liberaciones',
         ]);
     }
 }

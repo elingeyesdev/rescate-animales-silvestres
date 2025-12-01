@@ -29,9 +29,9 @@ class ReportController extends Controller
         // Permitir create y store sin autenticación (para usuarios anónimos desde landing)
         $this->middleware('auth')->except(['create', 'store']);
         // Solo ciertos roles gestionan reportes en el panel interno
-        $this->middleware('role:ciudadano|rescatista|encargado|admin')->except(['create', 'store']);
+        $this->middleware('role:ciudadano|rescatista|veterinario|encargado|admin')->except(['create', 'store']);
         // Ciudadanos solo pueden ver y crear, no editar ni eliminar
-        $this->middleware('role:admin|encargado|rescatista')->only(['edit', 'update', 'destroy']);
+        $this->middleware('role:admin|encargado|rescatista|veterinario')->only(['edit', 'update', 'destroy']);
     }
     /**
      * Display a listing of the resource.
@@ -80,9 +80,9 @@ class ReportController extends Controller
 
         $reports = $query->paginate(12)->withQueryString();
 
-        // Filter options (solo para admin/encargado, no para ciudadanos)
+        // Filter options (solo para admin/encargado/veterinario, no para ciudadanos)
         $reporters = collect();
-        if (!$user->hasRole('ciudadano') || $user->hasAnyRole(['admin', 'encargado'])) {
+        if (!$user->hasRole('ciudadano') || $user->hasAnyRole(['admin', 'encargado', 'veterinario'])) {
             $reporters = Person::whereIn(
                     'id',
                     Report::select('persona_id')->whereNotNull('persona_id')->distinct()->pluck('persona_id')

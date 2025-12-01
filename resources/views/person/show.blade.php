@@ -14,6 +14,11 @@
                             <span class="card-title">{{ __('Show') }} {{ __('Person') }}</span>
                         </div>
                         <div class="float-right">
+                            @if($isAdmin)
+                                <a class="btn btn-success btn-sm mr-2" href="{{ route('people.edit', $person->id) }}">
+                                    <i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}
+                                </a>
+                            @endif
                             <a class="btn btn-primary btn-sm" href="{{ route('people.index') }}"> {{ __('Back') }}</a>
                         </div>
                     </div>

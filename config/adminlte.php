@@ -110,7 +110,7 @@ return [
     */
 
     'preloader' => [
-        'enabled' => true,
+        'enabled' => false,
         'mode' => 'fullscreen',
         'img' => [
             'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
@@ -364,7 +364,7 @@ return [
             'can'  => 'veterinario|admin|cuidador',
         ],
         
-        ['header' => 'DIAGNOSTICO','can'=> 'admin|encargado|veterinario|cuidador'],
+        ['header' => 'DIAGNOSTICO','can'=> 'admin|veterinario|cuidador'],
         [
             'text' => 'Evaluaciones Médicas',
             'url' => 'medical-evaluations',
