@@ -6,6 +6,8 @@
     <title>{{ config('app.name') }} — Bienvenido</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
     <style>
         :root {
             --primary: #3c8dbc;
@@ -34,12 +36,7 @@
         .brand-badge { width: 38px; height: 38px; border-radius: 10px; background: #eaf5fb; border: 1px solid var(--border); display: grid; place-items: center; color: var(--primary); }
         .brand-badge i { font-size: 18px; }
         .cta { display: flex; gap: .75rem; }
-        .btn { display: inline-flex; align-items: center; gap: .5rem; padding: .85rem 1.1rem; border-radius: 12px; border: 1px solid var(--border); background: #ffffff; color: var(--text); text-decoration: none; transition: transform .2s ease, box-shadow .2s ease; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(17,24,39,0.08); }
-        .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
-        .btn-primary:hover { background: #357ca5; }
-        .btn-accent { background: var(--warning); border-color: var(--warning); color: #1f2937; box-shadow: 0 8px 20px rgba(255,193,7,0.25); }
-        .btn-accent:hover { background: #e0a800; box-shadow: 0 8px 28px rgba(255,193,7,0.35); }
+        
         .btn-hero { padding: 1rem 1.25rem; font-weight: 600; }
         @keyframes pulseGlow { 0%{ box-shadow: 0 0 0 0 rgba(255,193,7,0.55);} 70%{ box-shadow: 0 0 0 12px rgba(255,193,7,0);} 100%{ box-shadow: 0 0 0 0 rgba(255,193,7,0);} }
         .btn-pulse { animation: pulseGlow 2.2s infinite; }
@@ -79,7 +76,7 @@
         .carousel-arrow.disabled { opacity:.45; pointer-events:none; }
         @media (max-width: 940px) { .content { grid-template-columns: 1fr; } .hero-visual { order: -1; } }
     </style>
-    <script src="https://kit.fontawesome.com/a2e0f6ad5b.js" crossorigin="anonymous"></script>
+    
 </head>
 <body>
     <section class="hero">
@@ -90,8 +87,8 @@
                     <div>Rescate Animales</div>
                 </div>
                 <div class="cta">
-                    <a href="{{ route('login') }}" class="btn">Ingresar</a>
-                    <a href="{{ route('reporte-rapido') }}" class="btn btn-accent btn-hero btn-pulse"><i class="fas fa-bolt"></i> Reporte rápido</a>
+                    <a href="{{ route('login') }}" class="btn btn-outline-primary d-flex align-items-center justify-content-center">Ingresar</a>
+                    <a href="{{ route('reporte-rapido') }}" class="btn btn-warning btn-hero btn-pulse d-flex align-items-center justify-content-center"><i class="fas fa-bolt"></i> Reporte rápido</a>
                 </div>
             </div>
 
@@ -101,34 +98,44 @@
                     <p class="subtitle">Conecta hallazgos, traslados, evaluaciones y liberaciones en un solo lugar. Tu participación ayuda a devolver a cada animal a su hábitat.</p>
                     <div class="actions">
                         <a href="{{ route('login') }}" class="btn btn-primary btn-hero"><i class="fas fa-sign-in-alt"></i> Ingresar</a>
-                        <a href="{{ route('reporte-rapido') }}" class="btn btn-accent btn-hero btn-pulse"><i class="fas fa-bolt"></i> Reporte rápido</a>
+                        <a href="{{ route('reporte-rapido') }}" class="btn btn-warning btn-hero btn-pulse"><i class="fas fa-bolt"></i> Reporte rápido</a>
                     </div>
 
                     <div class="features">
-                        <div class="feature">
-                            <strong><i class="fas fa-map-marked-alt"></i> Hallazgos geolocalizados</strong>
-                            <div>Registra ubicaciones y sigue el proceso de rescate.</div>
+                        <div class="card card-outline card-primary">
+                            <div class="card-body">
+                                <strong><i class="fas fa-map-marked-alt"></i> Hallazgos geolocalizados</strong>
+                                <div class="text-muted">Registra ubicaciones y sigue el proceso de rescate.</div>
+                            </div>
                         </div>
-                        <div class="feature">
-                            <strong><i class="fas fa-user-md"></i> Atención integral</strong>
-                            <div>Evaluaciones médicas, cuidados y alimentación.</div>
+                        <div class="card card-outline card-primary">
+                            <div class="card-body">
+                                <strong><i class="fas fa-user-md"></i> Atención integral</strong>
+                                <div class="text-muted">Evaluaciones médicas, cuidados y alimentación.</div>
+                            </div>
                         </div>
-                        <div class="feature">
-                            <strong><i class="fas fa-dove"></i> Liberaciones</strong>
-                            <div>Coordina y documenta devoluciones al hábitat.</div>
+                        <div class="card card-outline card-primary">
+                            <div class="card-body">
+                                <strong><i class="fas fa-dove"></i> Liberaciones</strong>
+                                <div class="text-muted">Coordina y documenta devoluciones al hábitat.</div>
+                            </div>
                         </div>
-                        <div class="feature">
-                            <strong><i class="fas fa-shield-alt"></i> Comunidad segura</strong>
-                            <div>Accesos por rol y revisión de solicitudes.</div>
+                        <div class="card card-outline card-primary">
+                            <div class="card-body">
+                                <strong><i class="fas fa-shield-alt"></i> Comunidad segura</strong>
+                                <div class="text-muted">Accesos por rol y revisión de solicitudes.</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="hero-visual animate__animated animate__fadeIn">
-                    <div class="card" style="height: 100%; display: grid; place-items: center;">
-                        <div style="text-align:center;">
-                            <div style="font-size: 56px; line-height: 1;">🐾</div>
-                            <div style="margin-top:.5rem; opacity:.85;">Cuidemos la vida silvestre</div>
+                    <div class="card card-outline card-primary h-100">
+                        <div class="card-body d-flex align-items-center justify-content-center text-center h-100">
+                            <div>
+                                <div style="font-size: 56px; line-height: 1;">🐾</div>
+                                <div class="text-muted" style="margin-top:.5rem;">Cuidemos la vida silvestre</div>
+                            </div>
                         </div>
                     </div>
                     <div class="blob one"></div>
@@ -141,22 +148,22 @@
                 <div class="carousel-header">
                     <div class="carousel-title">Animales liberados</div>
                 </div>
-                <button type="button" class="carousel-arrow left disabled" id="relArrowPrev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
-                <button type="button" class="carousel-arrow right" id="relArrowNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+                <button type="button" class="carousel-arrow left disabled btn btn-outline-primary" id="relArrowPrev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+                <button type="button" class="carousel-arrow right btn btn-outline-primary" id="relArrowNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
                 <div class="carousel-track" id="relTrack">
                     @php($slots = 8)
                     @if(isset($recentReleases) && $recentReleases->count() > 0)
                         @foreach($recentReleases as $rel)
                             @php($af = $rel->animalFile)
-                            <div class="release-card">
-                                <div class="release-card-img">
+                            <div class="release-card card card-outline card-success">
+                                <div class="release-card-img card-img-top">
                                     @if(!empty($af?->imagen_url))
                                         <img src="{{ asset('storage/' . $af->imagen_url) }}" alt="animal">
                                     @else
                                         <i class="fas fa-paw" style="font-size: 28px; color:#9ca3af"></i>
                                     @endif
                                 </div>
-                                <div class="release-card-body">
+                                <div class="release-card-body card-body">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="font-weight-bold">{{ $af?->animal?->nombre ?? $af?->species?->nombre ?? 'Animal' }}</div>
                                         <span class="badge badge-success">Liberado</span>
@@ -174,11 +181,11 @@
                             </div>
                         @endforeach
                         @for($i = $recentReleases->count(); $i < $slots; $i++)
-                            <div class="release-card empty">
-                                <div class="release-card-img">
+                            <div class="release-card empty card card-outline card-warning">
+                                <div class="release-card-img card-img-top">
                                     <i class="fas fa-dove" style="font-size: 28px; color:#9ca3af"></i>
                                 </div>
-                                <div class="release-card-body">
+                                <div class="release-card-body card-body">
                                     <div class="font-weight-bold">Sin liberaciones</div>
                                     <div class="release-meta">Espacio disponible</div>
                                 </div>
@@ -186,11 +193,11 @@
                         @endfor
                     @else
                         @for($i = 0; $i < $slots; $i++)
-                            <div class="release-card empty">
-                                <div class="release-card-img">
+                            <div class="release-card empty card card-outline card-warning">
+                                <div class="release-card-img card-img-top">
                                     <i class="fas fa-dove" style="font-size: 28px; color:#9ca3af"></i>
                                 </div>
-                                <div class="release-card-body">
+                                <div class="release-card-body card-body">
                                     <div class="font-weight-bold">Aún no hay animales liberados</div>
                                     <div class="release-meta">Pronto verás liberaciones aquí</div>
                                 </div>
@@ -200,7 +207,7 @@
                 </div>
             </div>
 
-            <div class="footer">
+            <div class="footer text-muted">
                 © {{ date('Y') }} {{ config('app.name') }}
             </div>
         </div>
