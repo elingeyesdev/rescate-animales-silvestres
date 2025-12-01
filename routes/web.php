@@ -40,6 +40,18 @@ Route::get('/', function () {
 
 Auth::routes();
 
+Route::get('/landing', function () {
+    return view('landing');
+})->name('landing');
+
+Route::get('/reporte-rapido', function () {
+    return view('quick-report');
+})->name('reporte-rapido');
+
+Route::post('/reporte-rapido', function () {
+    return back();
+})->name('reporte-rapido.store');
+
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->middleware('auth')->name('home');
 Route::get('animal-histories/{animal_history}/pdf', [AnimalHistoryController::class, 'pdf'])->name('animal-histories.pdf')->middleware('auth');
 
