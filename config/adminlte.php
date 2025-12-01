@@ -64,7 +64,7 @@ return [
     */
 
     'logo' => '<b>Rescate</b>Animales',
-    'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+    'logo_img' => 'images/paw-classic.svg',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
@@ -139,7 +139,7 @@ return [
     'usermenu_header_class' => 'bg-primary',
     'usermenu_image' => false,
     // Mostrar debajo del nombre una breve descripción (aquí: los roles Spatie del usuario)
-    'usermenu_desc' => true,
+    'usermenu_desc' => false,
     'usermenu_profile_url' => true,
 
     /*
