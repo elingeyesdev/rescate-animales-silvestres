@@ -201,6 +201,16 @@
                                         <i class="fa fa-user-check"></i> Revisar solicitud de cuidador
                                     </button>
                                 @endif
+
+                                {{-- Botón para convertir en encargado --}}
+                                @php
+                                    $hasEncargadoRole = $person->user && $person->user->hasRole('encargado');
+                                @endphp
+                                @if(!$hasEncargadoRole && $isAdmin)
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modalConvertirEncargado">
+                                        <i class="fa fa-user-shield"></i> Convertir en Encargado
+                                    </button>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -329,6 +339,52 @@
                     }
                 });
                 </script>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal para convertir en encargado --}}
+    @php
+        $hasEncargadoRole = $person->user && $person->user->hasRole('encargado');
+    @endphp
+    @if(!$hasEncargadoRole && $isAdmin)
+    <div class="modal fade" id="modalConvertirEncargado" tabindex="-1" role="dialog" aria-labelledby="modalConvertirEncargadoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalConvertirEncargadoLabel">
+                        <i class="fa fa-user-shield"></i> Convertir en Encargado
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{{ route('people.convert-to-encargado', $person->id) }}" method="POST" id="formConvertirEncargado">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fa fa-info-circle"></i> 
+                            <strong>¿Está seguro?</strong> Se asignará el rol de <strong>Encargado</strong> a <strong>{{ $person->nombre }}</strong>.
+                            <br><br>
+                            Los encargados tienen permisos para:
+                            <ul class="mb-0 mt-2">
+                                <li>Gestionar hallazgos y reportes</li>
+                                <li>Revisar solicitudes de personal</li>
+                                <li>Acceder al mapa de campo</li>
+                                <li>Gestionar animales y liberaciones</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fa fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-check-circle"></i> Confirmar
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

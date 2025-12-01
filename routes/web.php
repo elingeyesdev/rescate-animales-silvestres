@@ -81,6 +81,7 @@ Route::resource('care-types', CareTypeController::class);
 Route::resource('cares', CareController::class);
 Route::resource('animal-files', AnimalFileController::class);
 Route::resource('people', PersonController::class);
+Route::post('people/{person}/convert-to-encargado', [PersonController::class, 'convertToEncargado'])->name('people.convert-to-encargado')->middleware('auth');
 Route::resource('species', SpeciesController::class);
 Route::resource('releases', ReleaseController::class);
 Route::put('rescuers/{rescuer}/approve', [RescuerController::class, 'approve'])->name('rescuers.approve')->middleware('auth');

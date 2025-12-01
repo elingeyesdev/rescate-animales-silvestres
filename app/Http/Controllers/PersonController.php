@@ -248,4 +248,42 @@ class PersonController extends Controller
             ->with('success', 'Persona eliminada correctamente');
     }
 
+    /**
+     * Convert a person to encargado role
+     */
+    public function convertToEncargado($id): RedirectResponse
+    {
+        // Solo administradores pueden convertir en encargado
+        if (!Auth::user()->hasRole('admin')) {
+            abort(403, 'No tiene permisos para realizar esta acción.');
+        }
+
+        $person = Person::with('user')->findOrFail($id);
+
+        // Verificar que la persona tenga un usuario asociado
+        if (!$person->user) {
+            return Redirect::back()
+                ->with('error', 'La persona no tiene un usuario asociado.');
+        }
+
+        // Verificar que no sea admin
+        if ($person->user->hasRole('admin')) {
+            return Redirect::back()
+                ->with('error', 'No se puede convertir un administrador en encargado.');
+        }
+
+        // Verificar que no tenga ya el rol de encargado
+        if ($person->user->hasRole('encargado')) {
+            return Redirect::back()
+                ->with('info', 'La persona ya tiene el rol de encargado.');
+        }
+
+        // Asignar rol de encargado
+        $role = Role::firstOrCreate(['name' => 'encargado', 'guard_name' => 'web']);
+        $person->user->assignRole($role);
+
+        return Redirect::route('people.show', $person->id)
+            ->with('success', 'La persona ha sido convertida en encargado correctamente.');
+    }
+
 }
