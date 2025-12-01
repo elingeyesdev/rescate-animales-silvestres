@@ -64,7 +64,7 @@ return [
     */
 
     'logo' => '<b>Rescate</b>Animales',
-    'logo_img' => 'images/paw-classic.svg',
+    'logo_img' => 'images/paw-primary.svg',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
