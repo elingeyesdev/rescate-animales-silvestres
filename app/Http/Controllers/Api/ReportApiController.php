@@ -73,6 +73,7 @@ class ReportApiController extends Controller
                 'puede_moverse' => $report->puede_moverse,
                 'urgencia' => $report->urgencia,
                 'imagen_url' => $report->imagen_url,
+                'created_at' => $report->created_at ? $report->created_at->toDateTimeString() : null, // Guardar fecha original del reporte
             ],
         ];
         $hist->observaciones = ['texto' => $report->observaciones ?? 'Registro de Hallazgo'];

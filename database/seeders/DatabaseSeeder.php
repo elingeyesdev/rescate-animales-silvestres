@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Person;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
@@ -27,5 +28,15 @@ class DatabaseSeeder extends Seeder
 
         // Asignar rol admin
         $admin->assignRole('admin');
+
+        // Crear registro de Person para el administrador si no existe
+        Person::firstOrCreate(
+            ['usuario_id' => $admin->id],
+            [
+                'nombre' => 'Administrador',
+                'ci' => '0000000',
+                'telefono' => '0000000000',
+            ]
+        );
     }
 }

@@ -129,7 +129,7 @@ class AnimalTransactionalController extends Controller
 			}
 
 			$this->service->createWithFile($animalData, $animalFileData, $image);
-			$msg = 'Animal y Hoja creados correctamente en una transacción.';
+			$msg = 'Hoja de Animal creada.';
 
 			return Redirect::route('animal-files.index')
 				->with('success', $msg);

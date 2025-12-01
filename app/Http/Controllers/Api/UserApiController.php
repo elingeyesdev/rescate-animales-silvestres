@@ -1,14 +1,14 @@
 <?php
-
+ 
 namespace App\Http\Controllers\Api;
-
+ 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Person;
 use App\Services\Api\User\UserRegistrationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-
+ 
 class UserApiController extends Controller
 {
     public function __construct(
@@ -16,7 +16,7 @@ class UserApiController extends Controller
     ) {
         //
     }
-
+ 
     /**
      * Display a listing of the resource.
      */
@@ -24,7 +24,7 @@ class UserApiController extends Controller
     {
         //
     }
-
+ 
     /**
      * Store a newly created resource in storage.
      */
@@ -38,23 +38,29 @@ class UserApiController extends Controller
             'telefono' => 'required|string',
             'es_cuidador' => 'nullable|boolean'
         ]);
-
+ 
         // Lógica de creación delegada al servicio
         $this->userRegistrationService->register($validated);
-
+ 
         return response()->json([
             'message' => 'Usuario registrado correctamente',
         ], 201);
     }
-
+ 
     /**
      * Display the specified resource.
      */
     public function show(User $user)
     {
-        return $user->load('person');
+        $userLoaded = $user->load('person');
+        return response()->json([
+            'user'         => $userLoaded,
+            'roles'        => method_exists($user, 'getRoleNames') ? $user->getRoleNames() : [],
+            'permissions'  => method_exists($user, 'getAllPermissions') ? $user->getAllPermissions()->pluck('name') : [],
+            'highest_role' => $userLoaded->person?->highest_role,
+        ]);
     }
-
+ 
     /**
      * Update the specified resource in storage.
      */
@@ -68,28 +74,28 @@ class UserApiController extends Controller
             'telefono' => 'sometimes|string',
             'es_cuidador' => 'sometimes|boolean'
         ]);
-
+ 
         if ($request->filled('email')) {
             $user->email = $request->email;
         }
-
+ 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
-
+ 
         $user->save();
-
+ 
         // actualizar person
         if ($user->person) {
             $user->person->update($request->only('nombre','ci','telefono','es_cuidador'));
         }
-
+ 
         return response()->json([
             'message' => 'Usuario actualizado correctamente',
             'user'    => $user->load('person')
         ]);
     }
-
+ 
     /**
      * Remove the specified resource from storage.
      */

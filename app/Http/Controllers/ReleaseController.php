@@ -16,11 +16,10 @@ class ReleaseController extends Controller
     public function __construct(
         private readonly AnimalReleaseTransactionalService $releaseService
     ) {
-        $this->middleware('auth');
-        // Ciudadanos solo pueden ver (index, show)
-        $this->middleware('role:ciudadano')->only(['index','show']);
+        // Cualquiera puede ver liberaciones (index, show) sin autenticación
         // Solo admin/encargado pueden crear, editar, actualizar y eliminar
-        $this->middleware('role:admin|encargado')->except(['index','show']);
+        $this->middleware('auth')->only(['create', 'store', 'edit', 'update', 'destroy']);
+        $this->middleware('role:admin|encargado')->only(['create', 'store', 'edit', 'update', 'destroy']);
     }
     /**
      * Display a listing of the resource.

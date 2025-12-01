@@ -391,7 +391,6 @@ return [
             'text' => 'Liberaciones',
             'url' => 'releases',
             'icon' => 'fas fa-fw fa-unlock',
-
         ],
         ['header' => 'ADMINISTRACION', 'can' => 'admin|encargado'],
         [

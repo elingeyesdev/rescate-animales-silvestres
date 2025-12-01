@@ -168,6 +168,7 @@ class ReportController extends Controller
                     'puede_moverse' => $report->puede_moverse,
                     'urgencia' => $report->urgencia,
                     'imagen_url' => $report->imagen_url,
+                    'created_at' => $report->created_at ? $report->created_at->toDateTimeString() : null, // Guardar fecha original del reporte
                 ],
             ];
             $hist->observaciones = ['texto' => $report->observaciones ?? 'Registro de hallazgo'];
@@ -238,6 +239,48 @@ class ReportController extends Controller
 
         return Redirect::route('reports.index')
             ->with('success', 'El hallazgo se actualizó correctamente');
+    }
+
+    /**
+     * Approve or reject a report.
+     */
+    public function approve(Request $request, Report $report): RedirectResponse
+    {
+        // Solo admin y encargado pueden aprobar/rechazar
+        if (!Auth::user()->hasAnyRole(['admin', 'encargado'])) {
+            abort(403, 'No tienes permiso para aprobar o rechazar hallazgos.');
+        }
+
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+            'motivo' => 'required|string|min:3',
+        ]);
+
+        $report->aprobado = $validated['action'] === 'approve' ? 1 : 0;
+        $report->save();
+
+        // Registrar en historial si existe
+        $hist = AnimalHistory::whereNull('animal_file_id')
+            ->whereNotNull('valores_nuevos')
+            ->whereRaw("(valores_nuevos->'report'->>'id')::text = ?", [(string)$report->id])
+            ->first();
+
+        if ($hist) {
+            // Actualizar observaciones con el motivo de aprobación/rechazo
+            $obs = $hist->observaciones ?? [];
+            $obsTexto = is_array($obs) ? ($obs['texto'] ?? '') : (string)$obs;
+            $accionTexto = $validated['action'] === 'approve' ? 'Aprobado' : 'Rechazado';
+            $obs['texto'] = $obsTexto . ' | ' . $accionTexto . ' por: ' . Auth::user()->person->nombre . '. Motivo: ' . $validated['motivo'];
+            $hist->observaciones = $obs;
+            $hist->save();
+        }
+
+        $message = $validated['action'] === 'approve' 
+            ? 'El hallazgo ha sido aprobado correctamente.' 
+            : 'El hallazgo ha sido rechazado correctamente.';
+
+        return Redirect::route('reports.index')
+            ->with('success', $message);
     }
 
     public function destroy($id): RedirectResponse

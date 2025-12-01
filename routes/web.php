@@ -50,6 +50,7 @@ Route::resource('animals', AnimalController::class)->middleware('auth');
 Route::resource('animal-profiles', AnimalProfileController::class);
 Route::resource('dispositions', DispositionController::class);
 Route::resource('health-records', HealthRecordController::class);
+Route::put('reports/{report}/approve', [ReportController::class, 'approve'])->name('reports.approve')->middleware('auth');
 Route::resource('reports', ReportController::class)->middleware('auth');
 Route::resource('animal-statuses', AnimalStatusController::class);
 Route::resource('care-types', CareTypeController::class);

@@ -65,8 +65,8 @@ class AnimalHistoryTimelineService
 	public function buildForAnimalFile(int $animalFileId): array
 	{
 		$all = AnimalHistory::where('animal_file_id', $animalFileId)
-			->orderByDesc('changed_at')
-			->orderByDesc('id')
+			->orderBy('changed_at') // Ordenar ascendente para que los eventos más antiguos aparezcan primero
+			->orderBy('id')
 			->get();
 
 		$afRecord = AnimalFileModel::find($animalFileId);
@@ -82,9 +82,21 @@ class AnimalHistoryTimelineService
 
 		$timeline = [];
 		foreach ($all as $h) {
-			$changed = $h->changed_at ? Carbon::parse($h->changed_at) : null;
-			$changedDate = $changed ? $changed->format('d/m/y') : null;
-			$changedTime = $changed ? $changed->format('H:i') : null;
+			$old = $h->valores_antiguos ?? [];
+			$new = $h->valores_nuevos ?? [];
+			
+			// Intentar usar la fecha guardada en valores_nuevos si está disponible (para traslados y reportes)
+			$eventDate = null;
+			if (!empty($new['transfer']['created_at'])) {
+				$eventDate = Carbon::parse($new['transfer']['created_at']);
+			} elseif (!empty($new['report']['created_at'])) {
+				$eventDate = Carbon::parse($new['report']['created_at']);
+			} elseif ($h->changed_at) {
+				$eventDate = Carbon::parse($h->changed_at);
+			}
+			
+			$changedDate = $eventDate ? $eventDate->format('d/m/y') : null;
+			$changedTime = $eventDate ? $eventDate->format('H:i') : null;
 			$item = [
 				'id' => $h->id,
 				'changed_at' => trim(($changedDate ?? '') . ($changedTime ? ' '.$changedTime : '')),
@@ -93,10 +105,9 @@ class AnimalHistoryTimelineService
 					: null,
 				'title' => 'Actualización',
 				'details' => [],
+				'_sort_date' => $eventDate ? $eventDate->timestamp : ($h->changed_at ? Carbon::parse($h->changed_at)->timestamp : 0), // Para ordenamiento
 			];
 
-			$old = $h->valores_antiguos ?? [];
-			$new = $h->valores_nuevos ?? [];
 			$imageUrl = null;
 
 			// Reporte (hallazgo)
@@ -319,6 +330,16 @@ class AnimalHistoryTimelineService
 			$timeline[] = $item;
 		}
 
+		// Ordenar por fecha del evento (usando _sort_date) para respetar las fechas guardadas en valores_nuevos
+		usort($timeline, function($a, $b) {
+			return $a['_sort_date'] <=> $b['_sort_date'];
+		});
+
+		// Remover el campo temporal de ordenamiento
+		foreach ($timeline as &$item) {
+			unset($item['_sort_date']);
+		}
+
 		return $timeline;
 	}
 
@@ -349,7 +370,8 @@ class AnimalHistoryTimelineService
 				$lat = $rp['latitud'] ?? null;
 				$lon = $rp['longitud'] ?? null;
 				if ($lat !== null && $lon !== null) {
-					$eventDate = $changed;
+					// Usar fecha guardada en valores_nuevos si está disponible
+					$eventDate = !empty($rp['created_at']) ? Carbon::parse($rp['created_at']) : $changed;
 					if (!$eventDate && !empty($rp['id'])) {
 						$reportModel = Report::find($rp['id']);
 						if ($reportModel && $reportModel->created_at) {
@@ -381,7 +403,8 @@ class AnimalHistoryTimelineService
 				$lon = $center?->longitud ?? ($tr['longitud'] ?? null);
 
 				if ($lat !== null && $lon !== null) {
-					$eventDate = $changed;
+					// Usar fecha guardada en valores_nuevos si está disponible
+					$eventDate = !empty($tr['created_at']) ? Carbon::parse($tr['created_at']) : $changed;
 					if (!$eventDate && !empty($tr['id'])) {
 						$transferModel = Transfer::find($tr['id']);
 						if ($transferModel && $transferModel->created_at) {

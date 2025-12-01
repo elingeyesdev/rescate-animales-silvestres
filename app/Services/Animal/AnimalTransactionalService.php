@@ -139,11 +139,13 @@ class AnimalTransactionalService
                                     'primer_traslado' => true,
                                     'latitud' => $firstTransfer->latitud,
                                     'longitud' => $firstTransfer->longitud,
+                                    'created_at' => $firstTransfer->created_at ? $firstTransfer->created_at->toDateTimeString() : null, // Guardar fecha original del traslado
                                 ],
                             ],
                             'observaciones' => [
                                 'texto' => 'Primer traslado desde reporte de hallazgo',
                             ],
+                            'changed_at' => $firstTransfer->created_at, // Usar la fecha del traslado, no la del historial
                         ]);
                     }
                 }

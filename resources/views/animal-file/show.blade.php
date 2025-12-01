@@ -46,7 +46,9 @@
                                 <div class="form-group mb-2 mb20">
                                     <strong>Imagen:</strong>
                                     @if($animalFile->imagen_url)
-                                        <div><img src="{{ asset('storage/' . $animalFile->imagen_url) }}" alt="img" style="max-height:180px; border-radius:4px;"></div>
+                                        <div style="max-width: 100%; overflow: hidden; border-radius: 4px;">
+                                            <img src="{{ asset('storage/' . $animalFile->imagen_url) }}" alt="img" style="max-width: 100%; max-height: 180px; height: auto; width: auto; object-fit: contain; border-radius: 4px;">
+                                        </div>
                                     @else
                                         <span>-</span>
                                     @endif
@@ -121,7 +123,9 @@
                                     <div class="form-group mb-2 mb20">
                                         <strong>{{ __('Imagen del hallazgo') }}:</strong>
                                         @if($report->imagen_url)
-                                            <div><img src="{{ asset('storage/' . $report->imagen_url) }}" alt="img" style="max-height:180px; border-radius:4px;"></div>
+                                            <div style="max-width: 100%; overflow: hidden; border-radius: 4px;">
+                                                <img src="{{ asset('storage/' . $report->imagen_url) }}" alt="img" style="max-width: 100%; max-height: 180px; height: auto; width: auto; object-fit: contain; border-radius: 4px;">
+                                            </div>
                                         @else
                                             <span>-</span>
                                         @endif
@@ -132,8 +136,8 @@
                             <div class="form-group mb-2 mb20">
                                 <strong>{{ __('Ubicación del hallazgo') }}:</strong>
                                 <div class="row mt-2">
-                                    <div class="col-12 col-md-6">
-                                        <div id="report_map" style="height: 320px; border-radius: 6px; overflow: hidden;"></div>
+                                    <div class="col-12">
+                                        <div id="report_map" style="height: 400px; border-radius: 6px; overflow: hidden; width: 100%;"></div>
                                     </div>
                                 </div>
                             </div>

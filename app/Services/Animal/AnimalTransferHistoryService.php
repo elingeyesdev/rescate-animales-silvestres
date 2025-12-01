@@ -27,12 +27,14 @@ class AnimalTransferHistoryService
                     'primer_traslado' => true,
                     'latitud' => $transfer->latitud ?? null,
                     'longitud' => $transfer->longitud ?? null,
+                    'created_at' => $transfer->created_at ? $transfer->created_at->toDateTimeString() : null, // Guardar fecha original del traslado
                 ],
                 // No hay hoja/centro anterior aún
             ],
             'observaciones' => [
                 'texto' => 'Primer traslado desde reporte de hallazgo',
             ],
+            'changed_at' => $transfer->created_at, // Usar la fecha del traslado, no la del historial
         ]);
     }
 
@@ -80,6 +82,7 @@ class AnimalTransferHistoryService
                 'primer_traslado' => false,
                 'latitud' => $transfer->latitud ?? null,
                 'longitud' => $transfer->longitud ?? null,
+                'created_at' => $transfer->created_at ? $transfer->created_at->toDateTimeString() : null, // Guardar fecha original del traslado
             ],
             'centro' => $newCenter ? [
                 'id' => $newCenter->id,
@@ -94,6 +97,7 @@ class AnimalTransferHistoryService
             'observaciones' => [
                 'texto' => 'Registro de traslado entre centros',
             ],
+            'changed_at' => $transfer->created_at, // Usar la fecha del traslado, no la del historial
         ]);
     }
 }

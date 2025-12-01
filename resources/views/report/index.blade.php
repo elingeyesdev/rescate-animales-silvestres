@@ -86,11 +86,35 @@
                             object-fit: cover;
                             background: #f4f6f9;
                         }
-                        .report-card .card-header { padding-left: 1.25rem; padding-right: 1.25rem; }
+                        .report-card .card-header { 
+                            padding-left: 1.25rem; 
+                            padding-right: 1.25rem; 
+                            padding-top: 0.75rem;
+                            padding-bottom: 0.75rem;
+                        }
                         .report-card .card-header .card-tools { margin-left: auto; margin-right: .25rem; }
-                        /* Ajuste de espacios verticales entre cuerpo y footer */
-                        .report-card .card-body { padding-bottom: .75rem; }
-                        .report-card .card-footer { padding-top: .5rem; padding-bottom: .5rem; }
+                        .report-card .card-body { 
+                            padding: 0.5rem 1.25rem 0.25rem 1.25rem; 
+                        }
+                        .report-card .card-body .list-group-item {
+                            border-left: 0;
+                            border-right: 0;
+                            padding: 0.35rem 0;
+                            border-color: #dee2e6;
+                        }
+                        .report-card .card-body .list-group-item:first-child {
+                            border-top: 0;
+                        }
+                        .report-card .card-body .list-group-item:last-child {
+                            border-bottom: 0;
+                            margin-bottom: 0;
+                        }
+                        .report-card .card-footer { 
+                            padding-top: 0.25rem; 
+                            padding-bottom: 0.5rem; 
+                            background-color: #f8f9fa;
+                            margin-top: 0;
+                        }
                         /* Botones iguales y con separación uniforme */
                         .report-card .card-footer form > * { flex: 1 1 0; }
                         .report-card .card-footer form > * + * { margin-left: .5rem; }
@@ -117,9 +141,11 @@
                                         @endif
                                         <div class="card-header d-flex justify-content-between align-items-center">
                                             <h3 class="card-title mb-0" title="{{ $report->condicionInicial?->nombre }}">
+                                                <i class="fas fa-clipboard-list text-primary mr-2"></i>
                                                 {{ \Illuminate\Support\Str::limit($report->condicionInicial?->nombre ?? __('Condición no especificada'), 26) }}
                                             </h3>
                                             <div class="card-tools d-flex align-items-center">
+                                                <!--<i class="fas fa-exclamation-circle text-{{ $urgClass }} mr-1"></i>-->
                                                 <span class="small text-muted mr-1">{{ __('Urgencia') }}:</span>
                                                 <span class="badge badge-{{ $urgClass }}" title="{{ __('Urgencia') }}">
                                                     {{ is_null($urg) ? __('N/A') : $urg }}
@@ -127,18 +153,36 @@
                                             </div>
                                         </div>
                                         <div class="card-body">
-                                            <p class="mb-1"><strong>{{ __('Incidente:') }}</strong> {{ $report->incidentType?->nombre ?? '-' }}</p>
-                                            <!-- Se oculta Reportante según requerimiento -->
-                                            <p class="mb-1"><strong>{{ __('Aprobado:') }}</strong> {{ (int)$report->aprobado === 1 ? __('Sí') : __('No') }}</p>
-                                            @if($report->firstTransfer?->center)
-                                                <p class="mb-1">
-                                                    <strong>{{ __('Traslado a:') }}</strong>
-                                                    {{ $report->firstTransfer->center->nombre }}
-                                                </p>
-                                            @endif
-                                            <!--<p class="mb-1"><strong>{{ __('Tamaño:') }}</strong> {{ $report->tamano ?? '-' }}</p>
-                                            <p class="mb-1"><strong>{{ __('¿Puede moverse?:') }}</strong> {{ is_null($report->puede_moverse) ? '-' : ($report->puede_moverse ? __('Sí') : __('No')) }}</p>-->
-                                            <p class="mb-0"><strong>{{ __('Fecha:') }}</strong> {{ optional($report->created_at)->format('d/m/Y') }}</p>
+                                            <ul class="list-group list-group-unbordered mb-0">
+                                                <li class="list-group-item">
+                                                    <i class="fas fa-exclamation-triangle text-muted mr-2"></i>
+                                                    <b>{{ __('Incidente:') }}</b>
+                                                    <span class="float-right">{{ $report->incidentType?->nombre ?? '-' }}</span>
+                                                </li>
+                                                <li class="list-group-item">
+                                                    <i class="fas fa-{{ (int)$report->aprobado === 1 ? 'check-circle' : 'clock' }} text-muted mr-2"></i>
+                                                    <b>{{ __('Aprobado:') }}</b>
+                                                    <span class="float-right">
+                                                        @if((int)$report->aprobado === 1)
+                                                            <span class="badge badge-success">{{ __('Sí') }}</span>
+                                                        @else
+                                                            <span class="badge badge-warning">{{ __('No') }}</span>
+                                                        @endif
+                                                    </span>
+                                                </li>
+                                                @if($report->firstTransfer?->center)
+                                                <li class="list-group-item">
+                                                    <i class="fas fa-hospital text-muted mr-2"></i>
+                                                    <b>{{ __('Traslado a:') }}</b>
+                                                    <span class="float-right">{{ \Illuminate\Support\Str::limit($report->firstTransfer->center->nombre, 20) }}</span>
+                                                </li>
+                                                @endif
+                                                <li class="list-group-item">
+                                                    <i class="fas fa-calendar-alt text-muted mr-2"></i>
+                                                    <b>{{ __('Fecha:') }}</b>
+                                                    <span class="float-right">{{ optional($report->created_at)->format('d/m/Y') }}</span>
+                                                </li>
+                                            </ul>
                                         </div>
                                         <div class="card-footer">
                                             @php
@@ -153,9 +197,16 @@
                                                 <a class="btn btn-primary btn-sm" href="{{ route('reports.show', $report->id) }}">
                                                     <i class="fa fa-fw fa-eye"></i> {{ __('Ver') }}
                                                 </a>
-                                                <a class="btn btn-success btn-sm" href="{{ route('reports.edit', $report->id) }}">
-                                                    <i class="fa fa-fw fa-edit"></i> {{ __('Editar') }}
-                                                </a>
+                                                @if(Auth::user()->hasAnyRole(['admin', 'encargado']))
+                                                <button type="button" 
+                                                        class="btn btn-success btn-sm {{ (int)$report->aprobado === 1 ? 'disabled' : '' }}" 
+                                                        data-toggle="modal" 
+                                                        data-target="#modalAprobarReport{{ $report->id }}"
+                                                        {{ (int)$report->aprobado === 1 ? 'disabled' : '' }}
+                                                        title="{{ (int)$report->aprobado === 1 ? __('Este hallazgo ya está aprobado') : __('Aprobar o rechazar este hallazgo') }}">
+                                                    <i class="fa fa-fw fa-check"></i> {{ __('Aprobar') }}
+                                                </button>
+                                                @endif
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="btn btn-danger btn-sm js-confirm-delete">
@@ -175,6 +226,75 @@
         </div>
     </section>
     @include('partials.page-pad')
+    
+    {{-- Modales de aprobación para cada reporte --}}
+    @foreach ($reports as $report)
+        @if(Auth::user()->hasAnyRole(['admin', 'encargado']))
+        <div class="modal fade" id="modalAprobarReport{{ $report->id }}" tabindex="-1" role="dialog" aria-labelledby="modalAprobarReport{{ $report->id }}Label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalAprobarReport{{ $report->id }}Label">
+                            <i class="fa fa-check-circle"></i> {{ __('Aprobar/Rechazar Hallazgo') }}
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ route('reports.approve', $report->id) }}" method="POST" id="formAprobarReport{{ $report->id }}">
+                        @method('PUT')
+                        @csrf
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="action{{ $report->id }}">{{ __('Acción') }} <span class="text-danger">*</span></label>
+                                <select class="form-control @error('action') is-invalid @enderror" 
+                                        id="action{{ $report->id }}" 
+                                        name="action" 
+                                        required>
+                                    <option value="">{{ __('Seleccione una acción') }}</option>
+                                    <option value="approve" {{ old('action') === 'approve' ? 'selected' : '' }}>{{ __('Aprobar') }}</option>
+                                    <option value="reject" {{ old('action') === 'reject' ? 'selected' : '' }}>{{ __('Rechazar') }}</option>
+                                </select>
+                                @error('action')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label for="motivo{{ $report->id }}">{{ __('Motivo') }} <span class="text-danger">*</span></label>
+                                <textarea 
+                                    class="form-control @error('motivo') is-invalid @enderror" 
+                                    id="motivo{{ $report->id }}" 
+                                    name="motivo" 
+                                    rows="4" 
+                                    placeholder="{{ __('Ingrese el motivo de aprobación o rechazo...') }}"
+                                    required
+                                    minlength="3">{{ old('motivo') }}</textarea>
+                                @error('motivo')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                                <small class="form-text text-muted">
+                                    {{ __('Este motivo será registrado en el historial del hallazgo.') }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <i class="fa fa-times"></i> {{ __('Cancelar') }}
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-check"></i> {{ __('Confirmar') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @endif
+    @endforeach
     <script>
     document.addEventListener('DOMContentLoaded', function(){
         var form = document.querySelector('form.js-auto-filter-form');
@@ -185,6 +305,17 @@
         if (window.$ && typeof window.$.fn.tooltip === 'function') {
             window.$('[data-toggle="tooltip"]').tooltip();
         }
+        
+        // Prevenir que se abra el modal si el reporte ya está aprobado
+        document.querySelectorAll('[data-target^="#modalAprobarReport"]').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                if (this.disabled || this.classList.contains('disabled')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+        });
     });
     </script>
 @endsection
