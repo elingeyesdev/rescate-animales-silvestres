@@ -92,6 +92,9 @@ class DashboardService
 
                 // Estadísticas para gráficos
                 'reportsByMonth' => $this->getReportsByMonth(),
+                'transfersByMonth' => $this->getTransfersByMonth(),
+                'releasesByMonth' => $this->getReleasesByMonth(),
+                'animalFilesByMonth' => $this->getAnimalFilesByMonth(),
                 'animalsByStatus' => $this->getAnimalsByStatus(),
                 'applicationsByType' => $this->getApplicationsByType(),
             ];
@@ -289,6 +292,105 @@ class DashboardService
         } else {
             // MySQL/MariaDB
             return Report::select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->pluck('count', 'month')
+            ->toArray();
+        }
+    }
+
+    /**
+     * Obtiene traslados agrupados por mes (últimos 6 meses)
+     *
+     * @return array
+     */
+    private function getTransfersByMonth(): array
+    {
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'pgsql') {
+            return Transfer::select(
+                DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month"),
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy(DB::raw("TO_CHAR(created_at, 'YYYY-MM')"))
+            ->orderBy('month')
+            ->get()
+            ->pluck('count', 'month')
+            ->toArray();
+        } else {
+            return Transfer::select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->pluck('count', 'month')
+            ->toArray();
+        }
+    }
+
+    /**
+     * Obtiene liberaciones agrupadas por mes (últimos 6 meses)
+     *
+     * @return array
+     */
+    private function getReleasesByMonth(): array
+    {
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'pgsql') {
+            return Release::select(
+                DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month"),
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy(DB::raw("TO_CHAR(created_at, 'YYYY-MM')"))
+            ->orderBy('month')
+            ->get()
+            ->pluck('count', 'month')
+            ->toArray();
+        } else {
+            return Release::select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->pluck('count', 'month')
+            ->toArray();
+        }
+    }
+
+    /**
+     * Obtiene hojas de animales (AnimalFile) agrupadas por mes (últimos 6 meses)
+     *
+     * @return array
+     */
+    private function getAnimalFilesByMonth(): array
+    {
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'pgsql') {
+            return AnimalFile::select(
+                DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month"),
+                DB::raw('COUNT(*) as count')
+            )
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy(DB::raw("TO_CHAR(created_at, 'YYYY-MM')"))
+            ->orderBy('month')
+            ->get()
+            ->pluck('count', 'month')
+            ->toArray();
+        } else {
+            return AnimalFile::select(
                 DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
                 DB::raw('COUNT(*) as count')
             )

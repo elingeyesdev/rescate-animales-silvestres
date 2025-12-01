@@ -3,186 +3,278 @@
 @section('title', 'Inicio')
 
 @section('content_header')
-    <h1>Inicio</h1>
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="text-dark font-weight-bold">Panel de Control</h1>
+        <small class="text-muted"><i class="fas fa-calendar-alt mr-1"></i> {{ date('d/m/Y') }}</small>
+    </div>
+@stop
+
+@section('css')
+<style>
+    /* Efecto Hover Personalizado para Botones de Acción */
+    .btn-action-custom {
+        background-color: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    }
+    .btn-action-custom:hover {
+        transform: translateY(-5px); /* Se eleva */
+        box-shadow: 0 14px 28px rgba(0,0,0,0.15), 0 10px 10px rgba(0,0,0,0.12); /* Sombra profunda */
+        border-color: transparent;
+        z-index: 10;
+    }
+    .btn-action-custom i {
+        transition: transform 0.3s ease;
+    }
+    .btn-action-custom:hover i {
+        transform: scale(1.2); /* El icono crece un poco */
+    }
+</style>
 @stop
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid pb-4">
+
+    {{-- =========================================================== --}}
+    {{-- SECCIÓN: ADMIN Y ENCARGADO --}}
+    {{-- =========================================================== --}}
     @if(Auth::user()->hasAnyRole(['admin', 'encargado']))
-        {{-- DASHBOARD PARA ADMIN Y ENCARGADO --}}
         
-
+        {{-- 1. Tarjetas de Estadísticas Principales (KPIs) --}}
         <div class="row">
-            {{-- Estadísticas rápidas --}}
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-info">
-                    <div class="inner">
-                        <h3>{{ $pendingReportsCount ?? 0 }}</h3>
-                        <p>Hallazgos Pendientes</p>
+            {{-- Hallazgos Pendientes --}}
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box shadow-sm mb-3 h-100">
+                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-search-location"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text text-muted">Hallazgos Pendientes</span>
+                        <span class="info-box-number display-6">{{ $pendingReportsCount ?? 0 }}</span>
+                        
+                        @php 
+                            $total = $totalReports ?? 0; 
+                            $pending = $pendingReportsCount ?? 0; 
+                            $pct = $total > 0 ? intval(($pending / $total) * 100) : 0; 
+                        @endphp
+                        <div class="progress progress-sm mt-2">
+                            <div class="progress-bar bg-info" style="width: {{ $pct }}%"></div>
+                        </div>
+                        <span class="progress-description text-xs text-muted">
+                            {{ $pct }}% del total reportado
+                        </span>
                     </div>
-                    <div class="icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <a href="{{ route('reports.index') }}" class="small-box-footer">
-                        Ver más <i class="fas fa-arrow-circle-right"></i>
-                    </a>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-warning">
-                    <div class="inner">
-                        <h3>{{ ($pendingRescuersCount ?? 0) + ($pendingVeterinariansCount ?? 0) + ($pendingCaregiversCount ?? 0) }}</h3>
-                        <p>Solicitudes Pendientes</p>
+            {{-- Solicitudes de Personal --}}
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box shadow-sm mb-3 h-100">
+                    <span class="info-box-icon bg-warning elevation-1 text-white"><i class="fas fa-users-cog"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text text-muted">Solicitudes Pendientes</span>
+                        <span class="info-box-number">
+                            {{ ($pendingRescuersCount ?? 0) + ($pendingVeterinariansCount ?? 0) + ($pendingCaregiversCount ?? 0) }}
+                        </span>
+                        <a href="{{ route('people.index') }}" class="text-xs text-warning font-weight-bold mt-2 d-block">
+                            Revisar solicitudes <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
                     </div>
-                    <div class="icon">
-                        <i class="fas fa-user-check"></i>
-                    </div>
-                    <a href="{{ route('people.index') }}" class="small-box-footer">
-                        Ver más <i class="fas fa-arrow-circle-right"></i>
-                    </a>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-success">
-                    <div class="inner">
-                        <h3>{{ $totalAnimals ?? 0 }}</h3>
-                        <p>Animales en Sistema</p>
+            {{-- Total Animales --}}
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box shadow-sm mb-3 h-100">
+                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-paw"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text text-muted">Animales en Sistema</span>
+                        <span class="info-box-number">{{ $totalAnimals ?? 0 }}</span>
+                        <a href="{{ route('animal-files.index') }}" class="text-xs text-success font-weight-bold mt-2 d-block">
+                            Ver inventario <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
                     </div>
-                    <div class="icon">
-                        <i class="fas fa-paw"></i>
-                    </div>
-                    <a href="{{ route('animal-files.index') }}" class="small-box-footer">
-                        Ver más <i class="fas fa-arrow-circle-right"></i>
-                    </a>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-danger">
-                    <div class="inner">
-                        <h3>{{ $unreadMessagesCount ?? 0 }}</h3>
-                        <p>Mensajes No Leídos</p>
+            {{-- Mensajes --}}
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box shadow-sm mb-3 h-100">
+                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-envelope-open-text"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text text-muted">Mensajes Nuevos</span>
+                        <span class="info-box-number">{{ $unreadMessagesCount ?? 0 }}</span>
+                        <span class="progress-description text-xs text-muted">
+                            Bandeja de entrada
+                        </span>
                     </div>
-                    <div class="icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <a href="#mensajes" class="small-box-footer">
-                        Ver más <i class="fas fa-arrow-circle-right"></i>
+                </div>
+            </div>
+        </div>
+
+        {{-- 2. Acciones Rápidas con Efecto Hover Mejorado --}}
+        <div class="card shadow-none bg-transparent border-0 mb-4">
+            <div class="card-body py-3 px-0">
+                <p class="text-muted text-uppercase font-weight-bold text-xs mb-2 pl-1">Acciones Rápidas</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ route('reports.index') }}" class="btn btn-app btn-action-custom ml-0">
+                        @if(($pendingReportsCount ?? 0) > 0) <span class="badge bg-purple">{{ $pendingReportsCount }}</span> @endif
+                        <i class="fas fa-map-marked-alt text-purple"></i> Hallazgos
+                    </a>
+                    
+                    @if(Auth::user()->hasAnyRole(['admin','encargado']))
+                    <a href="{{ route('animal-files.create') }}" class="btn btn-app btn-action-custom">
+                        <i class="fas fa-plus-circle text-success"></i> Nuevo Animal
+                    </a>
+                    <a href="{{ route('releases.create') }}" class="btn btn-app btn-action-custom">
+                        <i class="fas fa-dove text-info"></i> Liberación
+                    </a>
+                    @endif
+
+                    <a href="{{ route('animal-files.index') }}" class="btn btn-app btn-action-custom">
+                        <i class="fas fa-list text-secondary"></i> Fichas
+                    </a>
+                    <a href="{{ route('releases.index') }}" class="btn btn-app btn-action-custom">
+                        <i class="fas fa-history text-muted"></i> Historial Lib.
                     </a>
                 </div>
             </div>
         </div>
 
-        {{-- Gráficos para Admin y Encargado --}}
-        @if(isset($reportsByMonth) || isset($animalsByStatus) || isset($applicationsByType))
-        <div class="row">
-            {{-- Gráfico de Hallazgos por Mes --}}
+        {{-- 3. Sección de Gráficos (Altura Igualada) --}}
+        @if(isset($reportsByMonth) || isset($animalsByStatus))
+        <div class="row align-items-stretch">
+            
+            {{-- Gráfico Principal: RADAR (Reemplazo visual interesante) --}}
             @if(isset($reportsByMonth))
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-line mr-1"></i>
-                            Hallazgos por Mes (Últimos 6 meses)
+            <div class="@if(isset($animalsByStatus)) col-lg-7 @else col-lg-12 @endif d-flex">
+                <div class="card card-outline card-purple shadow-sm w-100">
+                    <div class="card-header border-0">
+                        <h3 class="card-title font-weight-bold text-dark">
+                            <i class="fas fa-chart-bar mr-2 text-purple"></i> Comparativa Operativa (Totales)
                         </h3>
                     </div>
-                    <div class="card-body">
-                        <canvas id="reportsChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    <div class="card-body d-flex justify-content-center align-items-center">
+                        <div style="width: 100%;">
+                            <canvas id="operationsCompareChart" style="min-height: 320px; height: 320px; max-height: 320px; max-width: 100%;"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
             @endif
 
-            {{-- Gráfico de Animales por Estado --}}
+            {{-- Gráfico Secundario: Estado de Animales --}}
             @if(isset($animalsByStatus))
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-pie mr-1"></i>
-                            Animales por Estado
+            <div class="col-lg-5 d-flex">
+                <div class="card card-outline card-info shadow-sm w-100">
+                    <div class="card-header border-0">
+                        <h3 class="card-title font-weight-bold text-dark">
+                            <i class="fas fa-chart-pie mr-2 text-info"></i> Estado Actual
                         </h3>
                     </div>
-                    <div class="card-body">
-                        <canvas id="animalsStatusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <div style="width: 100%;">
+                             <canvas id="animalsStatusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white p-0">
+                        <ul class="nav nav-pills flex-column">
+                            <li class="nav-item border-bottom">
+                                <a href="#" class="nav-link text-muted py-2">
+                                    Total Registrados <span class="float-right badge bg-primary">{{ $totalAnimals ?? 0 }}</span>
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
             @endif
         </div>
-
-        {{-- Gráfico de Solicitudes por Tipo --}}
+        @endif
+        
+        {{-- Gráfico Terciario: Solicitudes (Multicolor y Horizontal) --}}
         @if(isset($applicationsByType))
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-bar mr-1"></i>
-                            Solicitudes por Tipo
+        <div class="row mt-3">
+             <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-header border-0">
+                        <h3 class="card-title font-weight-bold">
+                            <i class="fas fa-user-plus mr-2 text-secondary"></i> Solicitudes de Voluntariado/Personal
                         </h3>
                     </div>
                     <div class="card-body">
-                        <canvas id="applicationsChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                        <canvas id="applicationsChart" height="100"></canvas>
                     </div>
                 </div>
             </div>
         </div>
         @endif
-        @endif
-        <div class="row">
-            {{-- Mensajes de contacto no leídos --}}
+
+        {{-- 4. Bandeja de Mensajes --}}
+        <div class="row mt-3" id="mensajes">
             <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header border-transparent">
-                        <h3 class="card-title">
-                            <i class="fas fa-envelope"></i> Mensajes de Contacto
-                            @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
-                                <span class="badge badge-danger ml-2">{{ $unreadMessagesCount }}</span>
-                            @endif
+                <div class="card card-outline card-danger shadow-sm">
+                    <div class="card-header">
+                        <h3 class="card-title font-weight-bold">
+                            <i class="fas fa-inbox mr-2"></i> Mensajes Recientes
                         </h3>
+                        <div class="card-tools">
+                            @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
+                                <span class="badge badge-danger">{{ $unreadMessagesCount }} nuevos</span>
+                            @endif
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         @if(isset($unreadMessages) && $unreadMessages->count() > 0)
                             <div class="table-responsive">
-                                <table class="table m-0">
-                                    <thead>
+                                <table class="table table-hover table-striped align-middle mb-0">
+                                    <thead class="bg-light">
                                         <tr>
-                                            <th>Usuario</th>
-                                            <th>Motivo</th>
+                                            <th style="width: 20%">Usuario</th>
+                                            <th style="width: 15%">Motivo</th>
                                             <th>Mensaje</th>
-                                            <th>Fecha</th>
-                                            <th>Acciones</th>
+                                            <th style="width: 15%">Fecha</th>
+                                            <th style="width: 10%" class="text-right">Acción</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($unreadMessages as $message)
                                             <tr>
                                                 <td>
-                                                    {{ $message->user->person->nombre ?? $message->user->email }}
-                                                    <br><small class="text-muted">{{ $message->user->email }}</small>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="bg-gray-light rounded-circle d-flex justify-content-center align-items-center mr-2" style="width:35px; height:35px;">
+                                                            <i class="fas fa-user text-muted"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="font-weight-bold">{{ $message->user->person->nombre ?? 'Usuario' }}</div>
+                                                            <small class="text-muted">{{ $message->user->email }}</small>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     @php
                                                         $motivos = \App\Models\ContactMessage::getMotivos();
                                                         $motivoLabel = $motivos[$message->motivo] ?? $message->motivo;
+                                                        $badgeColor = 'secondary';
+                                                        if($message->motivo == 'emergencia') $badgeColor = 'danger';
+                                                        if($message->motivo == 'consulta') $badgeColor = 'info';
+                                                        if($message->motivo == 'adopcion') $badgeColor = 'success';
                                                     @endphp
-                                                    {{ $motivoLabel }}
+                                                    <span class="badge badge-{{ $badgeColor }}">{{ $motivoLabel }}</span>
                                                 </td>
                                                 <td>
-                                                    <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
+                                                    <p class="mb-0 text-sm text-muted text-truncate" style="max-width: 400px;">
                                                         {{ Str::limit($message->mensaje, 100) }}
-                                                    </div>
+                                                    </p>
                                                 </td>
-                                                <td>{{ $message->created_at->format('d/m/Y H:i') }}</td>
-                                                <td>
-                                                    <form action="{{ route('contact-messages.update', $message->id) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <button type="submit" class="btn btn-sm btn-success">
-                                                            <i class="fas fa-check"></i> Marcar como leído
+                                                <td class="text-muted text-sm">
+                                                    <i class="far fa-clock mr-1"></i> {{ $message->created_at->diffForHumans() }}
+                                                </td>
+                                                <td class="text-right">
+                                                    <form action="{{ route('contact-messages.update', $message->id) }}" method="POST">
+                                                        @csrf @method('PUT')
+                                                        <button type="submit" class="btn btn-xs btn-outline-success" title="Marcar como leído">
+                                                            <i class="fas fa-check"></i>
                                                         </button>
                                                     </form>
                                                 </td>
@@ -192,127 +284,136 @@
                                 </table>
                             </div>
                         @else
-                            <div class="p-3 text-center text-muted">
-                                No hay mensajes de contacto pendientes.
+                            <div class="text-center py-5">
+                                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" alt="Clean" style="width: 64px; opacity: 0.5;">
+                                <p class="text-muted mt-3">¡Todo limpio! No hay mensajes nuevos.</p>
                             </div>
                         @endif
                     </div>
                 </div>
             </div>
         </div>
+
     @endif
 
-    {{-- ESTADÍSTICAS GENERALES PARA TODOS LOS ROLES --}}
+    {{-- =========================================================== --}}
+    {{-- SECCIÓN: RESUMEN GENERAL (Roles Rescatista/Vet/Ciudadano) --}}
+    {{-- =========================================================== --}}
+    
     @php
         $isOnlyCitizen = Auth::user()->hasRole('ciudadano') && !Auth::user()->hasAnyRole(['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador']);
     @endphp
-    <div class="row">
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-info">
-                <div class="inner">
-                    <h3>{{ $totalAnimals ?? 0 }}</h3>
-                    <p>Animales en el Sistema</p>
+
+    @if($isOnlyCitizen || Auth::user()->hasAnyRole(['rescatista', 'veterinario', 'cuidador']))
+    <div class="row mt-4 align-items-stretch">
+        <div class="col-12 mb-3">
+            <h4 class="text-secondary font-weight-bold"><i class="fas fa-globe-americas mr-2"></i> Impacto Global</h4>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 col-12 d-flex">
+            <div class="card bg-gradient-info text-white shadow-sm mb-3 w-100">
+                <div class="card-body">
+                    <h2 class="font-weight-bold mb-0">{{ $totalAnimals ?? 0 }}</h2>
+                    <p class="mb-0">Animales Rescatados</p>
                 </div>
-                <div class="icon">
-                    <i class="fas fa-paw"></i>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <i class="fas fa-paw fa-2x opacity-50 float-right" style="opacity: 0.3;"></i>
+                    @if(!$isOnlyCitizen)
+                    <a href="{{ route('animal-files.index') }}" class="text-white small stretched-link">Ver detalles <i class="fas fa-arrow-right ml-1"></i></a>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 col-12 d-flex">
+            <div class="card bg-gradient-success text-white shadow-sm mb-3 w-100">
+                <div class="card-body">
+                    <h2 class="font-weight-bold mb-0">{{ $releasedAnimals ?? 0 }}</h2>
+                    <p class="mb-0">Devueltos al Hábitat</p>
+                    @php $totalA = $totalAnimals ?? 0; $released = $releasedAnimals ?? 0; $rpct = $totalA > 0 ? intval(($released / $totalA) * 100) : 0; @endphp
+                    <div class="progress mt-2" style="height: 4px; background-color: rgba(255,255,255,0.3);">
+                        <div class="progress-bar bg-white" style="width: {{ $rpct }}%"></div>
+                    </div>
+                    <small>{{ $rpct }}% tasa de éxito</small>
                 </div>
                 @if(!$isOnlyCitizen)
-                <a href="{{ route('animal-files.index') }}" class="small-box-footer">
-                    Ver más <i class="fas fa-arrow-circle-right"></i>
-                </a>
-                @else
-                <div class="small-box-footer" style="background-color: rgba(0,0,0,.1); padding: 10px; text-align: center; color: rgba(255,255,255,.8);">
-                    &nbsp;
+                <a href="{{ route('releases.index') }}" class="stretched-link"></a>
+                @endif
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6 col-12 d-flex">
+            <div class="card card-outline card-warning shadow-sm mb-3 w-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="font-weight-bold text-warning">{{ $totalReports ?? 0 }}</h3>
+                            <p class="text-muted mb-0">Reportes Recibidos</p>
+                        </div>
+                        <i class="fas fa-clipboard-list fa-2x text-warning opacity-50"></i>
+                    </div>
+                </div>
+                @if(!$isOnlyCitizen)
+                <div class="card-footer bg-white text-center p-1">
+                     <a href="{{ route('reports.index') }}" class="text-warning small">Ir a reportes</a>
                 </div>
                 @endif
             </div>
         </div>
 
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-success">
-                <div class="inner">
-                    <h3>{{ $releasedAnimals ?? 0 }}</h3>
-                    <p>Animales Liberados</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-dove"></i>
-                </div>
-                @if(!$isOnlyCitizen)
-                <a href="{{ route('releases.index') }}" class="small-box-footer">
-                    Ver más <i class="fas fa-arrow-circle-right"></i>
-                </a>
-                @else
-                <div class="small-box-footer" style="background-color: rgba(0,0,0,.1); padding: 10px; text-align: center; color: rgba(255,255,255,.8);">
-                    &nbsp;
-                </div>
-                @endif
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-warning">
-                <div class="inner">
-                    <h3>{{ $totalReports ?? 0 }}</h3>
-                    <p>Total de Hallazgos</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-file-alt"></i>
+        <div class="col-md-3 col-sm-6 col-12 d-flex">
+            <div class="card card-outline card-primary shadow-sm mb-3 w-100">
+                <div class="card-body">
+                     <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="font-weight-bold text-primary">{{ $totalTransfers ?? 0 }}</h3>
+                            <p class="text-muted mb-0">Traslados</p>
+                        </div>
+                        <i class="fas fa-ambulance fa-2x text-primary opacity-50"></i>
+                    </div>
                 </div>
                 @if(!$isOnlyCitizen)
-                <a href="{{ route('reports.index') }}" class="small-box-footer">
-                    Ver más <i class="fas fa-arrow-circle-right"></i>
-                </a>
-                @else
-                <div class="small-box-footer" style="background-color: rgba(0,0,0,.1); padding: 10px; text-align: center; color: rgba(255,255,255,.8);">
-                    &nbsp;
-                </div>
-                @endif
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-primary">
-                <div class="inner">
-                    <h3>{{ $totalTransfers ?? 0 }}</h3>
-                    <p>Traslados Realizados</p>
-                </div>
-                <div class="icon">
-                    <i class="fas fa-truck"></i>
-                </div>
-                @if(!$isOnlyCitizen)
-                <a href="{{ route('transfers.index') }}" class="small-box-footer">
-                    Ver más <i class="fas fa-arrow-circle-right"></i>
-                </a>
-                @else
-                <div class="small-box-footer" style="background-color: rgba(0,0,0,.1); padding: 10px; text-align: center; color: rgba(255,255,255,.8);">
-                    &nbsp;
+                <div class="card-footer bg-white text-center p-1">
+                     <a href="{{ route('transfers.index') }}" class="text-primary small">Ver logística</a>
                 </div>
                 @endif
             </div>
         </div>
     </div>
+    @endif
 
+    {{-- =========================================================== --}}
+    {{-- SECCIÓN: BIENVENIDA ESPECÍFICA (Resto de roles) --}}
+    {{-- =========================================================== --}}
     @if(!Auth::user()->hasAnyRole(['admin', 'encargado']))
-        {{-- DASHBOARD PARA OTROS ROLES --}}
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Bienvenido, {{ Auth::user()->person->nombre ?? Auth::user()->email }}</h3>
-                    </div>
-                    <div class="card-body">
-                        <p>Este es tu panel de control.</p>
-                        @if(Auth::user()->hasRole('veterinario'))
-                            <p>Animales bajo tu cuidado: <strong>{{ $myAnimalFiles ?? 0 }}</strong></p>
-                        @endif
-                        @if(Auth::user()->hasRole('rescatista'))
-                            <p>Traslados realizados: <strong>{{ $myTransfers ?? 0 }}</strong></p>
-                        @endif
+                <div class="card shadow-lg border-0 bg-white">
+                    <div class="card-body text-center py-5">
+                        <img src="https://cdn-icons-png.flaticon.com/512/2368/2368447.png" alt="Welcome" class="img-fluid mb-3" style="width: 80px;">
+                        <h2 class="display-4 font-weight-bold text-dark">Hola, {{ Auth::user()->person->nombre ?? 'Usuario' }}</h2>
+                        <p class="lead text-muted">Bienvenido al Sistema de Rescate y Gestión de Fauna.</p>
+                        
+                        <div class="d-flex justify-content-center mt-4">
+                            @if(Auth::user()->hasRole('veterinario'))
+                                <div class="px-4 border-right">
+                                    <h5 class="font-weight-bold text-success">{{ $myAnimalFiles ?? 0 }}</h5>
+                                    <small class="text-uppercase text-muted">Mis Pacientes</small>
+                                </div>
+                            @endif
+                            @if(Auth::user()->hasRole('rescatista'))
+                                <div class="px-4">
+                                    <h5 class="font-weight-bold text-primary">{{ $myTransfers ?? 0 }}</h5>
+                                    <small class="text-uppercase text-muted">Mis Traslados</small>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     @endif
+
 </div>
 @include('partials.page-pad')
 @endsection
@@ -322,32 +423,88 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Gráfico de hallazgos por mes
-    @if(isset($reportsByMonth) && !empty($reportsByMonth))
-    const reportsCtx = document.getElementById('reportsChart');
-    if (reportsCtx) {
-        const reportsData = @json($reportsByMonth);
-        const labels = Object.keys(reportsData);
-        const data = Object.values(reportsData);
+    
+    Chart.defaults.font.family = "'Source Sans Pro', 'Helvetica', 'Arial', sans-serif";
+    Chart.defaults.color = '#666';
+
+    // 1. Gráfico de Hallazgos (LÍNEA)
+    @php $totalsAvailable = isset($totalReports) || isset($totalTransfers) || isset($releasedAnimals) || isset($totalAnimals); @endphp
+    @if($totalsAvailable)
+    const cmp = document.getElementById('operationsCompareChart');
+    if (cmp) {
+        const totals = {
+            hallazgos: {{ $totalReports ?? 0 }},
+            traslados: {{ $totalTransfers ?? 0 }},
+            liberaciones: {{ $releasedAnimals ?? 0 }},
+            hojas: {{ $totalAnimals ?? 0 }}
+        };
+        const labels = ['Hallazgos','Traslados','Liberaciones','Hojas de vida'];
+        const values = [totals.hallazgos, totals.traslados, totals.liberaciones, totals.hojas];
+        const sum = values.reduce((a,b)=>a+b,0);
+        if (sum === 0) {
+            cmp.outerHTML = '<div class="text-center text-muted">Sin datos totales para mostrar</div>';
+        } else {
+            new Chart(cmp, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Totales',
+                        data: values,
+                        backgroundColor: ['#e74c3c','#3498db','#2ecc71','#8e44ad'],
+                        borderColor: ['#e74c3c','#3498db','#2ecc71','#8e44ad'],
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Comparativa de Totales' }
+                    },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    }
+    @endif
+
+    // 2. Gráfico de Animales por Estado (Doughnut)
+    @if(isset($animalsByStatus) && !empty($animalsByStatus))
+    const animalsCtx = document.getElementById('animalsStatusChart');
+    if (animalsCtx) {
+        const animalsData = @json($animalsByStatus);
         
-        new Chart(reportsCtx, {
-            type: 'line',
+        new Chart(animalsCtx, {
+            type: 'doughnut',
             data: {
-                labels: labels,
+                labels: Object.keys(animalsData),
                 datasets: [{
-                    label: 'Hallazgos',
-                    data: data,
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    tension: 0.1
+                    data: Object.values(animalsData),
+                    backgroundColor: [
+                        '#10b981', // Emerald
+                        '#3b82f6', // Blue
+                        '#f59e0b', // Amber
+                        '#ef4444', // Red
+                        '#8b5cf6', // Violet
+                        '#6b7280', // Gray
+                        '#ec4899', // Pink
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 10
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { usePointStyle: true, boxWidth: 10, padding: 15, font: { size: 11 } }
                     }
                 }
             }
@@ -355,73 +512,40 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     @endif
 
-    // Gráfico de animales por estado
-    @if(isset($animalsByStatus) && !empty($animalsByStatus))
-    const animalsCtx = document.getElementById('animalsStatusChart');
-    if (animalsCtx) {
-        const animalsData = @json($animalsByStatus);
-        const statusLabels = Object.keys(animalsData);
-        const statusData = Object.values(animalsData);
-        
-        new Chart(animalsCtx, {
-            type: 'doughnut',
-            data: {
-                labels: statusLabels,
-                datasets: [{
-                    data: statusData,
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.8)',
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(255, 206, 86, 0.8)',
-                        'rgba(75, 192, 192, 0.8)',
-                        'rgba(153, 102, 255, 0.8)',
-                        'rgba(255, 159, 64, 0.8)',
-                        'rgba(199, 199, 199, 0.8)',
-                        'rgba(86, 119, 226, 0.8)',
-                        'rgba(22, 180, 43, 0.8)',
-                        'rgba(126, 196, 206, 0.8)',
-                        'rgba(133, 65, 107, 0.8)',
-                        'rgba(199, 199, 199, 0.8)',
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-    }
-    @endif
-
-    // Gráfico de solicitudes por tipo
+    // 3. Gráfico de Solicitudes (Barras Multicolor Horizontales)
     @if(isset($applicationsByType) && !empty($applicationsByType))
     const applicationsCtx = document.getElementById('applicationsChart');
     if (applicationsCtx) {
         const applicationsData = @json($applicationsByType);
-        const appLabels = Object.keys(applicationsData);
-        const appData = Object.values(applicationsData);
         
         new Chart(applicationsCtx, {
             type: 'bar',
             data: {
-                labels: appLabels,
+                labels: Object.keys(applicationsData),
                 datasets: [{
-                    label: 'Cantidad',
-                    data: appData,
+                    label: 'Solicitudes',
+                    data: Object.values(applicationsData),
+                    // Array de colores diferentes para cada barra
                     backgroundColor: [
-                        'rgba(255, 99, 132, 0.8)',
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(255, 206, 86, 0.8)'
-                    ]
+                        '#4f46e5', // Indigo
+                        '#06b6d4', // Cyan
+                        '#f97316', // Orange
+                        '#ec4899', // Pink
+                        '#10b981', // Emerald
+                        '#8b5cf6'  // Violet
+                    ],
+                    borderRadius: 4,
+                    barThickness: 25,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                indexAxis: 'y', // Mantiene la orientación horizontal
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+                    x: { beginAtZero: true, grid: { display: false } },
+                    y: { grid: { display: false, drawBorder: false } }
                 }
             }
         });
