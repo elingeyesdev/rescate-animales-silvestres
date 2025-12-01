@@ -77,15 +77,51 @@ class TransferController extends Controller
         $reportsFirst = collect();
         $animalFiles = collect();
         if ($tab === 'first') {
-            $firstReportIds = Transfer::where('primer_traslado', true)
+            // Obtener report IDs que ya tienen un primer traslado con primer_traslado = true
+            // Estos NO se deben mostrar
+            $reportsWithFirstTransferTrue = Transfer::where('primer_traslado', true)
                 ->whereNotNull('reporte_id')
                 ->pluck('reporte_id')
+                ->unique()
                 ->all();
-            $reportsWithAnimal = Animal::whereNotNull('reporte_id')->pluck('reporte_id')->all();
+            
+            // Obtener report IDs que tienen un Transfer con primer_traslado = false
+            // Estos SÍ se deben mostrar
+            $reportsWithFirstTransferFalse = Transfer::where('primer_traslado', false)
+                ->whereNotNull('reporte_id')
+                ->pluck('reporte_id')
+                ->unique()
+                ->all();
+            
+            // Obtener todos los report IDs que tienen algún Transfer
+            $reportsWithAnyTransfer = Transfer::whereNotNull('reporte_id')
+                ->pluck('reporte_id')
+                ->unique()
+                ->all();
+            
+            // Obtener hallazgos aprobados que:
+            // 1. NO tienen un primer traslado con primer_traslado = true
+            // 2. Y (tienen un Transfer con primer_traslado = false O no tienen ningún Transfer)
+            // Esto es independiente de si tienen hoja de animal o no
             $reportsFirst = Report::with(['person','condicionInicial'])
                 ->where('aprobado', true)
-                ->when(!empty($firstReportIds), fn($q) => $q->whereNotIn('id', $firstReportIds))
-                ->when(!empty($reportsWithAnimal), fn($q) => $q->whereNotIn('id', $reportsWithAnimal))
+                ->where(function($query) use ($reportsWithFirstTransferTrue, $reportsWithFirstTransferFalse, $reportsWithAnyTransfer) {
+                    // Excluir los que tienen primer_traslado = true
+                    if (!empty($reportsWithFirstTransferTrue)) {
+                        $query->whereNotIn('id', $reportsWithFirstTransferTrue);
+                    }
+                    // Incluir los que tienen primer_traslado = false O no tienen ningún Transfer
+                    $query->where(function($q) use ($reportsWithFirstTransferFalse, $reportsWithAnyTransfer) {
+                        // Si tienen primer_traslado = false, incluirlos
+                        if (!empty($reportsWithFirstTransferFalse)) {
+                            $q->whereIn('id', $reportsWithFirstTransferFalse);
+                        }
+                        // Si no tienen ningún Transfer, también incluirlos
+                        if (!empty($reportsWithAnyTransfer)) {
+                            $q->orWhereNotIn('id', $reportsWithAnyTransfer);
+                        }
+                    });
+                })
                 ->orderByDesc('id')
                 ->take(12)
                 ->get(['id','persona_id','condicion_inicial_id','aprobado','created_at','direccion','imagen_url']);

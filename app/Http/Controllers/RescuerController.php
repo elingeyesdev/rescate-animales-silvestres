@@ -28,7 +28,7 @@ class RescuerController extends Controller
      */
     public function index(Request $request): View
     {
-        $rescuers = Rescuer::with('person')->paginate();
+        $rescuers = Rescuer::with(['person.user'])->paginate();
 
         return view('rescuer.index', compact('rescuers'))
             ->with('i', ($request->input('page', 1) - 1) * $rescuers->perPage());
@@ -128,6 +128,56 @@ class RescuerController extends Controller
 
         return Redirect::route('rescuers.index')
             ->with('success', 'Rescatista actualizado correctamente');
+    }
+
+    /**
+     * Approve or reject a rescuer application.
+     */
+    public function approve(Request $request, Rescuer $rescuer): RedirectResponse
+    {
+        // Solo admin y encargado pueden aprobar/rechazar
+        if (!Auth::user()->hasAnyRole(['admin', 'encargado'])) {
+            abort(403, 'No tienes permiso para aprobar o rechazar solicitudes de rescatista.');
+        }
+
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+            'motivo_revision' => 'required|string|min:3',
+        ]);
+
+        $oldApproved = $rescuer->aprobado;
+        $rescuer->aprobado = $validated['action'] === 'approve' ? true : false;
+        $rescuer->motivo_revision = $validated['motivo_revision'];
+        $rescuer->save();
+        $rescuer->refresh();
+        $rescuer->load('person.user');
+
+        // Enganchar aprobación con roles de Spatie
+        $userModel = $rescuer->person?->user;
+        if ($userModel) {
+            if ($rescuer->aprobado === true) {
+                $userModel->assignRole('rescatista');
+            } elseif ($rescuer->aprobado === false || $rescuer->aprobado === null) {
+                $userModel->removeRole('rescatista');
+            }
+        }
+
+        // Enviar correo al ciudadano si cambió el estado de aprobación
+        if ($oldApproved !== $rescuer->aprobado && $userModel && $userModel->email) {
+            try {
+                $approved = $rescuer->aprobado === true;
+                Mail::to($userModel->email)->send(new RescuerApplicationResponse($rescuer, $approved));
+            } catch (\Exception $e) {
+                \Log::error('Error enviando correo de respuesta de solicitud de rescatista: ' . $e->getMessage());
+            }
+        }
+
+        $message = $validated['action'] === 'approve' 
+            ? 'La solicitud de rescatista ha sido aprobada correctamente.' 
+            : 'La solicitud de rescatista ha sido rechazada correctamente.';
+
+        return Redirect::route('rescuers.index')
+            ->with('success', $message);
     }
 
     public function destroy($id): RedirectResponse

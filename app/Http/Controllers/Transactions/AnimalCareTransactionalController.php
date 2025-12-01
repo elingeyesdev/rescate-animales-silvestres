@@ -7,6 +7,7 @@ use App\Http\Requests\Transactions\CareProcessRequest;
 use App\Models\AnimalFile;
 use App\Models\AnimalHistory;
 use App\Models\CareType;
+use App\Models\Center;
 use App\Services\Animal\AnimalCareTransactionalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
@@ -80,7 +81,9 @@ class AnimalCareTransactionalController extends Controller
                 } elseif (!empty($new['transfer'])) {
                     $tr = $new['transfer'];
                     if (!empty($tr['centro_id'])) {
-                        $summary = 'Traslado a centro ID '.$tr['centro_id'];
+                        $center = Center::find($tr['centro_id']);
+                        $centerName = $center ? $center->nombre : 'centro ID '.$tr['centro_id'];
+                        $summary = 'Traslado a '.$centerName;
                     }
                 }
 

@@ -28,7 +28,7 @@ class VeterinarianController extends Controller
      */
     public function index(Request $request): View
     {
-        $veterinarians = Veterinarian::with('person')->paginate();
+        $veterinarians = Veterinarian::with(['person.user'])->paginate();
 
         return view('veterinarian.index', compact('veterinarians'))
             ->with('i', ($request->input('page', 1) - 1) * $veterinarians->perPage());
@@ -129,6 +129,56 @@ class VeterinarianController extends Controller
 
         return Redirect::route('veterinarians.index')
             ->with('success', 'Veterinario actualizado correctamente');
+    }
+
+    /**
+     * Approve or reject a veterinarian application.
+     */
+    public function approve(Request $request, Veterinarian $veterinarian): RedirectResponse
+    {
+        // Solo admin y encargado pueden aprobar/rechazar
+        if (!Auth::user()->hasAnyRole(['admin', 'encargado'])) {
+            abort(403, 'No tienes permiso para aprobar o rechazar solicitudes de veterinario.');
+        }
+
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+            'motivo_revision' => 'required|string|min:3',
+        ]);
+
+        $oldApproved = $veterinarian->aprobado;
+        $veterinarian->aprobado = $validated['action'] === 'approve' ? true : false;
+        $veterinarian->motivo_revision = $validated['motivo_revision'];
+        $veterinarian->save();
+        $veterinarian->refresh();
+        $veterinarian->load('person.user');
+
+        // Enganchar aprobación con roles de Spatie
+        $userModel = $veterinarian->person?->user;
+        if ($userModel) {
+            if ($veterinarian->aprobado === true) {
+                $userModel->assignRole('veterinario');
+            } elseif ($veterinarian->aprobado === false || $veterinarian->aprobado === null) {
+                $userModel->removeRole('veterinario');
+            }
+        }
+
+        // Enviar correo al ciudadano si cambió el estado de aprobación
+        if ($oldApproved !== $veterinarian->aprobado && $userModel && $userModel->email) {
+            try {
+                $approved = $veterinarian->aprobado === true;
+                Mail::to($userModel->email)->send(new VeterinarianApplicationResponse($veterinarian, $approved));
+            } catch (\Exception $e) {
+                \Log::error('Error enviando correo de respuesta de solicitud de veterinario: ' . $e->getMessage());
+            }
+        }
+
+        $message = $validated['action'] === 'approve' 
+            ? 'La solicitud de veterinario ha sido aprobada correctamente.' 
+            : 'La solicitud de veterinario ha sido rechazada correctamente.';
+
+        return Redirect::route('veterinarians.index')
+            ->with('success', $message);
     }
 
     public function destroy($id): RedirectResponse

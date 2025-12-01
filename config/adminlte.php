@@ -416,7 +416,14 @@ return [
             'icon' => 'fas fa-fw fa-user-injured',
             'can'  => 'admin|encargado',
         ],
-        ['header' => 'CONFIGURACIÓN', 'can' => 'admin'],
+        
+        [
+            'text' => 'Centros',
+            'url' => 'centers',
+            'icon' => 'fas fa-fw fa-clinic-medical',
+            'can'  => 'admin',
+        ],
+        ['header' => 'CONFIGURACION', 'can' => 'admin'],
         [
             'text' => 'Estados de Animales',
             'url' => 'animal-statuses',
@@ -469,12 +476,6 @@ return [
             'text' => 'Porción de Alimentación',
             'url' => 'feeding-portions',
             'icon' => 'fas fa-fw fa-weight-hanging',
-            'can'  => 'admin',
-        ],
-        [
-            'text' => 'Centros',
-            'url' => 'centers',
-            'icon' => 'fas fa-fw fa-clinic-medical',
             'can'  => 'admin',
         ],
         /*[

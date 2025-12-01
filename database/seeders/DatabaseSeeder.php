@@ -33,9 +33,9 @@ class DatabaseSeeder extends Seeder
         Person::firstOrCreate(
             ['usuario_id' => $admin->id],
             [
-                'nombre' => 'Administrador',
-                'ci' => '0000000',
-                'telefono' => '0000000000',
+                'nombre' => 'Carmen Rojas',
+                'ci' => '8799668',
+                'telefono' => '74412589',
             ]
         );
     }

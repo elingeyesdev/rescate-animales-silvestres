@@ -29,76 +29,59 @@
                         </div>
                     @endif
 
-                    {{-- Filtros --}}
-                    <div class="card-body">
-                        <form method="GET" action="{{ route('people.index') }}" class="mb-3">
-                            <div class="row">
+                    <div class="card-body bg-white">
+                        <form method="GET" class="mb-2">
+                            <div class="form-row">
                                 <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="nombre">Nombre</label>
-                                        <input type="text" 
-                                               name="nombre" 
-                                               id="nombre" 
-                                               class="form-control form-control-sm" 
-                                               value="{{ request('nombre') }}" 
-                                               placeholder="Buscar por nombre...">
-                                    </div>
+                                    <label class="mb-1">{{ __('Nombre') }}</label>
+                                    <input type="text" 
+                                           name="nombre" 
+                                           id="nombre" 
+                                           class="form-control" 
+                                           value="{{ request('nombre') }}" 
+                                           placeholder="{{ __('Buscar por nombre') }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="email">Email</label>
-                                        <input type="text" 
-                                               name="email" 
-                                               id="email" 
-                                               class="form-control form-control-sm" 
-                                               value="{{ request('email') }}" 
-                                               placeholder="Buscar por email...">
-                                    </div>
+                                    <label class="mb-1">{{ __('Email') }}</label>
+                                    <input type="text" 
+                                           name="email" 
+                                           id="email" 
+                                           class="form-control" 
+                                           value="{{ request('email') }}" 
+                                           placeholder="{{ __('Buscar por email') }}">
                                 </div>
                                 <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="ci">CI</label>
-                                        <input type="text" 
-                                               name="ci" 
-                                               id="ci" 
-                                               class="form-control form-control-sm" 
-                                               value="{{ request('ci') }}" 
-                                               placeholder="Buscar por CI...">
-                                    </div>
+                                    <label class="mb-1">{{ __('CI') }}</label>
+                                    <input type="text" 
+                                           name="ci" 
+                                           id="ci" 
+                                           class="form-control" 
+                                           value="{{ request('ci') }}" 
+                                           placeholder="{{ __('Buscar por CI') }}">
                                 </div>
                                 <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="rol">Rol</label>
-                                        <select name="rol" id="rol" class="form-control form-control-sm">
-                                            <option value="">Todos los roles</option>
-                                            @foreach($roles as $role)
-                                                <option value="{{ $role->name }}" {{ request('rol') == $role->name ? 'selected' : '' }}>
-                                                    {{ ucfirst($role->name) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                    <label class="mb-1">{{ __('Rol') }}</label>
+                                    <select name="rol" id="rol" class="form-control">
+                                        <option value="">{{ __('Todos los roles') }}</option>
+                                        @foreach($roles as $role)
+                                            <option value="{{ $role->name }}" {{ request('rol') == $role->name ? 'selected' : '' }}>
+                                                {{ ucfirst($role->name) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="es_cuidador">Es Cuidador</label>
-                                        <select name="es_cuidador" id="es_cuidador" class="form-control form-control-sm">
-                                            <option value="">Todos</option>
-                                            <option value="1" {{ request('es_cuidador') == '1' ? 'selected' : '' }}>Sí</option>
-                                            <option value="0" {{ request('es_cuidador') == '0' ? 'selected' : '' }}>No</option>
-                                        </select>
-                                    </div>
+                                    <label class="mb-1">{{ __('Es Cuidador') }}</label>
+                                    <select name="es_cuidador" id="es_cuidador" class="form-control">
+                                        <option value="">{{ __('Todos') }}</option>
+                                        <option value="1" {{ request('es_cuidador') == '1' ? 'selected' : '' }}>{{ __('Sí') }}</option>
+                                        <option value="0" {{ request('es_cuidador') == '0' ? 'selected' : '' }}>{{ __('No') }}</option>
+                                    </select>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <button type="submit" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-search"></i> Buscar
-                                    </button>
-                                    <a href="{{ route('people.index') }}" class="btn btn-secondary btn-sm">
-                                        <i class="fas fa-times"></i> Limpiar
-                                    </a>
-                                </div>
+                            <div class="mt-2 d-flex align-items-center">
+                                <button type="submit" class="btn btn-primary btn-sm mr-3">{{ __('Buscar') }}</button>
+                                <a href="{{ route('people.index') }}" class="btn btn-link p-0">{{ __('Mostrar todos') }}</a>
                             </div>
                         </form>
                     </div>
@@ -113,7 +96,7 @@
                     }
                     </style>
 
-                    <div class="card-body pb-0">
+                    <div class="card-body pb-0" style="padding-top: 0.5rem;">
                         <div class="row">
                             @foreach ($people as $person)
                                 @php
@@ -140,14 +123,14 @@
                                     
                                     // Ajustar tamaño del email si es muy largo
                                     $emailLength = strlen($email);
-                                    $emailClass = $emailLength > 23 ? 'text-xs' : 'text-sm';
+                                    $emailClass = $emailLength > 24 ? 'text-xs' : 'text-sm';
                                 @endphp
                                 <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch flex-column">
                                     <div class="card bg-light d-flex flex-fill person-card">
-                                        <div class="card-header text-muted border-bottom-0 d-flex justify-content-between align-items-center">
+                                        <div class="card-header text-muted border-bottom-0 d-flex justify-content-between align-items-center" style="padding-right: {{  '1rem' }};">
                                             <span>{{ $roleLabel }}</span>
                                             @if($hasPendingRequest)
-                                                <span class="badge badge-warning" style="font-size: 11px; padding: 4px 8px;">
+                                                <span class="badge badge-warning" style="font-size: 11px; padding: 4px 8px; margin-left: auto;">
                                                     Solicitud pendiente
                                                 </span>
                                             @endif

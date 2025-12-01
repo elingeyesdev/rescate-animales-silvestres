@@ -92,7 +92,7 @@
                                     @php
                                         $fotoUrl = !empty($person->foto_path)
                                             ? asset('storage/' . $person->foto_path)
-                                            : asset('vendor/adminlte/dist/img/user2-160x160.jpg');
+                                            : asset('storage/personas/persona.png');
                                     @endphp
                                     <img src="{{ $fotoUrl }}" 
                                          alt="Foto de {{ $person->nombre }}"
@@ -156,10 +156,22 @@
                             <hr>
                             <h5>Asignar roles</h5>
                             <div class="form-group mb-2">
+                                @php
+                                    $rescuer = $hasRescuer ? $person->rescuers->first() : null;
+                                    $veterinarian = $hasVeterinarian ? $person->veterinarians->first() : null;
+                                    $rescuerEnRevision = $rescuer && $rescuer->aprobado === null;
+                                    $veterinarianEnRevision = $veterinarian && $veterinarian->aprobado === null;
+                                @endphp
+                                
                                 @if(!$hasRescuer)
                                     <a class="btn btn-outline-info btn-sm" 
                                        href="{{ route('rescuers.create', ['persona_id' => $person->id]) }}">
                                         <i class="fa fa-user-injured"></i> Asignar como rescatista
+                                    </a>
+                                @elseif($rescuerEnRevision)
+                                    <a class="btn btn-outline-warning btn-sm" 
+                                       href="{{ route('rescuers.show', $rescuer->id) }}">
+                                        <i class="fa fa-user-injured"></i> Ver Solicitud de Rescatista
                                     </a>
                                 @else
                                     <button class="btn btn-outline-secondary btn-sm" disabled>
@@ -171,6 +183,11 @@
                                     <a class="btn btn-outline-info btn-sm" 
                                        href="{{ route('veterinarians.create', ['persona_id' => $person->id]) }}">
                                         <i class="fa fa-user-md"></i> Asignar como veterinario
+                                    </a>
+                                @elseif($veterinarianEnRevision)
+                                    <a class="btn btn-outline-warning btn-sm" 
+                                       href="{{ route('veterinarians.show', $veterinarian->id) }}">
+                                        <i class="fa fa-user-md"></i> Ver Solicitud de Veterinario
                                     </a>
                                 @else
                                     <button class="btn btn-outline-secondary btn-sm" disabled>
