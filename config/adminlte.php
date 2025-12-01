@@ -86,11 +86,11 @@ return [
     'auth_logo' => [
         'enabled' => false,
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
-            'alt' => 'Auth Logo',
-            'class' => '',
-            'width' => 50,
-            'height' => 50,
+            'path' => 'images/paw-classic.svg',
+            'alt' => 'Huella Animal',
+            'class' => 'img-circle elevation-3',
+            'width' => 64,
+            'height' => 64,
         ],
     ],
 
