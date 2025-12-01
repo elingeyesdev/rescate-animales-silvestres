@@ -14,9 +14,10 @@ use App\Models\Care;
 use App\Models\MedicalEvaluation;
 use App\Models\Person;
 use App\Models\Center;
-use App\Models\AnimalType;
 use App\Models\Species;
 use App\Models\Report;
+use App\Models\Transfer;
+use App\Models\Release;
 use App\Models\AnimalFile as AnimalFileModel;
 use Illuminate\Support\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -64,8 +65,8 @@ class AnimalHistoryTimelineService
 	public function buildForAnimalFile(int $animalFileId): array
 	{
 		$all = AnimalHistory::where('animal_file_id', $animalFileId)
-			->orderByDesc('changed_at')
-			->orderByDesc('id')
+			->orderBy('changed_at') // Ordenar ascendente para que los eventos más antiguos aparezcan primero
+			->orderBy('id')
 			->get();
 
 		$afRecord = AnimalFileModel::find($animalFileId);
@@ -81,9 +82,21 @@ class AnimalHistoryTimelineService
 
 		$timeline = [];
 		foreach ($all as $h) {
-			$changed = $h->changed_at ? Carbon::parse($h->changed_at) : null;
-			$changedDate = $changed ? $changed->format('d/m/y') : null;
-			$changedTime = $changed ? $changed->format('H:i') : null;
+			$old = $h->valores_antiguos ?? [];
+			$new = $h->valores_nuevos ?? [];
+			
+			// Intentar usar la fecha guardada en valores_nuevos si está disponible (para traslados y reportes)
+			$eventDate = null;
+			if (!empty($new['transfer']['created_at'])) {
+				$eventDate = Carbon::parse($new['transfer']['created_at']);
+			} elseif (!empty($new['report']['created_at'])) {
+				$eventDate = Carbon::parse($new['report']['created_at']);
+			} elseif ($h->changed_at) {
+				$eventDate = Carbon::parse($h->changed_at);
+			}
+			
+			$changedDate = $eventDate ? $eventDate->format('d/m/y') : null;
+			$changedTime = $eventDate ? $eventDate->format('H:i') : null;
 			$item = [
 				'id' => $h->id,
 				'changed_at' => trim(($changedDate ?? '') . ($changedTime ? ' '.$changedTime : '')),
@@ -92,10 +105,9 @@ class AnimalHistoryTimelineService
 					: null,
 				'title' => 'Actualización',
 				'details' => [],
+				'_sort_date' => $eventDate ? $eventDate->timestamp : ($h->changed_at ? Carbon::parse($h->changed_at)->timestamp : 0), // Para ordenamiento
 			];
 
-			$old = $h->valores_antiguos ?? [];
-			$new = $h->valores_nuevos ?? [];
 			$imageUrl = null;
 
 			// Reporte (hallazgo)
@@ -265,6 +277,15 @@ class AnimalHistoryTimelineService
                     'label' => 'Información',
                     'value' => implode(' | ', $parts),
                 ];
+                // Obtener imagen de liberación
+                if (!empty($lib['imagen_url'])) {
+                    $imageUrl = $lib['imagen_url'];
+                } elseif (!empty($lib['id'])) {
+                    $releaseModel = Release::find($lib['id']);
+                    if ($releaseModel && $releaseModel->imagen_url) {
+                        $imageUrl = $releaseModel->imagen_url;
+                    }
+                }
             }
 
 			// Creación de Hoja de Vida / Animal
@@ -291,13 +312,11 @@ class AnimalHistoryTimelineService
 						}
 					}
 					$estadoName = isset($af['estado_id']) ? (AnimalStatus::find($af['estado_id'])->nombre) : null;
-					$tipoName = isset($af['tipo_id']) ? (AnimalType::find($af['tipo_id'])->nombre) : null;
 					$espName = isset($af['especie_id']) ? (Species::find($af['especie_id'])->nombre) : null;
 					$item['details'][] = [
 						'label' => 'Detalle',
 						'value' => implode(' | ', array_filter([
 							$estadoName ? ('Estado: '.$estadoName) : null,
-							$tipoName ? ('Tipo: '.$tipoName) : null,
 							$espName ? ('Especie: '.$espName) : null,
 						])),
 					];
@@ -320,7 +339,137 @@ class AnimalHistoryTimelineService
 			$timeline[] = $item;
 		}
 
+		// Ordenar por fecha del evento (usando _sort_date) para respetar las fechas guardadas en valores_nuevos
+		usort($timeline, function($a, $b) {
+			return $a['_sort_date'] <=> $b['_sort_date'];
+		});
+
+		// Remover el campo temporal de ordenamiento
+		foreach ($timeline as &$item) {
+			unset($item['_sort_date']);
+		}
+
 		return $timeline;
+	}
+
+	/**
+	 * Construye una ruta geográfica (para mapa) con las posiciones relevantes
+	 * del historial de un animal: hallazgo, traslados y liberación (si existe).
+	 *
+	 * @return array{
+	 *     points: array<int, array<string, mixed>>
+	 * }
+	 */
+	public function buildLocationRoute(int $animalFileId): array
+	{
+		$histories = AnimalHistory::where('animal_file_id', $animalFileId)
+			->orderBy('changed_at')
+			->orderBy('id')
+			->get();
+
+		$points = [];
+
+		foreach ($histories as $h) {
+			$changed = $h->changed_at ? Carbon::parse($h->changed_at) : null;
+			$new = $h->valores_nuevos ?? [];
+
+			// Punto de hallazgo (reporte)
+			if (!empty($new['report'])) {
+				$rp = $new['report'];
+				$lat = $rp['latitud'] ?? null;
+				$lon = $rp['longitud'] ?? null;
+				if ($lat !== null && $lon !== null) {
+					// Usar fecha guardada en valores_nuevos si está disponible
+					$eventDate = !empty($rp['created_at']) ? Carbon::parse($rp['created_at']) : $changed;
+					if (!$eventDate && !empty($rp['id'])) {
+						$reportModel = Report::find($rp['id']);
+						if ($reportModel && $reportModel->created_at) {
+							$eventDate = Carbon::parse($reportModel->created_at);
+						}
+					}
+
+					$points[] = [
+						'type' => 'report',
+						'label' => 'Hallazgo',
+						'lat' => (float)$lat,
+						'lon' => (float)$lon,
+						'address' => $rp['direccion'] ?? null,
+						'date' => $eventDate ? $eventDate->format('d/m/Y H:i') : null,
+					];
+				}
+			}
+
+			// Traslados (entre centros o primer traslado)
+			if (!empty($new['transfer'])) {
+				$tr = $new['transfer'];
+
+				$center = null;
+				if (!empty($tr['centro_id'])) {
+					$center = Center::find($tr['centro_id']);
+				}
+
+				$lat = $center?->latitud ?? ($tr['latitud'] ?? null);
+				$lon = $center?->longitud ?? ($tr['longitud'] ?? null);
+
+				if ($lat !== null && $lon !== null) {
+					// Usar fecha guardada en valores_nuevos si está disponible
+					$eventDate = !empty($tr['created_at']) ? Carbon::parse($tr['created_at']) : $changed;
+					if (!$eventDate && !empty($tr['id'])) {
+						$transferModel = Transfer::find($tr['id']);
+						if ($transferModel && $transferModel->created_at) {
+							$eventDate = Carbon::parse($transferModel->created_at);
+						}
+					}
+
+					$points[] = [
+						'type' => 'transfer',
+						'label' => !empty($tr['primer_traslado']) ? 'Primer traslado a centro' : 'Traslado entre centros',
+						'lat' => (float)$lat,
+						'lon' => (float)$lon,
+						'center_name' => $center?->nombre,
+						'observaciones' => $tr['observaciones'] ?? null,
+						'date' => $eventDate ? $eventDate->format('d/m/Y H:i') : null,
+					];
+				}
+			}
+
+			// Liberación
+			if (!empty($new['liberacion'])) {
+				$lib = $new['liberacion'];
+				$lat = $lib['latitud'] ?? null;
+				$lon = $lib['longitud'] ?? null;
+				if ($lat !== null && $lon !== null) {
+					$eventDate = $changed;
+					$imagenUrl = null;
+					if (!$eventDate && !empty($lib['id'])) {
+						$releaseModel = Release::find($lib['id']);
+						if ($releaseModel) {
+							if ($releaseModel->created_at) {
+								$eventDate = Carbon::parse($releaseModel->created_at);
+							}
+							$imagenUrl = $releaseModel->imagen_url;
+						}
+					} else {
+						$imagenUrl = $lib['imagen_url'] ?? null;
+					}
+
+					$points[] = [
+						'type' => 'release',
+						'label' => 'Liberación',
+						'lat' => (float)$lat,
+						'lon' => (float)$lon,
+						'address' => $lib['direccion'] ?? null,
+						'approved' => array_key_exists('aprobada', $lib) ? (bool)$lib['aprobada'] : null,
+						'date' => $eventDate ? $eventDate->format('d/m/Y H:i') : null,
+						'imagen_url' => $imagenUrl,
+					];
+				}
+			}
+		}
+
+		return [
+			'points' => $points,
+		];
 	}
 }
 

@@ -30,47 +30,103 @@
                     @endif
 
                     <div class="card-body bg-white">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="thead">
-                                    <tr>
-                                        <th>No</th>
-                                        
-								<th >Tratamiento</th>
-								<th >Fecha Revisión</th>
-								<th >Veterinario</th>
-								<th >Animal</th>
-
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($medicalEvaluations as $medicalEvaluation)
-                                        <tr>
-                                            <td>{{ ++$i }}</td>
-                                            
-									<td >{{ $medicalEvaluation->treatmentType?->nombre }}</td>
-									<td >{{ $medicalEvaluation->fecha ? \Carbon\Carbon::parse($medicalEvaluation->fecha)->format('d/m/Y') : '' }}</td>
-									<td >{{ $medicalEvaluation->veterinarian?->person?->nombre }}</td>
-									<td >{{ $medicalEvaluation->animalFile?->animal?->nombre ?? '-' }}</td>
-
-                                            <td>
-                                                <form action="{{ route('medical-evaluations.destroy', $medicalEvaluation->id) }}" method="POST">
-                                                    <a class="btn btn-sm btn-primary " href="{{ route('medical-evaluations.show', $medicalEvaluation->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Show') }}</a>
-                                                    <a class="btn btn-sm btn-success" href="{{ route('medical-evaluations.edit', $medicalEvaluation->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-danger btn-sm js-confirm-delete"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                        @if($groupedEvaluations->isEmpty())
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle"></i> {{ __('No se encontraron evaluaciones médicas.') }}
+                            </div>
+                        @else
+                            @foreach($groupedEvaluations as $animalFileId => $evaluations)
+                                @php
+                                    $firstEvaluation = $evaluations->first();
+                                    $animalFile = $firstEvaluation->animalFile;
+                                    $animal = $animalFile?->animal;
+                                    
+                                    if ($animalFileId === 'sin_animal') {
+                                        $animalName = 'Evaluaciones sin animal asignado';
+                                        $animalImage = asset('storage/personas/persona.png');
+                                        $species = '-';
+                                        $status = '-';
+                                        $showAnimalInfo = false;
+                                    } else {
+                                        $animalName = $animal?->nombre ?? ('Animal ' . ($animalFile?->animal_id ?? '-'));
+                                        $animalImage = $animalFile?->imagen_url 
+                                            ? asset('storage/' . $animalFile->imagen_url) 
+                                            : asset('storage/personas/persona.png');
+                                        $species = $animalFile?->species?->nombre ?? '-';
+                                        $status = $animalFile?->animalStatus?->nombre ?? '-';
+                                        $showAnimalInfo = true;
+                                    }
+                                @endphp
+                                <div class="card card-outline card-primary mb-4">
+                                    <div class="card-body">
+                                        <div class="row align-items-start">
+                                            {{-- Foto del animal a la izquierda --}}
+                                            <div class="col-md-3 text-center mb-3 mb-md-0">
+                                                <img src="{{ $animalImage }}" 
+                                                     alt="{{ $animalName }}" 
+                                                     class="img-fluid rounded"
+                                                     style="max-height: 200px; max-width: 100%; object-fit: cover;">
+                                            </div>
+                                            {{-- Información del animal a la derecha --}}
+                                            <div class="col-md-9">
+                                                <h5 class="mb-3">
+                                                    <strong>{{ $animalName }}</strong>
+                                                    @if($showAnimalInfo && $animalFile)
+                                                        <span class="badge badge-info ml-2">Hoja N°{{ $animalFile->id }}</span>
+                                                    @endif
+                                                </h5>
+                                                @if($showAnimalInfo)
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <small class="text-muted"><strong>Especie:</strong> {{ $species }}</small>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <small class="text-muted"><strong>Estado:</strong> {{ $status }}</small>
+                                                    </div>
+                                                </div>
+                                                @endif
+                                                
+                                                {{-- Tabla de evaluaciones médicas --}}
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered">
+                                                        <thead class="thead-light">
+                                                            <tr>
+                                                                <th class="text-center">Tratamiento</th>
+                                                                <th class="text-center">Fecha Revisión</th>
+                                                                <th class="text-center">Veterinario</th>
+                                                                <th class="text-center">Detalle</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($evaluations as $index => $medicalEvaluation)
+                                                                <tr>
+                                                                    
+                                                                    <td class="text-center">{{ $medicalEvaluation->treatmentType?->nombre ?? '-' }}</td>
+                                                                    <td class="text-center">{{ $medicalEvaluation->fecha ? \Carbon\Carbon::parse($medicalEvaluation->fecha)->format('d/m/Y') : '-' }}</td>
+                                                                    <td class="text-center">{{ $medicalEvaluation->veterinarian?->person?->nombre ?? '-' }}</td>
+                                                                    
+                                                                    <td class="text-center">
+                                                                        <div class="btn-group btn-group-sm" role="group">
+                                                                            <a class="btn btn-primary btn-sm" href="{{ route('medical-evaluations.show', $medicalEvaluation->id) }}" title="{{ __('Show') }}">
+                                                                                <i class="fa fa-fw fa-eye"></i> Ver
+                                                                            </a>
+                                                                            
+                                                                            </form>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
                     </div>
                 </div>
-                {!! $medicalEvaluations->withQueryString()->links() !!}
             </div>
         </div>
     </div>

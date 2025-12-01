@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'fire_prediction' => [
+        'url' => env('FIRE_PREDICTION_API_URL', ''),
+    ],
+
 ];

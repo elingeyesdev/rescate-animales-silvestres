@@ -11,6 +11,11 @@ use Illuminate\View\View;
 
 class FeedingPortionController extends Controller
 {
+    public function __construct()
+    {
+        // Solo administradores pueden gestionar porciones de alimentación
+        $this->middleware('role:admin');
+    }
     /**
      * Display a listing of the resource.
      */

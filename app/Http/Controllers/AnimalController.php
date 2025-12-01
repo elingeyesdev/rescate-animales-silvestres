@@ -30,12 +30,9 @@ class AnimalController extends Controller
     public function create(): View
     {
         $animal = new Animal();
-        // Listar solo reportes con cupo disponible según cantidad_animales
+        // Listar reportes aprobados
         $reports = Report::query()
             ->where('aprobado', 1)
-            ->leftJoin('animals', 'animals.reporte_id', '=', 'reports.id')
-            ->groupBy('reports.id', 'reports.cantidad_animales')
-            ->havingRaw('COUNT(animals.id) < COALESCE(reports.cantidad_animales, 1)')
             ->orderByDesc('reports.id')
             ->get(['reports.id']);
 
@@ -69,12 +66,11 @@ class AnimalController extends Controller
     public function edit($id): View
     {
         $animal = Animal::find($id);
-        // Reportes con cupo disponible
+        // Reportes aprobados
         $reports = Report::query()
             ->where('aprobado', 1)
             ->leftJoin('animals', 'animals.reporte_id', '=', 'reports.id')
-            ->groupBy('reports.id', 'reports.cantidad_animales')
-            ->havingRaw('COUNT(animals.id) < COALESCE(reports.cantidad_animales, 1)')
+            ->groupBy('reports.id')
             ->orderByDesc('reports.id')
             ->get(['reports.id'])
             ->keyBy('id');

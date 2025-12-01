@@ -22,7 +22,12 @@ class TransferController extends Controller
     public function __construct(
         private readonly AnimalTransferTransactionalService $transferService
     ) {
+        // Debe estar autenticado
         $this->middleware('auth');
+        // Rescatistas, veterinarios, encargados y administradores pueden ver y crear traslados
+        $this->middleware('role:rescatista|veterinario|encargado|admin')->only(['index','create','store','show']);
+        // Veterinarios, encargados y administradores pueden editar/eliminar traslados existentes
+        $this->middleware('role:veterinario|encargado|admin')->only(['edit','update','destroy']);
     }
     /**
      * Display a listing of the resource.
@@ -52,21 +57,71 @@ class TransferController extends Controller
         $tab = $request->string('tab')->toString() ?: 'first';
         $transfers = Transfer::with(['person','center'])->paginate();
         $centers = Center::orderBy('nombre')->get(['id','nombre','latitud','longitud']);
-        $people = Person::orderBy('nombre')->get(['id','nombre']);
+        
+        // Filtrar personas: excluir a los que son solo ciudadanos
+        // Obtener IDs de usuarios que son solo ciudadanos
+        $onlyCitizenUserIds = \App\Models\User::whereHas('roles', function ($query) {
+            $query->where('name', 'ciudadano');
+        })->whereDoesntHave('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador']);
+        })->pluck('id');
+        
+        // Obtener personas que NO tienen usuarios solo ciudadanos
+        $people = Person::where(function ($query) use ($onlyCitizenUserIds) {
+            $query->whereNotIn('usuario_id', $onlyCitizenUserIds)
+                  ->orWhereNull('usuario_id');
+        })->orderBy('nombre')
+          ->get(['id','nombre']);
 
         // Preparar datos SOLO para la pestaña activa
         $reportsFirst = collect();
         $animalFiles = collect();
         if ($tab === 'first') {
-            $firstReportIds = Transfer::where('primer_traslado', true)
+            // Obtener report IDs que ya tienen un primer traslado con primer_traslado = true
+            // Estos NO se deben mostrar
+            $reportsWithFirstTransferTrue = Transfer::where('primer_traslado', true)
                 ->whereNotNull('reporte_id')
                 ->pluck('reporte_id')
+                ->unique()
                 ->all();
-            $reportsWithAnimal = Animal::whereNotNull('reporte_id')->pluck('reporte_id')->all();
+            
+            // Obtener report IDs que tienen un Transfer con primer_traslado = false
+            // Estos SÍ se deben mostrar
+            $reportsWithFirstTransferFalse = Transfer::where('primer_traslado', false)
+                ->whereNotNull('reporte_id')
+                ->pluck('reporte_id')
+                ->unique()
+                ->all();
+            
+            // Obtener todos los report IDs que tienen algún Transfer
+            $reportsWithAnyTransfer = Transfer::whereNotNull('reporte_id')
+                ->pluck('reporte_id')
+                ->unique()
+                ->all();
+            
+            // Obtener hallazgos aprobados que:
+            // 1. NO tienen un primer traslado con primer_traslado = true
+            // 2. Y (tienen un Transfer con primer_traslado = false O no tienen ningún Transfer)
+            // Esto es independiente de si tienen hoja de animal o no
             $reportsFirst = Report::with(['person','condicionInicial'])
                 ->where('aprobado', true)
-                ->when(!empty($firstReportIds), fn($q) => $q->whereNotIn('id', $firstReportIds))
-                ->when(!empty($reportsWithAnimal), fn($q) => $q->whereNotIn('id', $reportsWithAnimal))
+                ->where(function($query) use ($reportsWithFirstTransferTrue, $reportsWithFirstTransferFalse, $reportsWithAnyTransfer) {
+                    // Excluir los que tienen primer_traslado = true
+                    if (!empty($reportsWithFirstTransferTrue)) {
+                        $query->whereNotIn('id', $reportsWithFirstTransferTrue);
+                    }
+                    // Incluir los que tienen primer_traslado = false O no tienen ningún Transfer
+                    $query->where(function($q) use ($reportsWithFirstTransferFalse, $reportsWithAnyTransfer) {
+                        // Si tienen primer_traslado = false, incluirlos
+                        if (!empty($reportsWithFirstTransferFalse)) {
+                            $q->whereIn('id', $reportsWithFirstTransferFalse);
+                        }
+                        // Si no tienen ningún Transfer, también incluirlos
+                        if (!empty($reportsWithAnyTransfer)) {
+                            $q->orWhereNotIn('id', $reportsWithAnyTransfer);
+                        }
+                    });
+                })
                 ->orderByDesc('id')
                 ->take(12)
                 ->get(['id','persona_id','condicion_inicial_id','aprobado','created_at','direccion','imagen_url']);
@@ -92,7 +147,21 @@ class TransferController extends Controller
         $rescuers = Rescuer::with('person')->where('aprobado', true)->orderBy('id')->get();
         $centers = Center::orderBy('nombre')->get(['id','nombre','latitud','longitud']);
         $animals = Animal::orderByDesc('id')->get(['id','nombre']);
-        $people = \App\Models\Person::orderBy('nombre')->get(['id','nombre']);
+        
+        // Filtrar personas: excluir a los que son solo ciudadanos
+        // Obtener IDs de usuarios que son solo ciudadanos
+        $onlyCitizenUserIds = \App\Models\User::whereHas('roles', function ($query) {
+            $query->where('name', 'ciudadano');
+        })->whereDoesntHave('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador']);
+        })->pluck('id');
+        
+        // Obtener personas que NO tienen usuarios solo ciudadanos
+        $people = \App\Models\Person::where(function ($query) use ($onlyCitizenUserIds) {
+            $query->whereNotIn('usuario_id', $onlyCitizenUserIds)
+                  ->orWhereNull('usuario_id');
+        })->orderBy('nombre')
+          ->get(['id','nombre']);
         return view('transfer.create', compact('transfer','rescuers','centers','animals','people'));
     }
 
@@ -169,7 +238,21 @@ class TransferController extends Controller
         $rescuers = Rescuer::with('person')->where('aprobado', true)->orderBy('id')->get();
         $centers = Center::orderBy('nombre')->get(['id','nombre']);
         $animals = Animal::orderByDesc('id')->get(['id','nombre']);
-        $people = \App\Models\Person::orderBy('nombre')->get(['id','nombre']);
+        
+        // Filtrar personas: excluir a los que son solo ciudadanos
+        // Obtener IDs de usuarios que son solo ciudadanos
+        $onlyCitizenUserIds = \App\Models\User::whereHas('roles', function ($query) {
+            $query->where('name', 'ciudadano');
+        })->whereDoesntHave('roles', function ($query) {
+            $query->whereIn('name', ['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador']);
+        })->pluck('id');
+        
+        // Obtener personas que NO tienen usuarios solo ciudadanos
+        $people = \App\Models\Person::where(function ($query) use ($onlyCitizenUserIds) {
+            $query->whereNotIn('usuario_id', $onlyCitizenUserIds)
+                  ->orWhereNull('usuario_id');
+        })->orderBy('nombre')
+          ->get(['id','nombre']);
         return view('transfer.edit', compact('transfer','rescuers','centers','animals','people'));
     }
 

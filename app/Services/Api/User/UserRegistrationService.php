@@ -5,6 +5,7 @@ namespace App\Services\Api\User;
 use App\Models\User;
 use App\Models\Person;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class UserRegistrationService
 {
@@ -31,6 +32,12 @@ class UserRegistrationService
                 'telefono'   => $data['telefono'],
                 'es_cuidador'=> $data['es_cuidador'] ?? false,
             ]);
+
+            // Rol por defecto: ciudadano (se asegura que exista aunque el seeder no se haya ejecutado)
+            if (method_exists($user, 'assignRole')) {
+                $role = Role::firstOrCreate(['name' => 'ciudadano', 'guard_name' => 'web']);
+                $user->assignRole($role);
+            }
 
             return [
                 'user'   => $user,

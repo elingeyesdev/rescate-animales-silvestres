@@ -31,8 +31,7 @@
                                 <h5 class="mb-2">{{ __('Paso 1: Seleccione el hallazgo') }}</h5>
                                 <div class="d-flex flex-wrap" id="report_cards">
                                     @foreach(($reportCards ?? []) as $rep)
-                                        @php($available = max(0, ($rep->cantidad_animales - $rep->asignados)))
-                                        <div class="card m-2 report-card" data-report-id="{{ $rep->id }}" data-available="{{ $available }}" data-cond-id="{{ $rep->condicion_inicial_id }}" data-cond-name="{{ $rep->condicion_nombre }}" data-obs="{{ e($rep->observaciones) }}" style="width: 200px; cursor: pointer;">
+                                        <div class="card m-2 report-card" data-report-id="{{ $rep->id }}" data-cond-id="{{ $rep->condicion_inicial_id }}" data-cond-name="{{ $rep->condicion_nombre }}" data-obs="{{ e($rep->observaciones) }}" style="width: 200px; cursor: pointer;">
                                             <div class="card-img-top mt-3" style="height:110px; overflow:hidden; display:flex; align-items:center; justify-content:center; ">
                                                 @if(!empty($rep->imagen_url))
                                                     <img src="{{ asset('storage/'.$rep->imagen_url) }}" alt="#{{ $rep->id }}" style="max-height:100%; max-width:100%;">
@@ -45,15 +44,14 @@
                                                 @if(!empty($rep->reportante_nombre))
                                                     <div class="small">{{ __('Reportante') }}: {{ $rep->reportante_nombre }}</div>
                                                 @endif
-                                                <!--<div class="small text-muted">{{ __('Reportados') }}: {{ $rep->cantidad_animales ?? 1 }}</div>
-                                                <div class="small text-muted">{{ __('Asignados') }}: {{ $rep->asignados }}</div>
-                                                <div class="small text-success">{{ __('Disp.') }}: {{ $available }}</div>-->
+                                                <!--<div class="small text-muted">{{ __('Asignados') }}: {{ $rep->asignados }}</div>
+                                                {{-- <div class="small text-success">{{ __('Disp.') }}: {{ $available }}</div> --}}-->
                                             </div>
                                         </div>
                                     @endforeach
                                 </div>
                                 @if((($reportCards ?? collect())->count() === 0) && (($reports ?? collect())->count() === 0))
-                                    <div class="alert alert-info mt-2">{{ __('No hay hallazgos aprobados con cupo disponibles. Cree o apruebe un hallazgo primero.') }}</div>
+                                    <div class="alert alert-info mt-2">{{ __('No hay hallazgos aprobados disponibles sin asignar. Cree o apruebe un hallazgo primero.') }}</div>
                                 @endif
                                 <button type="button" id="btn_continuar" class="btn btn-primary mt-2" disabled>{{ __('Continuar') }}</button>
                             </div>
@@ -93,14 +91,10 @@
                                         </div>
                                         @include('animal-file.form', [
                                             'animalFile' => $animalFile ?? null,
-                                            'animalTypes' => $animalTypes ?? [],
                                             'species' => $species ?? [],
                                             'animalStatuses' => $animalStatuses ?? [],
                                             'showAnimalSelect' => false,
                                             'showSubmit' => false,
-                                            'hideType' => true,
-                                            'defaultTypeId' => $wildTypeId ?? null,
-                                            'hideBreed' => true,
                                             'hideState' => true
                                         ])
                                     </div>

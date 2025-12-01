@@ -193,7 +193,6 @@ return [
         'direccion'           => 'dirección',
         'latitud'             => 'latitud',
         'longitud'            => 'longitud',
-        'cantidad_animales'   => 'cantidad de animales',
         'traslado_inmediato'  => 'traslado inmediato',
         'centro_id'           => 'centro de destino',
     ],

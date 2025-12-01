@@ -3,27 +3,38 @@
 namespace App\Http\Controllers;
 
 use App\Models\AnimalFile;
-use App\Models\AnimalType;
+use App\Models\AnimalHistory;
 use App\Models\Species;
 use App\Models\AnimalStatus;
 use App\Models\Report;
 use App\Models\Animal;
-use App\Models\Breed;
 use App\Models\Center;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\AnimalFileRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class AnimalFileController extends Controller
 {
+    public function __construct()
+    {
+        // Debe estar autenticado
+        $this->middleware('auth');
+        // Hoja de vida visible para cuidadores, rescatistas, veterinarios, encargados y administradores
+        $this->middleware('role:cuidador|rescatista|veterinario|encargado|admin')->only(['index','show']);
+        // Solo veterinarios y administradores pueden crear o modificar hojas de vida
+        $this->middleware('role:veterinario|admin')->only(['create','store','edit','update']);
+        // Solo administradores pueden eliminar hojas de vida
+        $this->middleware('role:admin')->only(['destroy']);
+    }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): View
     {
-        $query = AnimalFile::with(['animalType','species','animalStatus','breed','animal.report','adoption','release','center']);
+        $query = AnimalFile::with(['species','animalStatus','animal.report','release','center']);
 
         // Filtros
         if ($request->filled('nombre')) {
@@ -59,16 +70,10 @@ class AnimalFileController extends Controller
     public function create(): View
     {
         $animalFile = new AnimalFile();
-        $animalTypes = AnimalType::orderBy('nombre')->get(['id','nombre']);
         $species = Species::orderBy('nombre')->get(['id','nombre']);
         $animalStatuses = AnimalStatus::orderBy('nombre')->get(['id','nombre']);
         $animals = Animal::orderByDesc('id')->get(['id','nombre']);
 
-        // Preseleccionar tipo "Silvestre" si existe
-        $defaultTypeId = $animalTypes->firstWhere('nombre', 'Silvestre')?->id;
-        if ($defaultTypeId && empty($animalFile->tipo_id)) {
-            $animalFile->tipo_id = $defaultTypeId;
-        }
         // Preseleccionar Especie "Desconocido" si existe
         $unknownSpeciesId = Species::whereRaw('LOWER(nombre) = ?', ['desconocido'])->value('id');
         if ($unknownSpeciesId && empty($animalFile->especie_id)) {
@@ -80,7 +85,7 @@ class AnimalFileController extends Controller
             $animalFile->estado_id = $recoveryStatusId;
         }
 
-        return view('animal-file.create', compact('animalFile','animalTypes','species','animalStatuses','animals'));
+        return view('animal-file.create', compact('animalFile','species','animalStatuses','animals'));
     }
 
     /**
@@ -119,7 +124,7 @@ class AnimalFileController extends Controller
      */
     public function show($id): View
     {
-        $animalFile = AnimalFile::find($id);
+        $animalFile = AnimalFile::with(['animal.report.condicionInicial', 'animal.report.incidentType', 'animal.report.firstTransfer.center'])->find($id);
 
         return view('animal-file.show', compact('animalFile'));
     }
@@ -130,15 +135,11 @@ class AnimalFileController extends Controller
     public function edit($id): View
     {
         $animalFile = AnimalFile::find($id);
-        $animalTypes = AnimalType::orderBy('nombre')->get(['id','nombre']);
         $species = Species::orderBy('nombre')->get(['id','nombre']);
         $animalStatuses = AnimalStatus::orderBy('nombre')->get(['id','nombre']);
         $animals = Animal::orderByDesc('id')->get(['id','nombre']);
-        $breeds = $animalFile?->especie_id
-            ? Breed::where('especie_id', $animalFile->especie_id)->orderBy('nombre')->get(['id','nombre'])
-            : collect();
-
-        return view('animal-file.edit', compact('animalFile','animalTypes','species','animalStatuses','animals','breeds'));
+        
+        return view('animal-file.edit', compact('animalFile','species','animalStatuses','animals'));
     }
 
     /**
@@ -156,6 +157,28 @@ class AnimalFileController extends Controller
                 $data['imagen_url'] = $path;
             }
             $animalFile->update($data);
+
+            // Registrar en historial quién realizó la modificación
+            if (Auth::check()) {
+                $latestHistory = AnimalHistory::where('animal_file_id', $animalFile->id)
+                    ->orderByDesc('id')
+                    ->first();
+
+                if ($latestHistory) {
+                    $user = Auth::user();
+                    $personName = method_exists($user, 'person') && $user->person
+                        ? $user->person->nombre
+                        : $user->email;
+
+                    $prefix = 'Modificado por: '.$personName;
+                    $existing = $latestHistory->observaciones;
+                    $latestHistory->observaciones = $existing
+                        ? $prefix.' | '.$existing
+                        : $prefix;
+                    $latestHistory->save();
+                }
+            }
+
             if (!empty($animalNombre)) {
                 $animalId = $data['animal_id'] ?? $animalFile->animal_id;
                 $animal = Animal::find($animalId);

@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'title' => 'AdminLTE 3',
+    'title' => 'Rescate Animales',
     'title_prefix' => '',
     'title_postfix' => '',
 
@@ -64,7 +64,7 @@ return [
     */
 
     'logo' => '<b>Rescate</b>Animales',
-    'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+    'logo_img' => 'images/paw-primary.svg',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
@@ -86,11 +86,11 @@ return [
     'auth_logo' => [
         'enabled' => false,
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
-            'alt' => 'Auth Logo',
-            'class' => '',
-            'width' => 50,
-            'height' => 50,
+            'path' => 'images/paw-classic.svg',
+            'alt' => 'Huella Animal',
+            'class' => 'img-circle elevation-3',
+            'width' => 64,
+            'height' => 64,
         ],
     ],
 
@@ -110,7 +110,7 @@ return [
     */
 
     'preloader' => [
-        'enabled' => true,
+        'enabled' => false,
         'mode' => 'fullscreen',
         'img' => [
             'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
@@ -134,11 +134,13 @@ return [
     */
 
     'usermenu_enabled' => true,
-    'usermenu_header' => false,
+    // Mostramos un header dentro del dropdown del usuario (ahí se verá nombre + roles)
+    'usermenu_header' => true,
     'usermenu_header_class' => 'bg-primary',
     'usermenu_image' => false,
+    // Mostrar debajo del nombre una breve descripción (aquí: los roles Spatie del usuario)
     'usermenu_desc' => false,
-    'usermenu_profile_url' => false,
+    'usermenu_profile_url' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -198,7 +200,7 @@ return [
     'classes_content' => '',
     'classes_sidebar' => 'sidebar-dark-primary elevation-4',
     'classes_sidebar_nav' => '',
-    'classes_topnav' => 'navbar-white navbar-light',
+    'classes_topnav' => 'navbar-dark navbar-navy',
     'classes_topnav_nav' => 'navbar-expand',
     'classes_topnav_container' => 'container',
 
@@ -263,6 +265,7 @@ return [
     'register_url' => 'register',
     'password_reset_url' => 'password/reset',
     'password_email_url' => 'password/email',
+    // El perfil del usuario se resuelve a través de User::adminlte_profile_url()
     'profile_url' => false,
     'disable_darkmode_routes' => false,
 
@@ -312,8 +315,14 @@ return [
 
         // Sidebar items:
         [
-            'type' => 'sidebar-menu-search',
-            'text' => 'Buscar',
+            'text' => 'Inicio',
+            'url' => 'home',
+            'icon' => 'fas fa-fw fa-home',
+        ],
+        [
+            'text' => 'Mi Perfil',
+            'url' => 'profile',
+            'icon' => 'fas fa-fw fa-user-circle',
         ],
         [
             'text' => 'blog',
@@ -346,126 +355,128 @@ return [
             'text' => 'Hojas de Animales',
             'url' => 'animal-files',
             'icon' => 'fas fa-fw fa-paw',
+            'can'  => 'veterinario|admin|rescatista|encargado',
         ],
         [
             'text' => 'Historial de Animales',
             'url' => 'animal-histories',
             'icon' => 'fas fa-fw fa-history',
+            'can'  => 'veterinario|admin|cuidador',
         ],
         
-        [
-            'text' => 'Estados de Animales',
-            'url' => 'animal-statuses',
-            'icon' => 'fas fa-fw fa-heartbeat',
-        ],
-        /*[
-            'text' => 'Tipos de Animales',
-            'url' => 'animal-types',
-            'icon' => 'fas fa-fw fa-paw',
-        ],*/
-        [
-            'text' => 'Tipos de Incidentes',
-            'url' => 'incident-types',
-            'icon' => 'fas fa-fw fa-exclamation-triangle',
-        ],
-        [
-            'text' => 'Condiciones de Animales',
-            'url' => 'animal-conditions',
-            'icon' => 'fas fa-fw fa-first-aid',
-        ],
-        [
-            'text' => 'Especies',
-            'url' => 'species',
-            'icon' => 'fas fa-fw fa-paw',
-        ],
-        /*[
-            'text' => 'Razas',
-            'url' => 'breeds',
-            'icon' => 'fas fa-fw fa-paw',
-        ],*/
-        
-        ['header' => 'DIAGNOSTICO'],
+        ['header' => 'DIAGNOSTICO','can'=> 'admin|veterinario|cuidador'],
         [
             'text' => 'Evaluaciones Médicas',
             'url' => 'medical-evaluations',
             'icon' => 'fas fa-fw fa-stethoscope',
+            'can'  => 'veterinario|admin',
         ],
         
         [
             'text' => 'Cuidados de Animales',
             'url' => 'cares',
             'icon' => 'fas fa-fw fa-hand-holding-heart',
+            'can'  => 'cuidador|admin|veterinario',
         ],
         [
             'text' => 'Alimentación',
             'url' => 'care-feedings',
             'icon' => 'fas fa-fw fa-utensils',
-        ],
-        [
-            'text' => 'Veterinarios',
-            'url' => 'veterinarians',
-            'icon' => 'fas fa-fw fa-user-md',
-        ],
-        [
-            'text' => 'Tipos de Tratamiento',
-            'url' => 'treatment-types',
-            'icon' => 'fas fa-fw fa-pills',
+            'can'  => 'admin|veterinario',
         ],
         
-        [
-            'text' => 'Tipos de Cuidado',
-            'url' => 'care-types',
-            'icon' => 'fas fa-fw fa-hands-helping',
-        ],
-        [
-            'text' => 'Tipos de Alimentación',
-            'url' => 'feeding-types',
-            'icon' => 'fas fa-fw fa-drumstick-bite',
-        ],
-        [
-            'text' => 'Frecuencia',
-            'url' => 'feeding-frequencies',
-            'icon' => 'fas fa-fw fa-clock',
-        ],
-        [
-            'text' => 'Porción de Alimentación',
-            'url' => 'feeding-portions',
-            'icon' => 'fas fa-fw fa-weight-hanging',
-        ],
-        ['header' => 'DISPOSICION'],
+        ['header' => 'DISPOSICION', 'can'=> 'admin|encargado|rescatista|veterinario'],
         [
             'text' => 'Traslados',
             'url' => 'transfers',
             'icon' => 'fas fa-fw fa-exchange-alt',
+            'can'  => 'admin|encargado|rescatista|veterinario',
         ],
         [
             'text' => 'Liberaciones',
             'url' => 'releases',
             'icon' => 'fas fa-fw fa-unlock',
         ],
+        ['header' => 'ADMINISTRACION', 'can' => 'admin|encargado'],
         [
-            'text' => 'Centros',
-            'url' => 'centers',
-            'icon' => 'fas fa-fw fa-clinic-medical',
+            'text' => 'Personas',
+            'url' => 'people',
+            'icon' => 'fas fa-fw fa-user',
+            'can'  => 'admin|encargado',
+        ],
+        [
+            'text' => 'Veterinarios',
+            'url' => 'veterinarians',
+            'icon' => 'fas fa-fw fa-user-md',
+            'can'  => 'admin|encargado',
         ],
         [
             'text' => 'Rescatistas',
             'url' => 'rescuers',
             'icon' => 'fas fa-fw fa-user-injured',
+            'can'  => 'admin|encargado',
         ],
         
-        /*[
-            'text' => 'Adopciones',
-            'url' => 'adoptions',
-            'icon' => 'fas fa-fw fa-paw',
-        ],*/
-        
-        
-        ['header' => 'ADMINISTRACION'],
         [
-            'text' => 'Personas',
-            'url' => 'people',
-            'icon' => 'fas fa-fw fa-user',
+            'text' => 'Centros',
+            'url' => 'centers',
+            'icon' => 'fas fa-fw fa-clinic-medical',
+            'can'  => 'admin',
+        ],
+        ['header' => 'CONFIGURACION', 'can' => 'admin'],
+        [
+            'text' => 'Estados de Animales',
+            'url' => 'animal-statuses',
+            'icon' => 'fas fa-fw fa-heartbeat',
+            'can'  => 'admin',
+        ],
+        [
+            'text' => 'Tipos de Incidentes',
+            'url' => 'incident-types',
+            'icon' => 'fas fa-fw fa-exclamation-triangle',
+            'can'  => 'admin',
+        ],
+        [
+            'text' => 'Condiciones de Animales',
+            'url' => 'animal-conditions',
+            'icon' => 'fas fa-fw fa-first-aid',
+            'can'  => 'admin',
+        ],
+        [
+            'text' => 'Especies',
+            'url' => 'species',
+            'icon' => 'fas fa-fw fa-paw',
+            'can'  => 'admin',
+        ],
+        [
+            'text' => 'Tipos de Tratamiento',
+            'url' => 'treatment-types',
+            'icon' => 'fas fa-fw fa-pills',
+            'can'  => 'admin',
+        ],
+        [
+            'text' => 'Tipos de Cuidado',
+            'url' => 'care-types',
+            'icon' => 'fas fa-fw fa-hands-helping',
+            'can'  => 'admin',
+        ],
+        [
+            'text' => 'Tipos de Alimentación',
+            'url' => 'feeding-types',
+            'icon' => 'fas fa-fw fa-drumstick-bite',
+            'can'  => 'admin',
+        ],
+        [
+            'text' => 'Frecuencia',
+            'url' => 'feeding-frequencies',
+            'icon' => 'fas fa-fw fa-clock',
+            'can'  => 'admin',
+        ],
+        [
+            'text' => 'Porción de Alimentación',
+            'url' => 'feeding-portions',
+            'icon' => 'fas fa-fw fa-weight-hanging',
+            'can'  => 'admin',
         ],
         /*[
             'text' => 'Usuarios',
@@ -526,6 +537,7 @@ return [
     */
 
     'filters' => [
+        App\Menu\Filters\SpatieRoleFilter::class, // Filtro personalizado para roles de Spatie (debe ir primero)
         JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\HrefFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\SearchFilter::class,

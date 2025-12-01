@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('reports', function (Blueprint $table) {
-            $table->decimal('latitud', 10, 7)->nullable()->after('cantidad_animales');
+            $table->decimal('latitud', 10, 7)->nullable()->after('observaciones');
             $table->decimal('longitud', 10, 7)->nullable()->after('latitud');
             $table->string('direccion')->nullable()->after('longitud');
         });

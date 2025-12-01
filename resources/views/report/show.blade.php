@@ -9,12 +9,24 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header d-flex align-items-center">
-                        <div>
-                            <span class="card-title">{{ __('Show') }} {{ __('Report') }}</span>
+                    <div class="card-header bg-success d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-clipboard-list mr-1"></i>
+                                {{ __('Información del Hallazgo') }}
+                            </h3>
                         </div>
-                        <div class="ml-auto">
-                            <a class="btn btn-primary btn-sm" href="{{ route('reports.index') }}"> {{ __('Back') }}</a>
+                        <div>
+                            @if(Auth::user()->hasAnyRole(['admin', 'encargado']) && (int)$report->aprobado !== 1)
+                            <button type="button" 
+                                    class="btn btn-success btn-sm mr-2" 
+                                    data-toggle="modal" 
+                                    data-target="#modalAprobarReport{{ $report->id }}"
+                                    title="{{ __('Aprobar o rechazar este hallazgo') }}">
+                                <i class="fa fa-check"></i> {{ __('Aprobar/Rechazar') }}
+                            </button>
+                            @endif
+                            <a class="btn btn-success btn-sm" href="{{ route('reports.index') }}"> {{ __('Back') }}</a>
                         </div>
                     </div>
 
@@ -44,14 +56,30 @@
                                     <strong>{{ __('Aprobado') }}:</strong> {{ (int)$report->aprobado === 1 ? __('Sí') : __('No') }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Tamaño') }}:</strong> {{ $report->tamano ?? '-' }}
+                                    <strong>{{ __('Tamaño') }}:</strong>
+                                    @php
+                                        $tamano = $report->tamano ?? null;
+                                        if ($tamano) {
+                                            // Convertir a minúsculas primero
+                                            $tamanoLower = mb_strtolower(trim($tamano));
+                                            // Mapear valores comunes a formato correcto
+                                            $mapa = [
+                                                'pequeno' => 'Pequeño',
+                                                'pequeño' => 'Pequeño',
+                                                'mediano' => 'Mediano',
+                                                'grande' => 'Grande'
+                                            ];
+                                            $tamanoFormateado = $mapa[$tamanoLower] ?? ucfirst($tamanoLower);
+                                        } else {
+                                            $tamanoFormateado = '-';
+                                        }
+                                    @endphp
+                                    {{ $tamanoFormateado }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>{{ __('¿Puede moverse?') }}:</strong> {{ is_null($report->puede_moverse) ? '-' : ($report->puede_moverse ? __('Sí') : __('No')) }}
                                 </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Cantidad de animales') }}:</strong> {{ $report->cantidad_animales ?? '-' }}
-                                </div>
+                                
                                 @if($report->firstTransfer?->center)
                                 <div class="form-group mb-2 mb20">
                                     <strong>{{ __('Traslado a') }}:</strong>
@@ -67,18 +95,14 @@
                                     <strong>{{ __('Dirección') }}:</strong> {{ $report->direccion ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Latitud') }}:</strong> {{ $report->latitud ?: '-' }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Longitud') }}:</strong> {{ $report->longitud ?: '-' }}
-                                </div>
-                                <div class="form-group mb-2 mb20">
                                     <strong>{{ __('Observaciones') }}:</strong> {{ $report->observaciones ?: '-' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>{{ __('Imagen') }}:</strong>
+                                    <strong>{{ __('Imagen del hallazgo') }}:</strong>
                                     @if($report->imagen_url)
-                                        <div><img src="{{ asset('storage/' . $report->imagen_url) }}" alt="img" style="max-height:180px; border-radius:4px;"></div>
+                                        <div style="max-width: 100%; overflow: hidden; border-radius: 4px;">
+                                            <img src="{{ asset('storage/' . $report->imagen_url) }}" alt="img" style="max-width: 100%; max-height: 180px; height: auto; width: auto; object-fit: contain; border-radius: 4px;">
+                                        </div>
                                     @else
                                         <span>-</span>
                                     @endif
@@ -87,10 +111,10 @@
                         </div>
                         @if(!is_null($report->latitud) && !is_null($report->longitud))
                         <div class="form-group mb-2 mb20">
-                            <strong>{{ __('Ubicación') }}:</strong>
-                            <div class="row">
-                                <div class="col-12 col-md-6">
-                                    <div id="report_map" style="height: 320px; border-radius: 6px; overflow: hidden;"></div>
+                            <strong>{{ __('Ubicación del hallazgo') }}:</strong>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <div id="report_map" style="height: 400px; border-radius: 6px; overflow: hidden; width: 100%;"></div>
                                 </div>
                             </div>
                         </div>
@@ -121,5 +145,83 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
+{{-- Modal de aprobación para el reporte --}}
+@if(Auth::user()->hasAnyRole(['admin', 'encargado']) && (int)$report->aprobado !== 1)
+<div class="modal fade" id="modalAprobarReport{{ $report->id }}" tabindex="-1" role="dialog" aria-labelledby="modalAprobarReport{{ $report->id }}Label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAprobarReport{{ $report->id }}Label">
+                    <i class="fa fa-check-circle"></i> {{ __('Aprobar/Rechazar Hallazgo') }}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('reports.approve', $report->id) }}" method="POST" id="formAprobarReport{{ $report->id }}">
+                @method('PUT')
+                @csrf
+                <input type="hidden" name="redirect_to" value="show">
+                <div class="modal-body">
+                    <p class="mb-0">{{ __('¿Desea aprobar o rechazar este hallazgo?') }}</p>
+                    <input type="hidden" name="action" id="actionReport{{ $report->id }}" value="">
+                </div>
+                <div class="modal-footer">
+                    
+                    <button type="button" class="btn btn-danger" id="btnRechazarReport{{ $report->id }}">
+                        <i class="fa fa-times-circle"></i> {{ __('Rechazar') }}
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnAprobarReport{{ $report->id }}">
+                        <i class="fa fa-check-circle"></i> {{ __('Aprobar') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('formAprobarReport{{ $report->id }}');
+    var actionInput = document.getElementById('actionReport{{ $report->id }}');
+    var btnRechazar = document.getElementById('btnRechazarReport{{ $report->id }}');
+    var btnAprobar = document.getElementById('btnAprobarReport{{ $report->id }}');
+    
+    function submitForm(action) {
+        // Establecer el valor de action
+        if (actionInput) {
+            actionInput.value = action;
+        }
+        
+        // Deshabilitar botones para evitar doble envío
+        if (btnRechazar) btnRechazar.disabled = true;
+        if (btnAprobar) btnAprobar.disabled = true;
+        
+        // Enviar formulario
+        if (form) {
+            form.submit();
+        }
+        return true;
+    }
+    
+    if (btnRechazar) {
+        btnRechazar.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            submitForm('reject');
+        });
+    }
+    
+    if (btnAprobar) {
+        btnAprobar.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            submitForm('approve');
+        });
+    }
+});
+</script>
+@endif
+
 @include('partials.page-pad')
 @endsection

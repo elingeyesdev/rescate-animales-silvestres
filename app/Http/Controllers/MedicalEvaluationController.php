@@ -15,15 +15,28 @@ use App\Models\Veterinarian;
 
 class MedicalEvaluationController extends Controller
 {
+    public function __construct()
+    {
+        // Veterinarios aprobados, encargados y administradores pueden gestionar evaluaciones
+        $this->middleware('role:veterinario|encargado|admin');
+    }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): View
     {
-        $medicalEvaluations = MedicalEvaluation::with(['treatmentType','veterinarian.person','animalFile.animal'])->paginate();
+        $medicalEvaluations = MedicalEvaluation::with(['treatmentType','veterinarian.person','animalFile.animal','animalFile.species','animalFile.animalStatus'])
+            ->orderByDesc('fecha')
+            ->orderByDesc('id')
+            ->get();
 
-        return view('medical-evaluation.index', compact('medicalEvaluations'))
-            ->with('i', ($request->input('page', 1) - 1) * $medicalEvaluations->perPage());
+        // Agrupar evaluaciones por animal_file_id (usar 'sin_animal' para las que no tienen animal_file_id)
+        $groupedEvaluations = $medicalEvaluations->groupBy(function($evaluation) {
+            return $evaluation->animal_file_id ?? 'sin_animal';
+        });
+
+        return view('medical-evaluation.index', compact('groupedEvaluations'))
+            ->with('i', 0);
     }
 
     /**

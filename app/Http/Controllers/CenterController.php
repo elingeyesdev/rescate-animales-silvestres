@@ -11,6 +11,11 @@ use Illuminate\View\View;
 
 class CenterController extends Controller
 {
+    public function __construct()
+    {
+        // Solo administradores pueden gestionar centros
+        $this->middleware('role:admin');
+    }
     /**
      * Display a listing of the resource.
      */

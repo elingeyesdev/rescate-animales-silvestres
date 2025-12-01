@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property $updated_at
  *
  * @property AnimalFile[] $animalFiles
- * @property Breed[] $breeds
  * @package App
  * @mixin \Illuminate\Database\Eloquent\Builder
  */
@@ -37,13 +36,5 @@ class Species extends Model
     {
         return $this->hasMany(\App\Models\AnimalFile::class, 'id', 'especie_id');
     }
-    
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function breeds()
-    {
-        return $this->hasMany(\App\Models\Breed::class, 'id', 'especie_id');
-    }
-    
+        
 }

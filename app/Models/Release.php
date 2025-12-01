@@ -30,7 +30,7 @@ class Release extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['direccion', 'detalle', 'latitud', 'longitud', 'aprobada', 'animal_file_id'];
+    protected $fillable = ['direccion', 'detalle', 'latitud', 'longitud', 'aprobada', 'animal_file_id', 'imagen_url'];
 
 
     /**

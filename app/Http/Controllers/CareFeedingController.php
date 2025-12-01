@@ -16,15 +16,39 @@ use Illuminate\Support\Carbon;
 
 class CareFeedingController extends Controller
 {
+    public function __construct()
+    {
+        // Debe estar autenticado
+        $this->middleware('auth');
+        // Cuidadores, veterinarios, encargados y administradores pueden ver y crear registros de alimentación
+        $this->middleware('role:cuidador|veterinario|encargado|admin');
+        // Solo encargados y administradores pueden editar/eliminar registros existentes
+        $this->middleware('role:encargado|admin')->only(['edit','update','destroy']);
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): View
     {
-        $careFeedings = CareFeeding::paginate();
+        $careFeedings = CareFeeding::with([
+            'care.animalFile.animal',
+            'care.animalFile.species',
+            'care.animalFile.animalStatus',
+            'feedingType',
+            'feedingFrequency',
+            'feedingPortion'
+        ])
+            ->orderByDesc('id')
+            ->get();
 
-        return view('care-feeding.index', compact('careFeedings'))
-            ->with('i', ($request->input('page', 1) - 1) * $careFeedings->perPage());
+        // Agrupar alimentaciones por animal_file_id a través de care->hoja_animal_id
+        $groupedFeedings = $careFeedings->groupBy(function($careFeeding) {
+            return $careFeeding->care?->hoja_animal_id ?? 'sin_animal';
+        });
+
+        return view('care-feeding.index', compact('groupedFeedings'))
+            ->with('i', 0);
     }
 
     /**

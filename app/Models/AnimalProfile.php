@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property $estado_salud
  * @property $sexo
  * @property $especie
- * @property $raza
  * @property $alimentacion
  * @property $frecuencia
  * @property $cantidad
@@ -35,7 +34,7 @@ class AnimalProfile extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['estado_salud', 'sexo', 'especie', 'raza', 'alimentacion', 'frecuencia', 'cantidad', 'color', 'imagen', 'reporte_id', 'detalle'];
+    protected $fillable = ['estado_salud', 'sexo', 'especie', 'alimentacion', 'frecuencia', 'cantidad', 'color', 'imagen', 'reporte_id', 'detalle'];
 
 
 }

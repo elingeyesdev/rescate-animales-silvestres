@@ -17,8 +17,6 @@
   "Animal": "Animal",
   "Species": "Especies",
   "Specie": "Especie",
-  "Breeds": "Razas",
-  "Breed": "Raza",
   "Animal Types": "Tipos de Animales",
   "Animal Type": "Tipo de Animal",
   "Animal Statuses": "Estados",
@@ -33,8 +31,6 @@
   "Care Type": "Tipo de Cuidado",
   "Cares": "Cuidados",
   "Care": "Cuidado",
-  "Adoptions": "Adopciones",
-  "Adoption": "Adopción",
   "Centers": "Centros",
   "Center": "Centro",
   "Transfers": "Traslado",
@@ -68,5 +64,7 @@
   "Care Id": "Cuidado",
   "Feeding Type Id": "Tipo de Alimentación",
   "Feeding Frequency Id": "Frecuencia de Alimentación",
-  "Feeding Portion Id": "Porción de Alimentación"
+  "Feeding Portion Id": "Porción de Alimentación",
+  "Incident Types": "Tipos de Incidente",
+  "Incident Type": "Tipo de Incidente"
 }

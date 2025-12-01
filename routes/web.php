@@ -7,15 +7,12 @@ use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\AnimalProfileController;
 use App\Http\Controllers\DispositionController;
 use App\Http\Controllers\HealthRecordController;
-use App\Http\Controllers\AnimalTypeController;
-use App\Http\Controllers\AdoptionController;
 use App\Http\Controllers\AnimalStatusController;
 use App\Http\Controllers\CareTypeController;
 use App\Http\Controllers\CareController;
 use App\Http\Controllers\AnimalFileController;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\SpeciesController;
-use App\Http\Controllers\BreedController;
 use App\Http\Controllers\ReleaseController;
 use App\Http\Controllers\VeterinarianController;
 use App\Http\Controllers\MedicalEvaluationController;
@@ -34,35 +31,65 @@ use App\Http\Controllers\Transactions\AnimalMedicalEvaluationTransactionalContro
 use App\Http\Controllers\Transactions\AnimalCareTransactionalController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AnimalHistoryController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ContactMessageController;
 
 Route::get('/', function () {
-    return redirect('login'); // pantalla inicial: login
+    if (Auth::check()) {
+        return redirect('home');
+    }
+    return redirect('landing');
 });
 
 Auth::routes();
 
+Route::get('/landing', function () {
+    $recentReleases = \App\Models\Release::with(['animalFile.species', 'animalFile.animal'])
+        ->orderBy('created_at', 'desc')
+        ->take(12)
+        ->get();
+    return view('landing', compact('recentReleases'));
+})->name('landing');
+
+Route::get('/reporte-rapido', function () {
+    return view('quick-report');
+})->name('reporte-rapido');
+
+Route::post('/reporte-rapido', function () {
+    return back();
+})->name('reporte-rapido.store');
+
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->middleware('auth')->name('home');
-Route::get('breeds/by-species/{species}', [BreedController::class, 'bySpecies'])->name('breeds.bySpecies');
+Route::get('animal-histories/{animal_history}/pdf', [AnimalHistoryController::class, 'pdf'])->name('animal-histories.pdf')->middleware('auth');
+Route::prefix('reports')->name('reports.')->group(function () {
+    Route::put('{report}/approve', [ReportController::class, 'approve'])->name('approve')->middleware('auth');
+    Route::get('claim', [ReportController::class, 'claim'])->name('claim');
+    Route::post('claim', [ReportController::class, 'claimStore'])->name('claim.store');
+    Route::get('mapa-campo', [ReportController::class, 'mapaCampo'])->name('mapa-campo')->middleware(['auth', 'role:admin|encargado']);
+});
+
+Route::resource('profile', ProfileController::class)->only(['index', 'update'])->middleware('auth');
+Route::resource('contact-messages', ContactMessageController::class)->only(['store', 'update'])->middleware('auth');
 Route::resource('centers', CenterController::class);
 Route::resource('animals', AnimalController::class)->middleware('auth');
 Route::resource('animal-profiles', AnimalProfileController::class);
 Route::resource('dispositions', DispositionController::class);
 Route::resource('health-records', HealthRecordController::class);
-Route::resource('reports', ReportController::class)->middleware('auth');
-Route::resource('animal-types', AnimalTypeController::class);
-Route::resource('adoptions', AdoptionController::class);
+Route::resource('reports', ReportController::class);
 Route::resource('animal-statuses', AnimalStatusController::class);
 Route::resource('care-types', CareTypeController::class);
 Route::resource('cares', CareController::class);
 Route::resource('animal-files', AnimalFileController::class);
 Route::resource('people', PersonController::class);
+Route::post('people/{person}/convert-to-encargado', [PersonController::class, 'convertToEncargado'])->name('people.convert-to-encargado')->middleware('auth');
 Route::resource('species', SpeciesController::class);
-Route::resource('breeds', BreedController::class);
 Route::resource('releases', ReleaseController::class);
+Route::put('rescuers/{rescuer}/approve', [RescuerController::class, 'approve'])->name('rescuers.approve')->middleware('auth');
+Route::resource('rescuers', RescuerController::class);
+Route::put('veterinarians/{veterinarian}/approve', [VeterinarianController::class, 'approve'])->name('veterinarians.approve')->middleware('auth');
 Route::resource('veterinarians', VeterinarianController::class);
 Route::resource('medical-evaluations', MedicalEvaluationController::class);
 Route::resource('treatment-types', TreatmentTypeController::class);
-Route::resource('rescuers', RescuerController::class);
 Route::resource('transfers', TransferController::class);
 Route::resource('care-feedings', CareFeedingController::class);
 Route::resource('feeding-types', FeedingTypeController::class);

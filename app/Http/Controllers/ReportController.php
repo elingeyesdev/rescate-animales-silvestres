@@ -5,17 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Report;
 use App\Models\Person;
 use App\Models\Center;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\ReportRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use App\Services\Animal\AnimalTransferTransactionalService;
 use App\Services\Report\ReportUrgencyService;
 use App\Models\AnimalCondition;
 use App\Models\IncidentType;
 use App\Models\AnimalHistory;
+use App\Mail\NewReportNotification;
 
 class ReportController extends Controller
 {
@@ -23,15 +26,34 @@ class ReportController extends Controller
         private readonly AnimalTransferTransactionalService $transferService,
         private readonly ReportUrgencyService $urgencyService
     ) {
-        $this->middleware('auth');
+        // Permitir create y store sin autenticación (para usuarios anónimos desde landing)
+        $this->middleware('auth')->except(['create', 'store']);
+        // Solo ciertos roles gestionan reportes en el panel interno
+        $this->middleware('role:ciudadano|rescatista|veterinario|encargado|admin')->except(['create', 'store']);
+        // Ciudadanos solo pueden ver y crear, no editar ni eliminar
+        $this->middleware('role:admin|encargado|rescatista|veterinario')->only(['edit', 'update']);
+        // Solo administradores pueden eliminar reportes
+        $this->middleware('role:admin')->only(['destroy']);
     }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): View
     {
+        $user = Auth::user();
         $query = Report::with(['person', 'condicionInicial', 'incidentType', 'firstTransfer.center'])
             ->orderByDesc('id');
+
+        // Si el usuario es solo ciudadano (sin otros roles), mostrar solo sus hallazgos
+        if ($user->hasRole('ciudadano') && !$user->hasAnyRole(['admin', 'encargado', 'rescatista', 'veterinario', 'cuidador'])) {
+            $personId = Person::where('usuario_id', $user->id)->value('id');
+            if ($personId) {
+                $query->where('persona_id', $personId);
+            } else {
+                // Si no tiene persona asociada, no mostrar nada
+                $query->whereRaw('1 = 0');
+            }
+        }
 
         // Filters
         if ($request->filled('urgencia_nivel')) {
@@ -60,13 +82,16 @@ class ReportController extends Controller
 
         $reports = $query->paginate(12)->withQueryString();
 
-        // Filter options
-        $reporters = Person::whereIn(
-                'id',
-                Report::select('persona_id')->whereNotNull('persona_id')->distinct()->pluck('persona_id')
-            )
-            ->orderBy('nombre')
-            ->get(['id', 'nombre']);
+        // Filter options (solo para admin/encargado/veterinario, no para ciudadanos)
+        $reporters = collect();
+        if (!$user->hasRole('ciudadano') || $user->hasAnyRole(['admin', 'encargado', 'veterinario'])) {
+            $reporters = Person::whereIn(
+                    'id',
+                    Report::select('persona_id')->whereNotNull('persona_id')->distinct()->pluck('persona_id')
+                )
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']);
+        }
         $incidentTypes = IncidentType::where('activo', true)->orderBy('nombre')->get(['id','nombre']);
 
         return view('report.index', compact('reports', 'reporters', 'incidentTypes'))
@@ -94,21 +119,24 @@ class ReportController extends Controller
     {
         try {
             $data = $request->validated();
+            $isAuthenticated = Auth::check();
 
-            // Persona del usuario autenticado (obligatoria para guardar)
-            $personId = Person::where('usuario_id', Auth::id())->value('id');
-            if (empty($personId)) {
-                return Redirect::back()
-                    ->withInput()
-                    ->withErrors(['persona_id' => 'Tu usuario no está vinculado a una persona. Comunícate con el administrador.']);
+            // Si el usuario está autenticado, obtener su persona_id
+            if ($isAuthenticated) {
+                $personId = Person::where('usuario_id', Auth::id())->value('id');
+                if (empty($personId)) {
+                    return Redirect::back()
+                        ->withInput()
+                        ->withErrors(['persona_id' => 'Tu usuario no está vinculado a una persona. Comunícate con el administrador.']);
+                }
+                $data['persona_id'] = $personId;
+            } else {
+                // Usuario no autenticado: guardar sin persona_id
+                $data['persona_id'] = null;
             }
-            $data['persona_id'] = $personId;
+            
             $data['aprobado'] = 0;
-            // Default cantidad si no viene
-            if (empty($data['cantidad_animales'])) {
-                $data['cantidad_animales'] = 1;
-            }
-
+           
             if ($request->hasFile('imagen')) {
                 $path = $request->file('imagen')->store('reports', 'public');
                 $data['imagen_url'] = $path;
@@ -117,6 +145,21 @@ class ReportController extends Controller
             $data['urgencia'] = $this->urgencyService->compute($data);
 
             $report = Report::create($data);
+            $report->load(['person', 'condicionInicial', 'incidentType']);
+
+            // Enviar correo a todos los encargados y administradores
+            $adminsAndEncargados = User::whereHas('roles', function ($query) {
+                $query->whereIn('name', ['admin', 'encargado']);
+            })->get();
+
+            foreach ($adminsAndEncargados as $user) {
+                try {
+                    Mail::to($user->email)->send(new NewReportNotification($report));
+                } catch (\Exception $e) {
+                    // Log error pero no interrumpir el flujo
+                    \Log::error('Error enviando correo de nuevo reporte: ' . $e->getMessage());
+                }
+            }
 
             // Registrar evento de reporte en el historial (sin hoja)
             $hist = new AnimalHistory();
@@ -134,8 +177,8 @@ class ReportController extends Controller
                     'tamano' => $report->tamano,
                     'puede_moverse' => $report->puede_moverse,
                     'urgencia' => $report->urgencia,
-                    'cantidad_animales' => $report->cantidad_animales,
                     'imagen_url' => $report->imagen_url,
+                    'created_at' => $report->created_at ? $report->created_at->toDateTimeString() : null, // Guardar fecha original del reporte
                 ],
             ];
             $hist->observaciones = ['texto' => $report->observaciones ?? 'Registro de hallazgo'];
@@ -143,7 +186,8 @@ class ReportController extends Controller
             $hist->save();
 
             // Si se marcó traslado inmediato, registrar primer traslado (sin hoja)
-            if ($request->boolean('traslado_inmediato')) {
+            // Solo si hay persona_id (usuario autenticado)
+            if ($request->boolean('traslado_inmediato') && $report->persona_id) {
                 $tData = [
                     'persona_id' => $report->persona_id,
                     'centro_id' => $request->input('centro_id'),
@@ -155,6 +199,13 @@ class ReportController extends Controller
                     'reporte_id' => $report->id,
                 ];
                 $this->transferService->create($tData);
+            }
+
+            // Si el usuario NO está autenticado, guardar el reporte en sesión y preguntar si quiere conservarlo
+            if (!$isAuthenticated) {
+                session(['pending_report_id' => $report->id]);
+                return Redirect::route('reports.claim')
+                    ->with('success', 'El hallazgo se registró correctamente. ¿Deseas conservar este reporte como tuyo?');
             }
 
             return Redirect::route('reports.index')
@@ -208,11 +259,161 @@ class ReportController extends Controller
             ->with('success', 'El hallazgo se actualizó correctamente');
     }
 
+    /**
+     * Approve or reject a report.
+     */
+    public function approve(Request $request, Report $report): RedirectResponse
+    {
+        // Solo admin y encargado pueden aprobar/rechazar
+        if (!Auth::user()->hasAnyRole(['admin', 'encargado'])) {
+            abort(403, 'No tienes permiso para aprobar o rechazar hallazgos.');
+        }
+
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+        ]);
+
+        $report->aprobado = $validated['action'] === 'approve' ? 1 : 0;
+        $report->save();
+
+        // Registrar en historial si existe
+        $hist = AnimalHistory::whereNull('animal_file_id')
+            ->whereNotNull('valores_nuevos')
+            ->whereRaw("(valores_nuevos->'report'->>'id')::text = ?", [(string)$report->id])
+            ->first();
+
+        if ($hist) {
+            // Actualizar observaciones con la acción de aprobación/rechazo
+            $obs = $hist->observaciones ?? [];
+            $obsTexto = is_array($obs) ? ($obs['texto'] ?? '') : (string)$obs;
+            $accionTexto = $validated['action'] === 'approve' ? 'Aprobado' : 'Rechazado';
+            $obs['texto'] = $obsTexto . ' | ' . $accionTexto . ' por: ' . Auth::user()->person->nombre;
+            $hist->observaciones = $obs;
+            $hist->save();
+        }
+
+        $message = $validated['action'] === 'approve' 
+            ? 'El hallazgo ha sido aprobado correctamente.' 
+            : 'El hallazgo ha sido rechazado correctamente.';
+
+        // Redirigir a la vista desde donde se llamó (index o show)
+        $redirectTo = $request->get('redirect_to', 'reports.index');
+        if ($redirectTo === 'show') {
+            return Redirect::route('reports.show', $report->id)
+                ->with('success', $message);
+        }
+        
+        return Redirect::route('reports.index')
+            ->with('success', $message);
+    }
+
     public function destroy($id): RedirectResponse
     {
         Report::find($id)->delete();
 
         return Redirect::route('reports.index')
             ->with('success', 'El hallazgo se eliminó correctamente');
+    }
+
+    /**
+     * Mostrar el mapa de campo con todos los hallazgos e incendios
+     */
+    public function mapaCampo(): View
+    {
+        $user = Auth::user();
+        
+        // Solo administradores y encargados pueden acceder
+        if (!$user->hasAnyRole(['admin', 'encargado'])) {
+            abort(403, 'No tienes permiso para acceder al mapa de campo.');
+        }
+        
+        $query = Report::with(['person', 'condicionInicial', 'incidentType'])
+            ->whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->orderByDesc('id');
+
+        $reports = $query->get()->map(function ($report) {
+            return [
+                'id' => $report->id,
+                'latitud' => $report->latitud,
+                'longitud' => $report->longitud,
+                'urgencia' => $report->urgencia,
+                'incendio_id' => $report->incendio_id,
+                'direccion' => $report->direccion,
+                'condicion_inicial' => $report->condicionInicial ? [
+                    'nombre' => $report->condicionInicial->nombre,
+                ] : null,
+                'incident_type' => $report->incidentType ? [
+                    'nombre' => $report->incidentType->nombre,
+                ] : null,
+            ];
+        });
+
+        // Agregar reporte simulado si no hay ninguno con incendio_id = 1
+        $hasFireReport = $reports->contains(function ($report) {
+            return isset($report['incendio_id']) && $report['incendio_id'] == 1;
+        });
+
+        if (!$hasFireReport) {
+            // Coordenadas del foco de incendio: San Jose de Chiquitos
+            $reports->push([
+                'id' => 'simulado',
+                'latitud' => '-17.718397',
+                'longitud' => '-60.774994',
+                'urgencia' => 5,
+                'incendio_id' => 1,
+                'direccion' => 'San Jose de Chiquitos, Santa Cruz, Bolivia',
+                'condicion_inicial' => [
+                    'nombre' => 'Hallazgo en incendio',
+                ],
+                'incident_type' => [
+                    'nombre' => 'Incendio forestal',
+                ],
+            ]);
+        }
+
+        return view('report.mapa-campo', compact('reports'));
+    }
+
+    /**
+     * Mostrar página para reclamar el reporte (si el usuario no estaba autenticado)
+     */
+    public function claim(): View
+    {
+        $reportId = session('pending_report_id');
+        if (!$reportId) {
+            return view('reports.claim', ['report' => null]);
+        }
+
+        $report = Report::with(['condicionInicial', 'incidentType'])->find($reportId);
+        return view('reports.claim', compact('report'));
+    }
+
+    /**
+     * Procesar la decisión del usuario sobre conservar el reporte
+     */
+    public function claimStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:yes,no',
+        ]);
+
+        $reportId = session('pending_report_id');
+        if (!$reportId) {
+            return Redirect::route('landing')
+                ->with('info', 'No hay reportes pendientes de asociar.');
+        }
+
+        if ($validated['action'] === 'no') {
+            // El usuario no quiere conservar el reporte, limpiar sesión y redirigir
+            session()->forget('pending_report_id');
+            return Redirect::route('landing')
+                ->with('success', 'El reporte se ha registrado correctamente. Gracias por tu colaboración.');
+        }
+
+        // El usuario quiere conservar el reporte, mantener en sesión y redirigir a login
+        // El reporte ya está en sesión, solo redirigir
+        return Redirect::route('login')
+            ->with('info', 'Por favor, inicia sesión o regístrate para asociar este reporte a tu cuenta.');
     }
 }

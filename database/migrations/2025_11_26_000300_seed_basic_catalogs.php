@@ -8,19 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Tipos de animales
-        if (Schema::hasTable('animal_types')) {
-            if (!DB::table('animal_types')->where('nombre', 'Silvestre')->exists()) {
-                DB::table('animal_types')->insert([
-                    'nombre' => 'Silvestre',
-                    'permite_adopcion' => false,
-                    'permite_liberacion' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        }
-
         // Tipos de cuidado
         if (Schema::hasTable('care_types')) {
             $now = now();
@@ -156,15 +143,31 @@ return new class extends Migration
                 }
             }
         }
+        //Tipos de alimentación
+        if (Schema::hasTable('feeding_types')) {
+            $now = now();
+            $feedingTypes = [
+                ['nombre' => 'Carnívoro', 'descripcion' => 'Alimentación basada en carne.'],
+                ['nombre' => 'Herbívoro', 'descripcion' => 'Alimentación basada en vegetales.'],
+                ['nombre' => 'Omnívoro', 'descripcion' => 'Alimentación basada en carne y vegetales.'],
+                ['nombre' => 'Insectívoro', 'descripcion' => 'Alimentación basada en insectos.'],
+                ['nombre' => 'Desconocido', 'descripcion' => 'Alimentación desconocida.'],
+            ];
+        }
+        foreach ($feedingTypes as $ft) {
+            if (!DB::table('feeding_types')->where('nombre', $ft['nombre'])->exists()) {
+                DB::table('feeding_types')->insert([
+                    'nombre' => $ft['nombre'],
+                    'descripcion' => $ft['descripcion']
+                ]);
+            }
+        }
     }
 
     public function down(): void
     {
         // En down eliminamos solo los registros insertados por nombre para no borrar datos de producción.
 
-        if (Schema::hasTable('animal_types')) {
-            DB::table('animal_types')->where('nombre', 'Silvestre')->delete();
-        }
 
         if (Schema::hasTable('care_types')) {
             DB::table('care_types')->whereIn('nombre', ['Alimentación', 'Intensivo'])->delete();
@@ -207,6 +210,14 @@ return new class extends Migration
                 'Ave',
                 'Mamífero',
                 'Reptil',
+            ])->delete();
+        }
+
+        if (Schema::hasTable('feeding_types')) {
+            DB::table('feeding_types')->whereIn('nombre', [
+                'Carnívoro',
+                'Herbívoro',
+                'Omnívoro',
             ])->delete();
         }
     }

@@ -30,50 +30,102 @@
                     @endif
 
                     <div class="card-body bg-white">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="thead">
-                                    <tr>
-                                        <th>No</th>
-                                        
-									<th >{{ __('Cuidado') }}</th>
-									<th >{{ __('Tipo de Alimentación') }}</th>
-									<th >{{ __('Frecuencia') }}</th>
-									<th >{{ __('Porción') }}</th>
-
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($careFeedings as $careFeeding)
-                                        <tr>
-                                            <td>{{ ++$i }}</td>
-                                            
-										<td >{{ $careFeeding->care?->descripcion ?? ('N°'.$careFeeding->care_id) }}</td>
-										<td >{{ $careFeeding->feedingType?->nombre ?? ('N°'.$careFeeding->feeding_type_id) }}</td>
-										<td >{{ $careFeeding->feedingFrequency?->nombre ?? ('N°'.$careFeeding->feeding_frequency_id) }}</td>
-										<td >
-                                            @php($p = $careFeeding->feedingPortion)
-                                            {{ $p ? ($p->cantidad.' '.$p->unidad) : ('N°'.$careFeeding->feeding_portion_id) }}
-                                        </td>
-
-                                            <td>
-                                                <form action="{{ route('care-feedings.destroy', $careFeeding->id) }}" method="POST">
-                                                    <a class="btn btn-sm btn-primary " href="{{ route('care-feedings.show', $careFeeding->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Show') }}</a>
-                                                    <a class="btn btn-sm btn-success" href="{{ route('care-feedings.edit', $careFeeding->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-danger btn-sm js-confirm-delete"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                        @if($groupedFeedings->isEmpty())
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle"></i> {{ __('No se encontraron registros de alimentación.') }}
+                            </div>
+                        @else
+                            @foreach($groupedFeedings as $animalFileId => $feedings)
+                                @php
+                                    $firstFeeding = $feedings->first();
+                                    $animalFile = $firstFeeding->care?->animalFile;
+                                    $animal = $animalFile?->animal;
+                                    
+                                    if ($animalFileId === 'sin_animal') {
+                                        $animalName = 'Alimentaciones sin animal asignado';
+                                        $animalImage = asset('storage/personas/persona.png');
+                                        $species = '-';
+                                        $status = '-';
+                                        $showAnimalInfo = false;
+                                    } else {
+                                        $animalName = $animal?->nombre ?? ('Animal ' . ($animalFile?->animal_id ?? '-'));
+                                        $animalImage = $animalFile?->imagen_url 
+                                            ? asset('storage/' . $animalFile->imagen_url) 
+                                            : asset('storage/personas/persona.png');
+                                        $species = $animalFile?->species?->nombre ?? '-';
+                                        $status = $animalFile?->animalStatus?->nombre ?? '-';
+                                        $showAnimalInfo = true;
+                                    }
+                                @endphp
+                                <div class="card card-outline card-primary mb-4">
+                                    <div class="card-body">
+                                        <div class="row align-items-start">
+                                            {{-- Foto del animal a la izquierda --}}
+                                            <div class="col-md-3 text-center mb-3 mb-md-0">
+                                                <img src="{{ $animalImage }}" 
+                                                     alt="{{ $animalName }}" 
+                                                     class="img-fluid rounded"
+                                                     style="max-height: 200px; max-width: 100%; object-fit: cover;">
+                                            </div>
+                                            {{-- Información del animal a la derecha --}}
+                                            <div class="col-md-9">
+                                                <h5 class="mb-3">
+                                                    <strong>{{ $animalName }}</strong>
+                                                    @if($showAnimalInfo && $animalFile)
+                                                        <span class="badge badge-info ml-2">Hoja N°{{ $animalFile->id }}</span>
+                                                    @endif
+                                                </h5>
+                                                @if($showAnimalInfo)
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <small class="text-muted"><strong>Especie:</strong> {{ $species }}</small>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <small class="text-muted"><strong>Estado:</strong> {{ $status }}</small>
+                                                    </div>
+                                                </div>
+                                                @endif
+                                                
+                                                {{-- Tabla de alimentaciones --}}
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered">
+                                                        <thead class="thead-light">
+                                                            <tr>
+                                                                <th class="text-center">{{ __('Tipo de Alimentación') }}</th>
+                                                                <th class="text-center">{{ __('Frecuencia') }}</th>
+                                                                <th class="text-center">{{ __('Porción') }}</th>
+                                                                <th class="text-center">Detalle</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($feedings as $index => $careFeeding)
+                                                                <tr>
+                                                                    <td class="text-center">{{ $careFeeding->feedingType?->nombre ?? '-' }}</td>
+                                                                    <td class="text-center">{{ $careFeeding->feedingFrequency?->nombre ?? '-' }}</td>
+                                                                    <td class="text-center">
+                                                                        @php($p = $careFeeding->feedingPortion)
+                                                                        {{ $p ? ($p->cantidad.' '.$p->unidad) : '-' }}
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <div class="btn-group btn-group-sm" role="group">
+                                                                            <a class="btn btn-primary btn-sm" href="{{ route('care-feedings.show', $careFeeding->id) }}" title="{{ __('Show') }}">
+                                                                                <i class="fa fa-fw fa-eye"></i> Ver
+                                                                            </a>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
                     </div>
                 </div>
-                {!! $careFeedings->withQueryString()->links() !!}
             </div>
         </div>
     </div>

@@ -13,7 +13,6 @@ use App\Models\Transfer;
  * @property $aprobado
  * @property $imagen_url
  * @property $observaciones
- * @property $cantidad_animales
  * @property $created_at
  * @property $updated_at
  *
@@ -37,7 +36,6 @@ class Report extends Model
         'aprobado',
         'imagen_url',
         'observaciones',
-        'cantidad_animales',
         'latitud',
         'longitud',
         'direccion',
@@ -47,6 +45,7 @@ class Report extends Model
         'tamano',
         'puede_moverse',
         'urgencia',
+        'incendio_id',
     ];
 
 

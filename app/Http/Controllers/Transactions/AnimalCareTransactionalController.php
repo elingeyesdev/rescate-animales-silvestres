@@ -7,6 +7,7 @@ use App\Http\Requests\Transactions\CareProcessRequest;
 use App\Models\AnimalFile;
 use App\Models\AnimalHistory;
 use App\Models\CareType;
+use App\Models\Center;
 use App\Services\Animal\AnimalCareTransactionalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
@@ -23,11 +24,11 @@ class AnimalCareTransactionalController extends Controller
 
 	public function create(): View
 	{
-		$animalFiles = AnimalFile::with('animal')
+		$animalFiles = AnimalFile::with(['animal.report.person','animalStatus'])
             ->leftJoin('releases', 'releases.animal_file_id', '=', 'animal_files.id')
             ->whereNull('releases.animal_file_id')
             ->orderByDesc('animal_files.id')
-            ->get(['animal_files.id','animal_files.animal_id']);
+            ->get(['animal_files.id','animal_files.animal_id','animal_files.estado_id','animal_files.imagen_url']);
 		$careTypes = CareType::orderBy('nombre')->get(['id','nombre']);
 
         // Obtener resumen de la última actualización por hoja de animal
@@ -50,7 +51,7 @@ class AnimalCareTransactionalController extends Controller
                     $em = $new['evaluacion_medica'];
                     $pieces = [];
                     if (!empty($em['diagnostico'])) {
-                        $pieces[] = 'Dx: '.$em['diagnostico'];
+                        $pieces[] = 'Diagnóstico: '.$em['diagnostico'];
                     }
                     if (!empty($em['tratamiento_texto'])) {
                         $pieces[] = $em['tratamiento_texto'];
@@ -80,7 +81,9 @@ class AnimalCareTransactionalController extends Controller
                 } elseif (!empty($new['transfer'])) {
                     $tr = $new['transfer'];
                     if (!empty($tr['centro_id'])) {
-                        $summary = 'Traslado a centro ID '.$tr['centro_id'];
+                        $center = Center::find($tr['centro_id']);
+                        $centerName = $center ? $center->nombre : 'centro ID '.$tr['centro_id'];
+                        $summary = 'Traslado a '.$centerName;
                     }
                 }
 
@@ -97,7 +100,18 @@ class AnimalCareTransactionalController extends Controller
             $af->last_summary = $summary;
         }
 
-		return view('transactions.animal.care.create', compact('animalFiles','careTypes'));
+        // Datos para cards de Paso 1
+        $afCards = $animalFiles->map(function ($af) {
+            return [
+                'id' => $af->id,
+                'img' => $af->imagen_url ? asset('storage/'.$af->imagen_url) : null,
+                'status' => $af->animalStatus?->nombre,
+                'reporter' => $af->animal?->report?->person?->nombre,
+                'name' => ($af->animal?->nombre ?? ('#' . $af->animal?->id)),
+            ];
+        })->values()->toArray();
+
+		return view('transactions.animal.care.create', compact('animalFiles','careTypes','afCards'));
 	}
 
 	public function store(CareProcessRequest $request): RedirectResponse

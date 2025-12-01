@@ -14,7 +14,6 @@ return new class extends Migration
             $table->boolean('aprobado')->default(false);
             $table->string('imagen_url')->nullable();
             $table->string('observaciones')->nullable();
-            $table->integer('cantidad_animales')->default(1);
             $table->timestamps();
         });
     }

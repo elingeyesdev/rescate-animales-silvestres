@@ -24,11 +24,9 @@ class AnimalFileRequest extends FormRequest
         return [
             'animal_nombre' => 'nullable|string|max:255',
             'animal_id' => 'required|exists:animals,id',
-			'tipo_id' => 'required|exists:animal_types,id',
 			'especie_id' => 'required|exists:species,id',
 			'imagen_url' => 'nullable|string',
-			'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-			'raza_id' => 'nullable|exists:breeds,id',
+			'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:4096', new \App\Rules\NotWebpImage()],
 			'estado_id' => 'required|exists:animal_statuses,id',
         ];
     }

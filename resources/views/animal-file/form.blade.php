@@ -13,25 +13,6 @@
         </div>
     @endif
 
-    
-
-    @if(empty($hideType))
-        <div class="form-group mb-2">
-            <label for="tipo_id" class="form-label">{{ __('Tipo de Animal') }}</label>
-            <select name="tipo_id" id="tipo_id" class="form-control @error('tipo_id') is-invalid @enderror">
-                <option value="">Seleccione</option>
-                @foreach(($animalTypes ?? []) as $t)
-                    @if(!Str::contains(mb_strtolower($t->nombre), 'domést'))
-                        <option value="{{ $t->id }}" {{ (string)old('tipo_id', $animalFile?->tipo_id) === (string)$t->id ? 'selected' : '' }}>{{ $t->nombre }}</option>
-                    @endif
-                @endforeach
-            </select>
-            {!! $errors->first('tipo_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
-        </div>
-    @else
-        <input type="hidden" name="tipo_id" value="{{ $defaultTypeId ?? old('tipo_id', $animalFile?->tipo_id) }}">
-    @endif
-
     <div class="form-group mb-2">
         <label for="especie_id" class="form-label">{{ __('Especie') }}</label>
         <select name="especie_id" id="especie_id" class="form-control @error('especie_id') is-invalid @enderror">
@@ -45,7 +26,7 @@
     <div class="form-group mb-2">
         <label for="imagen" class="form-label">{{ __('Imagen') }}</label>
         <div class="custom-file">
-                <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
+                <input type="file" accept="image/jpeg,image/jpg,image/png" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
                 <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>
             </div>
         {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
@@ -84,53 +65,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (input && img) {
         input.addEventListener('change', function(){
             const file = this.files && this.files[0] ? this.files[0] : null;
-            if (file && file.type.startsWith('image/')) {
+            if (file && file.type.startsWith('image/') && file.type !== 'image/webp') {
                 img.src = URL.createObjectURL(file);
                 img.style.display = '';
+            } else if (file && file.type === 'image/webp') {
+                alert('El formato de imagen .webp no está permitido. Por favor, usa JPG, JPEG o PNG.');
+                this.value = '';
             }
         });
-    }
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const especieSelect = document.getElementById('especie_id');
-    const razaSelect = document.getElementById('raza_id');
-
-    especieSelect?.addEventListener('change', async function() {
-        const speciesId = this.value;
-        razaSelect.innerHTML = '<option value="">Cargando...</option>';
-        if (!speciesId) { razaSelect.innerHTML = '<option value="">Seleccione especie primero</option>'; return; }
-        try {
-            const resp = await fetch(`{{ route('breeds.bySpecies', ['species' => 'ID']) }}`.replace('ID', speciesId));
-            const data = await resp.json();
-            razaSelect.innerHTML = '<option value="">Seleccione</option>';
-            const selected = '{{ old('raza_id', $animalFile?->raza_id) }}';
-            let hasUnknown = false;
-            data.forEach(b => {
-                const nameLower = String(b.nombre || '').toLowerCase();
-                if (nameLower.includes('desconoc')) hasUnknown = true;
-                const opt = document.createElement('option');
-                opt.value = b.id;
-                opt.textContent = b.nombre;
-                if (String(selected) === String(b.id)) opt.selected = true;
-                razaSelect.appendChild(opt);
-            });
-            if (!hasUnknown) {
-                const opt = document.createElement('option');
-                opt.value = '';
-                opt.textContent = 'Desconocido (no definido)';
-                razaSelect.appendChild(opt);
-            }
-        } catch (e) {
-            razaSelect.innerHTML = '<option value="">Error al cargar</option>';
-        }
-    });
-
-    if (especieSelect && especieSelect.value) {
-        const event = new Event('change');
-        especieSelect.dispatchEvent(event);
     }
 });
 </script>

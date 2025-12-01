@@ -22,7 +22,7 @@
         <div class="form-group mb-2 mb20">
             <label for="imagen" class="form-label">{{ __('Imagen') }}</label>
             <div class="custom-file">
-                <input type="file" accept="image/*" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
+                <input type="file" accept="image/jpeg,image/jpg,image/png" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
                 <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>
             </div>
             {!! $errors->first('imagen', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
@@ -110,8 +110,6 @@
             <small id="observaciones_help" class="form-text text-muted">{{ __('Máximo 500 caracteres') }} · <span id="obs_counter">0</span>/500</small>
             {!! $errors->first('observaciones', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
-        <!-- Campo cantidad oculto por simplicidad de UI (se usará valor por defecto en backend) -->
-        <input type="hidden" name="cantidad_animales" value="{{ old('cantidad_animales', $report?->cantidad_animales ?? 1) }}">
 
         @if(empty($report?->id))
         <div class="form-group mb-2 mb20">
@@ -172,11 +170,15 @@ document.addEventListener('DOMContentLoaded', function () {
       preview.className = 'mt-2';
       container.appendChild(preview);
     }
-    if (file && file.type && file.type.startsWith('image/')) {
+    if (file && file.type && file.type.startsWith('image/') && file.type !== 'image/webp') {
       preview.src = URL.createObjectURL(file);
       preview.style.display = 'block';
     } else if (preview) {
       preview.style.display = 'none';
+      if (file && file.type === 'image/webp') {
+        alert('El formato de imagen .webp no está permitido. Por favor, usa JPG, JPEG o PNG.');
+        input.value = '';
+      }
     }
   });
   const obs = document.getElementById('observaciones');

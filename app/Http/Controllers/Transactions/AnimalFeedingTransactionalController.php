@@ -23,21 +23,33 @@ class AnimalFeedingTransactionalController extends Controller
 
 	public function create(): View
 	{
-		$animalFiles = AnimalFile::with('animal')
+		$animalFiles = AnimalFile::with(['animal.report.person','animalStatus'])
 			->whereDoesntHave('release')
 			->orderByDesc('id')
-			->get(['id','animal_id']);
+			->get(['id','animal_id','estado_id','imagen_url']);
 		$feedingTypeOptions = FeedingType::orderBy('nombre')->pluck('nombre', 'id');
 		$feedingFrequencyOptions = FeedingFrequency::orderBy('nombre')->pluck('nombre', 'id');
 		$feedingPortionOptions = FeedingPortion::orderBy('cantidad')->get()->mapWithKeys(function ($portion) {
 			return [$portion->id => $portion->cantidad.' '.$portion->unidad];
 		});
 
+        // Datos para cards de Paso 1
+        $afCards = $animalFiles->map(function ($af) {
+            return [
+                'id' => $af->id,
+                'img' => $af->imagen_url ? asset('storage/'.$af->imagen_url) : null,
+                'status' => $af->animalStatus?->nombre,
+                'reporter' => $af->animal?->report?->person?->nombre,
+                'name' => ($af->animal?->nombre ?? ('#' . $af->animal?->id)),
+            ];
+        })->values()->toArray();
+
 		return view('transactions.animal.feeding.create', compact(
 			'animalFiles',
 			'feedingTypeOptions',
 			'feedingFrequencyOptions',
-			'feedingPortionOptions'
+			'feedingPortionOptions',
+			'afCards'
 		));
 	}
 

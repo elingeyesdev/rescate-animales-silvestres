@@ -19,7 +19,7 @@
         <div class="form-group mb-2 mb20">
             <label for="cv" class="form-label">{{ __('Archivo CV (PDF/DOC o Imagen)') }}</label>
             <div class="custom-file">
-                <input type="file" name="cv" accept=".pdf,.doc,.docx,image/*" class="custom-file-input @error('cv') is-invalid @enderror" id="cv">
+                <input type="file" name="cv" accept=".pdf,.doc,.docx,image/jpeg,image/jpg,image/png" class="custom-file-input @error('cv') is-invalid @enderror" id="cv">
                 <label class="custom-file-label" for="cv">{{ __('Seleccionar archivo') }}</label>
             </div>
             {!! $errors->first('cv', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
@@ -30,13 +30,31 @@
         <script>
         document.addEventListener('DOMContentLoaded', function () {
             const input = document.getElementById('cv');
+            const preview = document.getElementById('cv_preview_img');
             input?.addEventListener('change', function(){
                 const fileName = this.files && this.files[0] ? this.files[0].name : '{{ __('Seleccionar archivo') }}';
                 const label = this.nextElementSibling;
                 if (label) label.textContent = fileName;
+                if (preview) {
+                    const file = this.files && this.files[0] ? this.files[0] : null;
+                    if (file && file.type && file.type.startsWith('image/') && file.type !== 'image/webp') {
+                        preview.src = URL.createObjectURL(file);
+                        preview.style.display = 'inline-block';
+                    } else {
+                        if (file && file.type === 'image/webp') {
+                            alert('El formato de imagen .webp no está permitido. Por favor, usa JPG, JPEG o PNG.');
+                            this.value = '';
+                        }
+                        preview.src = '';
+                        preview.style.display = 'none';
+                    }
+                }
             });
         });
         </script>
+        <div class="mt-2">
+            <img id="cv_preview_img" src="" alt="Vista previa" style="display:none; max-height: 80px; border: 1px solid #ddd; padding: 2px;"/>
+        </div>
         <div class="form-group mb-2 mb20">
             <label for="aprobado" class="form-label">{{ __('Aprobado') }}</label>
             <select name="aprobado" id="aprobado" class="form-control @error('aprobado') is-invalid @enderror">

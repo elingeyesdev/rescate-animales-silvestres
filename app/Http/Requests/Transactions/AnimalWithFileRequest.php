@@ -29,10 +29,8 @@ class AnimalWithFileRequest extends FormRequest
             'crear_cantidad' => 'nullable|required_if:modo_creacion,uno_por_cada|integer|min:1',
             'estado_inicial_id' => 'nullable|exists:animal_conditions,id',
             // AnimalFile (sin animal_id, se asigna en servicio)
-            'tipo_id' => 'required|exists:animal_types,id',
             'especie_id' => 'required|exists:species,id',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-            'raza_id' => 'nullable|exists:breeds,id',
+            'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:4096', new \App\Rules\NotWebpImage()],
             'estado_id' => 'required|exists:animal_statuses,id',
         ];
     }
