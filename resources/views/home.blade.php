@@ -4,7 +4,7 @@
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
-        <h1 class="text-dark font-weight-bold">Panel de Control</h1>
+        <h1 class="text-dark">Panel de Control</h1>
         <small class="text-muted"><i class="fas fa-calendar-alt mr-1"></i> {{ date('d/m/Y') }}</small>
     </div>
 @stop

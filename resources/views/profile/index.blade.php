@@ -206,9 +206,7 @@
                                                        class="custom-file-input @error('foto') is-invalid @enderror"
                                                        id="foto" name="foto"
                                                        accept="image/jpeg,image/jpg,image/png">
-                                                <label class="custom-file-label" for="foto">
-                                                    Seleccionar foto
-                                                </label>
+                                                <label class="custom-file-label" for="foto" data-browse="Subir">Subir foto de perfil</label>
                                             </div>
                                             <small class="form-text text-muted">
                                                 Se utilizará como imagen principal de tu perfil. Formatos: jpg, jpeg, png. Máx. 5MB.
@@ -418,9 +416,7 @@
                                                                    class="custom-file-input @error('cv') is-invalid @enderror"
                                                                    id="cv_rescatista" name="cv"
                                                                    accept=".pdf,.doc,.docx,image/jpeg,image/jpg,image/png">
-                                                            <label class="custom-file-label" for="cv_rescatista">
-                                                                Seleccionar archivo
-                                                            </label>
+                                                            <label class="custom-file-label" for="cv_rescatista" data-browse="Subir">Subir CV</label>
                                                         </div>
                                                         <small class="form-text text-muted">
                                                             Formatos admitidos: pdf, doc, docx, jpg, jpeg, png. Máx. 5MB.
@@ -562,9 +558,7 @@
                                                                    class="custom-file-input @error('cv') is-invalid @enderror"
                                                                    id="cv_veterinario" name="cv"
                                                                    accept=".pdf,.doc,.docx,image/jpeg,image/jpg,image/png">
-                                                            <label class="custom-file-label" for="cv_veterinario">
-                                                                Seleccionar archivo
-                                                            </label>
+                                                            <label class="custom-file-label" for="cv_veterinario" data-browse="Subir">Subir CV</label>
                                                         </div>
                                                         <small class="form-text text-muted">
                                                             Formatos admitidos: pdf, doc, docx, jpg, jpeg, png. Máx. 5MB.
