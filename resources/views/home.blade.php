@@ -38,6 +38,8 @@
         padding-right: 15px !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
+        margin-bottom: 0 !important; /* Eliminar margen inferior */
+        padding-bottom: 0.5rem !important; /* Reducir padding inferior */
         width: 100% !important;
         box-sizing: border-box !important;
     }
@@ -58,14 +60,14 @@
         padding-right: 15px !important;
     }
     
-    /* Igualar el padding vertical del card del index (page-pad) */
+    /* Reducir significativamente el padding vertical entre Panel de Control y los cards */
     .container-fluid {
-        padding-top: 1rem;
+        padding-top: 0.25rem; /* Reducido aún más */
     }
     
     @media (min-width: 768px) {
         .container-fluid {
-            padding-top: 1.5rem;
+            padding-top: 0.25rem; /* Reducido aún más */
         }
     }
     

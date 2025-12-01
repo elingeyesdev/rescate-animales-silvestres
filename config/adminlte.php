@@ -320,6 +320,11 @@ return [
             'icon' => 'fas fa-fw fa-home',
         ],
         [
+            'text' => 'Mi Perfil',
+            'url' => 'profile',
+            'icon' => 'fas fa-fw fa-user-circle',
+        ],
+        [
             'text' => 'blog',
             'url' => 'admin/blog',
             'can' => 'manage-blog',
@@ -471,12 +476,7 @@ return [
             'url' => 'centers',
             'icon' => 'fas fa-fw fa-clinic-medical',
             'can'  => 'admin',
-        ]
-        /*[
-            'text' => 'Mi perfil',
-            'url' => 'profile',
-            'icon' => 'fas fa-fw fa-user-circle',
-        ],*/
+        ],
         /*[
             'text' => 'Usuarios',
             'url' => 'users',
