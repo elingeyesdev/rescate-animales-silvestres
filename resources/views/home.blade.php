@@ -84,7 +84,7 @@
     
     /* Ajustar el margen de la sección de acciones rápidas */
     .card.shadow-none.bg-transparent {
-        margin-bottom: 30px !important;
+        margin-bottom: 15px !important;
     }
 </style>
 @stop
@@ -168,30 +168,40 @@
         </div>
 
         {{-- 2. Acciones Rápidas con Efecto Hover Mejorado --}}
-        <div class="card shadow-none bg-transparent border-0 mb-4">
-            <div class="card-body py-3 px-0">
-                <p class="text-muted text-uppercase font-weight-bold text-xs mb-2 pl-1">Acciones Rápidas</p>
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="{{ route('reports.index') }}" class="btn btn-app btn-action-custom ml-0">
-                        @if(($pendingReportsCount ?? 0) > 0) <span class="badge bg-purple">{{ $pendingReportsCount }}</span> @endif
-                        <i class="fas fa-map-marked-alt text-purple"></i> Hallazgos
-                    </a>
+        <div class="card shadow-none bg-transparent border-0 mb-2">
+            <div class="card-body py-2 px-0">
+                <p class="text-muted text-uppercase font-weight-bold text-xs mb-2 pl-1 text-center">Acciones Rápidas</p>
+                <div class="row g-2 justify-content-center">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+                        <a href="{{ route('reports.index') }}" class="btn btn-app btn-action-custom w-100">
+                            @if(($pendingReportsCount ?? 0) > 0) <span class="badge bg-purple">{{ $pendingReportsCount }}</span> @endif
+                            <i class="fas fa-map-marked-alt text-purple"></i> Hallazgos
+                        </a>
+                    </div>
                     
                     @if(Auth::user()->hasAnyRole(['admin','encargado']))
-                    <a href="{{ route('animal-files.create') }}" class="btn btn-app btn-action-custom">
-                        <i class="fas fa-plus-circle text-success"></i> Nuevo Animal
-                    </a>
-                    <a href="{{ route('releases.create') }}" class="btn btn-app btn-action-custom">
-                        <i class="fas fa-dove text-info"></i> Liberación
-                    </a>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+                        <a href="{{ route('animal-files.create') }}" class="btn btn-app btn-action-custom w-100">
+                            <i class="fas fa-plus-circle text-success"></i> Nuevo Animal
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+                        <a href="{{ route('releases.create') }}" class="btn btn-app btn-action-custom w-100">
+                            <i class="fas fa-dove text-info"></i> Liberación
+                        </a>
+                    </div>
                     @endif
 
-                    <a href="{{ route('animal-files.index') }}" class="btn btn-app btn-action-custom">
-                        <i class="fas fa-list text-secondary"></i> Fichas
-                    </a>
-                    <a href="{{ route('releases.index') }}" class="btn btn-app btn-action-custom">
-                        <i class="fas fa-history text-muted"></i> Historial Lib.
-                    </a>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+                        <a href="{{ route('animal-files.index') }}" class="btn btn-app btn-action-custom w-100">
+                            <i class="fas fa-list text-secondary"></i> Fichas
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
+                        <a href="{{ route('releases.index') }}" class="btn btn-app btn-action-custom w-100">
+                            <i class="fas fa-history text-muted"></i> Historial Lib.
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
