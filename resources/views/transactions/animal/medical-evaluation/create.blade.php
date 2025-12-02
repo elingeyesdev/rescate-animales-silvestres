@@ -117,7 +117,7 @@
                                                 <div id="header_current_status">-</div>
                                             </div>
                                             <div class="form-group mb-2 mb20">
-                                                <label class="form-label">{{ __('Última actualización (no médica)') }}</label>
+                                                <label class="form-label">{{ __('Última actualización') }}</label>
                                                 <div id="header_last_update">-</div>
                                             </div>
                                         </div>
