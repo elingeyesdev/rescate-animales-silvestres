@@ -180,7 +180,7 @@
                 const popupContent = `
                     <div style="min-width: 200px;">
                         <h6 style="margin: 0 0 8px 0; font-weight: bold;">
-                            <i class="fas fa-satellite"></i> Foco de Calor NASA FIRMS
+                            <i class="fas fa-satellite"></i> Foco de Calor
                         </h6>
                         <div style="font-size: 12px; margin-bottom: 4px;">
                             <strong>Confianza:</strong> 

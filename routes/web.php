@@ -43,13 +43,7 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::get('/landing', function () {
-    $recentReleases = \App\Models\Release::with(['animalFile.species', 'animalFile.animal'])
-        ->orderBy('created_at', 'desc')
-        ->take(12)
-        ->get();
-    return view('landing', compact('recentReleases'));
-})->name('landing');
+Route::get('/landing', [App\Http\Controllers\LandingController::class, 'index'])->name('landing');
 
 Route::get('/reporte-rapido', function () {
     return view('quick-report');

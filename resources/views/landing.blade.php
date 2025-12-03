@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         :root {
             --primary: #3c8dbc;
@@ -74,6 +76,7 @@
         .carousel-arrow.right { right:-10px; }
         .carousel-arrow.disabled { opacity:.45; pointer-events:none; }
         @media (max-width: 940px) { .content { grid-template-columns: 1fr; } .hero-visual { order: -1; } }
+        #landingMap { z-index: 1; position: relative; }
     </style>
     
 </head>
@@ -95,11 +98,7 @@
                 <div class="copy animate__animated animate__fadeInUp">
                     <h1 class="title">Rescate y bienestar de la fauna</h1>
                     <p class="subtitle">Conecta hallazgos, traslados, evaluaciones y liberaciones en un solo lugar. Tu participación ayuda a devolver a cada animal a su hábitat.</p>
-                    <div class="actions">
-                        <a href="{{ route('login') }}" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Ingresar</a>
-                        <a href="{{ route('reports.create') }}" class="btn btn-warning btn-pulse"><i class="fas fa-bolt"></i> Registro rápido</a>
-                    </div>
-
+                    
                     <div class="features">
                         <div class="card card-outline card-primary">
                             <div class="card-body">
@@ -129,12 +128,9 @@
                 </div>
 
                 <div class="hero-visual animate__animated animate__fadeIn">
-                    <div class="card card-outline card-primary h-100">
-                        <div class="card-body d-flex align-items-center justify-content-center text-center h-100">
-                            <div>
-                                <div style="font-size: 56px; line-height: 1;">🐾</div>
-                                <div class="text-muted" style="margin-top:.5rem;">Cuidemos la vida silvestre</div>
-                            </div>
+                    <div class="card card-outline card-primary h-100" style="position: relative; overflow: hidden;">
+                        <div class="card-body p-0" style="height: 100%; min-height: 400px;">
+                            <div id="landingMap" style="height: 100%; width: 100%; border-radius: 6px;"></div>
                         </div>
                     </div>
                     <div class="blob one"></div>
@@ -213,6 +209,7 @@
     </section>
     <script>
     (function(){
+        // Carousel de liberaciones
         var track = document.getElementById('relTrack');
         var prev = document.getElementById('relArrowPrev');
         var next = document.getElementById('relArrowNext');
@@ -231,6 +228,110 @@
             track.addEventListener('scroll', updateArrows);
             window.addEventListener('resize', updateArrows);
             updateArrows();
+        }
+
+        // Mapa de Leaflet con hallazgos aprobados
+        const approvedReports = @json($approvedReports ?? []);
+        
+        function initLandingMap() {
+            if (typeof L === 'undefined') {
+                setTimeout(initLandingMap, 100);
+                return;
+            }
+
+            const mapEl = document.getElementById('landingMap');
+            if (!mapEl) return;
+
+            // Inicializar mapa centrado en Santa Cruz, Bolivia
+            const map = L.map('landingMap').setView([-17.7833, -63.1821], 7);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            // Agregar marcadores de hallazgos aprobados
+            const markers = [];
+            let bounds = null;
+
+            approvedReports.forEach(function(report) {
+                if (!report.latitud || !report.longitud) return;
+
+                const lat = parseFloat(report.latitud);
+                const lng = parseFloat(report.longitud);
+                
+                if (isNaN(lat) || isNaN(lng)) return;
+
+                // Determinar color según urgencia
+                let color = '#17a2b8'; // info (baja)
+                let iconClass = 'fa-info-circle';
+                if (report.urgencia >= 4) {
+                    color = '#dc3545'; // danger (alta)
+                    iconClass = 'fa-exclamation-circle';
+                } else if (report.urgencia === 3) {
+                    color = '#ffc107'; // warning (media)
+                    iconClass = 'fa-exclamation-triangle';
+                }
+
+                // Crear icono personalizado
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas ${iconClass}" style="color: white; font-size: 12px;"></i>
+                    </div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+
+                const marker = L.marker([lat, lng], { icon: icon }).addTo(map);
+
+                // Popup con información del hallazgo
+                const popupContent = `
+                    <div style="min-width: 200px;">
+                        <h6 style="margin: 0 0 8px 0; font-weight: bold; color: ${color};">
+                            <i class="fas ${iconClass}"></i> Hallazgo de animal en peligro
+                        </h6>
+                        ${report.incident_type ? `
+                            <div style="font-size: 12px; margin-bottom: 4px;">
+                                <i class="fas fa-tag"></i> <strong>Tipo:</strong> ${report.incident_type.nombre}
+                            </div>
+                        ` : ''}
+                        ${report.condicion_inicial ? `
+                            <div style="font-size: 12px; margin-bottom: 4px;">
+                                <i class="fas fa-heartbeat"></i> <strong>Condición:</strong> ${report.condicion_inicial.nombre}
+                            </div>
+                        ` : ''}
+                        <div style="font-size: 12px; margin-bottom: 4px;">
+                            <strong>Urgencia:</strong> 
+                            <span class="badge" style="background-color: ${color}; color: white;">
+                                ${report.urgencia || 'N/A'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+
+                // Actualizar bounds para ajustar el mapa
+                if (!bounds) {
+                    bounds = L.latLngBounds([lat, lng], [lat, lng]);
+                } else {
+                    bounds.extend([lat, lng]);
+                }
+            });
+
+            // Ajustar vista del mapa para mostrar todos los marcadores
+            if (bounds && markers.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+
+        // Inicializar mapa cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initLandingMap);
+        } else {
+            initLandingMap();
         }
     })();
     </script>

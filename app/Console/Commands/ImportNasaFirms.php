@@ -15,7 +15,7 @@ class ImportNasaFirms extends Command
     protected $description = 'Import NASA FIRMS fire hotspot data into the database';
 
     // NASA FIRMS API configuration
-    private const NASA_API_KEY = '1ae0346a287432156ada4abb791d57cd';
+    private const NASA_API_KEY = 'fefe458ab3c6d99e4c92f448dec288a5';
     private const NASA_API_BASE = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv';
     
     // Bolivia bounding box

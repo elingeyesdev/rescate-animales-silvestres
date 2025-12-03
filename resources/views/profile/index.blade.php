@@ -209,7 +209,7 @@
                                                 <label class="custom-file-label" for="foto" data-browse="Subir">Subir foto de perfil</label>
                                             </div>
                                             <small class="form-text text-muted">
-                                                Se utilizará como imagen principal de tu perfil. Formatos: jpg, jpeg, png. Máx. 5MB.
+                                                Se utilizará como imagen principal de tu perfil. Formatos: jpg, jpeg, png.
                                             </small>
                                             @error('foto')
                                             <span class="invalid-feedback d-block" role="alert"><strong>{{ $message }}</strong></span>
@@ -419,7 +419,7 @@
                                                             <label class="custom-file-label" for="cv_rescatista" data-browse="Subir">Subir CV</label>
                                                         </div>
                                                         <small class="form-text text-muted">
-                                                            Formatos admitidos: pdf, doc, docx, jpg, jpeg, png. Máx. 5MB.
+                                                            Formatos admitidos: pdf, doc, docx, jpg, jpeg, png.
                                                         </small>
                                                         @error('cv')
                                                         <span class="invalid-feedback d-block" role="alert"><strong>{{ $message }}</strong></span>
@@ -561,7 +561,7 @@
                                                             <label class="custom-file-label" for="cv_veterinario" data-browse="Subir">Subir CV</label>
                                                         </div>
                                                         <small class="form-text text-muted">
-                                                            Formatos admitidos: pdf, doc, docx, jpg, jpeg, png. Máx. 5MB.
+                                                            Formatos admitidos: pdf, doc, docx, jpg, jpeg, png.
                                                         </small>
                                                         @error('cv')
                                                         <span class="invalid-feedback d-block" role="alert"><strong>{{ $message }}</strong></span>
