@@ -407,7 +407,7 @@ class ReportController extends Controller
             'incendio_id' => 1, // ID para cargar la predicción desde la API
             'direccion' => 'San Jose de Chiquitos, Santa Cruz, Bolivia',
             'condicion_inicial' => [
-                'nombre' => 'Hallazgo en incendio (Simulación)',
+                'nombre' => 'Hallazgo',
             ],
             'incident_type' => [
                 'nombre' => 'Incendio forestal',

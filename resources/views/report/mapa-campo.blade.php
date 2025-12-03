@@ -72,13 +72,13 @@
                                         <span style="display: inline-block; width: 12px; height: 12px; background-color: #ff0000; border: 1px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.5); vertical-align: middle;"></span>
                                         <span class="ml-2">{{ __('Punto rojo - Foco de calor detectado') }}</span>
                                     </div>
-                                    <div class="mb-2 mt-3">
+                                    <!--<div class="mb-2 mt-3">
                                         <strong>{{ __('Predicciones (Simulación):') }}</strong>
                                     </div>
                                     <div class="mb-1">
                                         <span style="display: inline-block; width: 20px; height: 20px; background-color: #ff8800; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); vertical-align: middle;"></span>
                                         <span class="ml-2">{{ __('Círculo - Predicción de propagación') }}</span>
-                                    </div>
+                                    </div>-->
                                 </div>
                             </div>
                         </div>
@@ -191,18 +191,15 @@
                         <div style="font-size: 12px; margin-bottom: 4px;">
                             <strong>Fecha:</strong> ${foco.date}
                         </div>
-                        <div style="font-size: 12px; margin-bottom: 4px;">
-                            <strong>Hora:</strong> ${foco.time}
-                        </div>
                         ${foco.frp ? `
-                            <div style="font-size: 12px; margin-bottom: 4px;">
+                            <!--<div style="font-size: 12px; margin-bottom: 4px;">
                                 <strong>FRP:</strong> ${foco.frp.toFixed(2)} MW
-                            </div>
+                            </div>-->
                         ` : ''}
                         ${foco.brightness ? `
-                            <div style="font-size: 12px; margin-bottom: 4px;">
+                            <!--<div style="font-size: 12px; margin-bottom: 4px;">
                                 <strong>Brillo:</strong> ${foco.brightness.toFixed(2)} K
-                            </div>
+                            </div>-->
                         ` : ''}
                         <div style="font-size: 11px; color: #6c757d; margin-top: 8px;">
                             <i class="fas fa-info-circle"></i> Datos de NASA FIRMS
@@ -317,9 +314,9 @@
                                 <span class="badge badge-warning">
                                     <i class="fas fa-flask"></i> Simulación de demostración
                                 </span>
-                                <div style="margin-top: 4px; font-size: 10px; color: #6c757d;">
+                                <!--<div style="margin-top: 4px; font-size: 10px; color: #6c757d;">
                                     Este reporte muestra la funcionalidad de predicción de incendios
-                                </div>
+                                </div>-->
                             ` : `
                                 <a href="${window.location.origin}/reports/${report.id}" class="btn btn-sm btn-primary" target="_blank" style="color: white;">
                                     <i class="fas fa-eye"></i> Ver detalles

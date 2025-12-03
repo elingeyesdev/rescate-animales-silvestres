@@ -417,8 +417,8 @@ class UserTrackingService
 
         $action = $approved ? 'aprobacion' : 'rechazo';
         $description = $approved 
-            ? "Reporte aprobado: #{$report->id}"
-            : "Reporte rechazado: #{$report->id}";
+            ? "Reporte aprobado: N°{$report->id}"
+            : "Reporte rechazado: N°{$report->id}";
 
         return $this->log(
             actionType: $action,
@@ -483,7 +483,7 @@ class UserTrackingService
         $report->load('person.user', 'condicionInicial', 'incidentType');
         $user = $report->person?->user ?? ($userId ? User::find($userId) : null);
 
-        $description = "Reporte de hallazgo creado: #{$report->id}";
+        $description = "Registro de hallazgo creado: N°{$report->id}";
         if ($report->direccion) {
             $description .= " - {$report->direccion}";
         }
@@ -524,7 +524,7 @@ class UserTrackingService
         $user = $transfer->person?->user;
 
         $description = $isFirstTransfer
-            ? "Primer traslado registrado desde reporte #{$transfer->reporte_id}"
+            ? "Primer traslado registrado desde reporte N°{$transfer->reporte_id}"
             : "Traslado interno registrado";
 
         if ($transfer->center) {

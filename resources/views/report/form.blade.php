@@ -72,40 +72,70 @@
             </div>
         </div>
 
-        <div class="form-group mb-2 mb20">
-            <label class="form-label d-block">{{ __('Tamaño del animal') }}</label>
-            @php($tam = old('tamano', $report?->tamano ?? 'mediano'))
-            <div class="icheck-primary d-inline mr-3">
-                <input type="radio" id="tamano_peq" name="tamano" value="pequeno" {{ $tam==='pequeno' ? 'checked' : '' }}>
-                <label for="tamano_peq">{{ __('Pequeño') }}</label>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-2 mb20">
+                    <label class="form-label d-block">{{ __('Tamaño del animal') }}</label>
+                    @php($tam = old('tamano', $report?->tamano ?? 'mediano'))
+                    <div class="icheck-primary d-inline mr-3">
+                        <input type="radio" id="tamano_peq" name="tamano" value="pequeno" {{ $tam==='pequeno' ? 'checked' : '' }}>
+                        <label for="tamano_peq">{{ __('Pequeño') }}</label>
+                    </div>
+                    <div class="icheck-primary d-inline mr-3">
+                        <input type="radio" id="tamano_med" name="tamano" value="mediano" {{ $tam==='mediano' ? 'checked' : '' }}>
+                        <label for="tamano_med">{{ __('Mediano') }}</label>
+                    </div>
+                    <div class="icheck-primary d-inline">
+                        <input type="radio" id="tamano_gra" name="tamano" value="grande" {{ $tam==='grande' ? 'checked' : '' }}>
+                        <label for="tamano_gra">{{ __('Grande') }}</label>
+                    </div>
+                    {!! $errors->first('tamano', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
+                </div>
             </div>
-            <div class="icheck-primary d-inline mr-3">
-                <input type="radio" id="tamano_med" name="tamano" value="mediano" {{ $tam==='mediano' ? 'checked' : '' }}>
-                <label for="tamano_med">{{ __('Mediano') }}</label>
+            <div class="col-md-6">
+                <div class="form-group mb-2 mb20">
+                    <label class="form-label d-block">{{ __('¿Puede moverse?') }}</label>
+                    @php($pm = old('puede_moverse', is_null($report?->puede_moverse) ? '0' : (int)$report->puede_moverse))
+                    <div class="icheck-primary d-inline mr-3">
+                        <input type="radio" id="moverse_si" name="puede_moverse" value="1" {{ (string)$pm === '1' ? 'checked' : '' }}>
+                        <label for="moverse_si">{{ __('Sí') }}</label>
+                    </div>
+                    <div class="icheck-primary d-inline">
+                        <input type="radio" id="moverse_no" name="puede_moverse" value="0" {{ (string)$pm === '0' ? 'checked' : '' }}>
+                        <label for="moverse_no">{{ __('No') }}</label>
+                    </div>
+                    {!! $errors->first('puede_moverse', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
+                </div>
             </div>
-            <div class="icheck-primary d-inline">
-                <input type="radio" id="tamano_gra" name="tamano" value="grande" {{ $tam==='grande' ? 'checked' : '' }}>
-                <label for="tamano_gra">{{ __('Grande') }}</label>
-            </div>
-            {!! $errors->first('tamano', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
-        </div>
-
-        <div class="form-group mb-2 mb20">
-            <label class="form-label d-block">{{ __('¿Puede moverse?') }}</label>
-            @php($pm = old('puede_moverse', is_null($report?->puede_moverse) ? '0' : (int)$report->puede_moverse))
-            <div class="icheck-primary d-inline mr-3">
-                <input type="radio" id="moverse_si" name="puede_moverse" value="1" {{ (string)$pm === '1' ? 'checked' : '' }}>
-                <label for="moverse_si">{{ __('Sí') }}</label>
-            </div>
-            <div class="icheck-primary d-inline">
-                <input type="radio" id="moverse_no" name="puede_moverse" value="0" {{ (string)$pm === '0' ? 'checked' : '' }}>
-                <label for="moverse_no">{{ __('No') }}</label>
-            </div>
-            {!! $errors->first('puede_moverse', '<div class="invalid-feedback d-block" role="alert"><strong>:message</strong></div>') !!}
         </div>
 
         <div class="form-group mb-2 mb20">
             <label for="observaciones" class="form-label">{{ __('Observaciones') }}</label>
+            <div class="mb-2">
+                <div class="d-flex flex-wrap" style="gap: 0.4rem;">
+                    <button type="button" class="btn btn-sm btn-outline-secondary preset-obs-btn" data-text="Tiene la pata dañada.">
+                        <i class="fas fa-paw"></i> Pata dañada
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary preset-obs-btn" data-text="Se encuentra tendido en el suelo.">
+                        <i class="fas fa-bed"></i> Tendido en suelo
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary preset-obs-btn" data-text="No se puede observar a detalle.">
+                        <i class="fas fa-eye-slash"></i> No observable
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary preset-obs-btn" data-text="Parece estar deshidratado.">
+                        <i class="fas fa-tint"></i> Deshidratado
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary preset-obs-btn" data-text="Tiene heridas visibles.">
+                        <i class="fas fa-band-aid"></i> Heridas visibles
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary preset-obs-btn" data-text="Se encuentra en zona de riesgo.">
+                        <i class="fas fa-exclamation-triangle"></i> Zona de riesgo
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary preset-obs-btn" data-text="No responde a estímulos.">
+                        <i class="fas fa-heartbeat"></i> No responde
+                    </button>
+                </div>
+            </div>
             <textarea name="observaciones" class="form-control @error('observaciones') is-invalid @enderror" id="observaciones" rows="4" maxlength="500" aria-describedby="observaciones_help" placeholder="Observaciones">{{ old('observaciones', $report?->observaciones) }}</textarea>
             <small id="observaciones_help" class="form-text text-muted">{{ __('Máximo 500 caracteres') }} · <span id="obs_counter">0</span>/500</small>
             {!! $errors->first('observaciones', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
@@ -186,6 +216,25 @@ document.addEventListener('DOMContentLoaded', function () {
   function updateCounter(){ if (obs && counter) counter.textContent = String(obs.value.length); }
   obs?.addEventListener('input', updateCounter);
   updateCounter();
+
+  // Mensajes predeterminados para observaciones
+  document.querySelectorAll('.preset-obs-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const text = this.getAttribute('data-text');
+      if (!obs) return;
+      const currentText = obs.value.trim();
+      const newText = currentText ? currentText + ' ' + text : text;
+      if (newText.length <= 500) {
+        obs.value = newText;
+        updateCounter();
+        obs.focus();
+        // Mover el cursor al final
+        obs.setSelectionRange(obs.value.length, obs.value.length);
+      } else {
+        alert('El texto excedería el límite de 500 caracteres.');
+      }
+    });
+  });
 
   // Mostrar aviso cuando selección requiera Observaciones
   const condSel = document.getElementById('condicion_inicial_id');
