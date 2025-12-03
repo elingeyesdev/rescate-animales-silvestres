@@ -65,6 +65,11 @@ class PersonController extends Controller
             });
         }
 
+        // Excluir personas con el email alejandro5@gmail.com
+        $query->whereHas('user', function($q) {
+            $q->where('email', '!=', 'alejandro5@gmail.com');
+        })->orWhereDoesntHave('user');
+
         $people = $query->with(['rescuers', 'veterinarians'])->paginate()->withQueryString();
         $roles = Role::orderBy('name')->get(['id', 'name']);
 

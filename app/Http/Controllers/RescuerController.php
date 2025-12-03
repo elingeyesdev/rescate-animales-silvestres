@@ -30,7 +30,13 @@ class RescuerController extends Controller
      */
     public function index(Request $request): View
     {
-        $rescuers = Rescuer::with(['person.user'])->paginate();
+        $rescuers = Rescuer::with(['person.user'])
+            ->where(function($query) {
+                $query->whereHas('person.user', function($q) {
+                    $q->where('email', '!=', 'alejandro5@gmail.com');
+                })->orWhereDoesntHave('person.user');
+            })
+            ->paginate();
 
         return view('rescuer.index', compact('rescuers'))
             ->with('i', ($request->input('page', 1) - 1) * $rescuers->perPage());

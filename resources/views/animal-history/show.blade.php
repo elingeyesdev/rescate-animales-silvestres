@@ -158,7 +158,7 @@
                                 <div class="mt-3 p-3 bg-light border rounded">
                                     <strong class="d-block mb-2">{{ __('Eventos') }}:</strong>
                                     <div class="row">
-                                        <div class="col-md-3 mb-2">
+                                        <div class="col-md-4 mb-2">
                                             <div class="d-flex align-items-center">
                                                 <span class="legend-dot legend-dot-hallazgo mr-2"></span>
                                                 <div>
@@ -167,7 +167,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3 mb-2">
+                                        <div class="col-md-4 mb-2">
                                             <div class="d-flex align-items-center">
                                                 <span class="legend-dot legend-dot-transfer mr-2"></span>
                                                 <div>
@@ -176,21 +176,12 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3 mb-2">
+                                        <div class="col-md-4 mb-2">
                                             <div class="d-flex align-items-center">
                                                 <span class="legend-dot legend-dot-release mr-2"></span>
                                                 <div>
                                                     <strong>{{ __('Liberación') }}</strong>
                                                     <div class="small text-muted">{{ __('Punto de liberación del animal') }}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-2">
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-map-marker-alt text-danger mr-2" style="font-size: 18px;"></i>
-                                                <div>
-                                                    <strong>{{ __('Ubicación Actual') }}</strong>
-                                                    <div class="small text-muted">{{ __('Última ubicación registrada') }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -232,9 +223,9 @@
             border-radius:50%;
             margin-right:4px;
         }
-        .legend-dot-hallazgo{ background-color:#16a34a; }
+        .legend-dot-hallazgo{ background-color:#dc3545; }
         .legend-dot-transfer{ background-color:#2563eb; }
-        .legend-dot-release{ background-color:#f59e0b; }
+        .legend-dot-release{ background-color:#16a34a; }
         .custom-marker {
             background: transparent;
             border: none;
@@ -370,13 +361,13 @@
                 let eventType = 'Traslado';
                 let eventDescription = 'Centro de rescate o traslado';
                 if (p.type === 'report') {
-                    color = '#16a34a';
-                    iconClass = 'fa-flag';
+                    color = '#dc3545'; // rojo
+                    iconClass = 'fa-paw';
                     eventType = 'Hallazgo';
                     eventDescription = 'Punto donde se encontró al animal';
                 } else if (p.type === 'release') {
-                    color = '#f59e0b';
-                    iconClass = 'fa-dove';
+                    color = '#16a34a'; // verde
+                    iconClass = 'fa-flag';
                     eventType = 'Liberación';
                     eventDescription = 'Punto de liberación del animal';
                 } else if (p.type === 'transfer') {
@@ -411,11 +402,11 @@
                 let popup = '<div style="min-width: 200px;">';
                 if (p.label) popup += '<strong style="color: ' + color + '; font-size: 14px;">' + p.label + '</strong>';
                 if (p.type === 'report') {
-                    popup += '<div class="mt-2"><i class="fas fa-info-circle"></i> <strong>Evento:</strong> Hallazgo del animal</div>';
+                    popup += '<div class="mt-2"><i class="fas fa-paw"></i> <strong>Evento:</strong> Hallazgo del animal</div>';
                 } else if (p.type === 'transfer') {
                     popup += '<div class="mt-2"><i class="fas fa-info-circle"></i> <strong>Evento:</strong> Traslado</div>';
                 } else if (p.type === 'release') {
-                    popup += '<div class="mt-2"><i class="fas fa-info-circle"></i> <strong>Evento:</strong> Liberación</div>';
+                    popup += '<div class="mt-2"><i class="fas fa-flag"></i> <strong>Evento:</strong> Liberación</div>';
                 }
                 if (p.center_name) popup += '<div class="mt-1"><i class="fas fa-building"></i> <strong>Centro:</strong> ' + p.center_name + '</div>';
                 if (p.address) popup += '<div class="mt-1"><i class="fas fa-map-pin"></i> <strong>Dirección:</strong> ' + p.address + '</div>';
@@ -428,8 +419,8 @@
                 
                 marker.bindPopup(popup);
 
-                // Marcar el último punto como ubicación actual
-                if (index === points.length - 1) {
+                // Marcar el último punto como ubicación actual (solo si NO es liberación)
+                if (index === points.length - 1 && p.type !== 'release') {
                     const currentIcon = L.divIcon({
                         className: 'current-location-marker',
                         html: '<div style="background-color: #dc3545; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite;"><i class="fas fa-map-marker-alt" style="color: white; font-size: 14px;"></i></div>',
@@ -443,11 +434,9 @@
                     currentPopup += '<strong style="color: #dc3545; font-size: 16px;">📍 Ubicación Actual</strong>';
                     currentPopup += '<div class="mt-2" style="font-weight: bold; color: ' + color + ';">';
                     if (p.type === 'report') {
-                        currentPopup += '<i class="fas fa-flag"></i> Tipo: Hallazgo del animal';
+                        currentPopup += '<i class="fas fa-paw"></i> Tipo: Hallazgo del animal';
                     } else if (p.type === 'transfer') {
                         currentPopup += '<i class="fas fa-truck"></i> Tipo: Traslado';
-                    } else if (p.type === 'release') {
-                        currentPopup += '<i class="fas fa-dove"></i> Tipo: Liberación';
                     } else {
                         currentPopup += '<i class="fas fa-map-marker-alt"></i> Tipo: ' + (p.label || 'Evento');
                     }
@@ -457,9 +446,6 @@
                     if (p.address) currentPopup += '<div class="mt-1"><i class="fas fa-map-pin"></i> <strong>Dirección:</strong> ' + p.address + '</div>';
                     if (p.date) currentPopup += '<div class="mt-1"><i class="fas fa-calendar"></i> <strong>Fecha:</strong> ' + p.date + '</div>';
                     if (p.observaciones) currentPopup += '<div class="mt-1"><i class="fas fa-comment"></i> <strong>Observaciones:</strong> ' + p.observaciones + '</div>';
-                    if (p.type === 'release' && p.imagen_url) {
-                        currentPopup += '<div class="mt-2"><img src="{{ asset("storage") }}/' + p.imagen_url + '" alt="Imagen de liberación" style="max-width: 200px; max-height: 150px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>';
-                    }
                     currentPopup += '</div>';
                     
                     currentLocationMarker.bindPopup(currentPopup);
