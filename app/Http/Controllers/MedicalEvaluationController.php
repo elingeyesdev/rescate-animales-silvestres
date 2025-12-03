@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use App\Models\TreatmentType;
 use App\Models\Veterinarian;
+use App\Services\User\UserTrackingService;
 
 class MedicalEvaluationController extends Controller
 {
@@ -66,7 +67,18 @@ class MedicalEvaluationController extends Controller
             // Guardar ruta relativa; la vista resolverá URL pública
             $data['imagen_url'] = $path;
         }
-        MedicalEvaluation::create($data);
+        $medicalEvaluation = MedicalEvaluation::create($data);
+        $medicalEvaluation->load('animalFile');
+
+        // Registrar tracking de evaluación médica
+        try {
+            app(UserTrackingService::class)->logMedicalEvaluation(
+                $medicalEvaluation,
+                $medicalEvaluation->animalFile
+            );
+        } catch (\Exception $e) {
+            //
+        }
 
         return Redirect::route('medical-evaluations.index')
             ->with('success', 'Evaluación médica creada correctamente.');

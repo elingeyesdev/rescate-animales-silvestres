@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use App\Models\Report;
 use App\Models\Person;
 use Illuminate\Support\Facades\Auth;
+use App\Services\User\UserTrackingService;
 
 class TransferController extends Controller
 {
@@ -196,7 +197,15 @@ class TransferController extends Controller
                     'latitud' => $report->latitud,
                     'longitud' => $report->longitud,
                 ];
-                $this->transferService->create($payload);
+                $transfer = $this->transferService->create($payload);
+                
+                // Registrar tracking de traslado
+                try {
+                    app(UserTrackingService::class)->logTransfer($transfer, true);
+                } catch (\Exception $e) {
+                    \Log::warning('Error registrando tracking de traslado: ' . $e->getMessage());
+                }
+                
                 return Redirect::route('reports.index')
                     ->with('success', 'Primer traslado registrado correctamente.');
             }
@@ -210,7 +219,14 @@ class TransferController extends Controller
                 'persona_id' => $personId,
                 'primer_traslado' => false,
             ]);
-            $this->transferService->create($payload);
+            $transfer = $this->transferService->create($payload);
+            
+            // Registrar tracking de traslado
+            try {
+                app(UserTrackingService::class)->logTransfer($transfer, false);
+            } catch (\Exception $e) {
+                \Log::warning('Error registrando tracking de traslado: ' . $e->getMessage());
+            }
         } catch (\Throwable $e) {
             return Redirect::back()->withInput()->with('error', 'No se pudo registrar el traslado: '.$e->getMessage());
         }

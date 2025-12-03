@@ -8,6 +8,7 @@ use App\Models\Release;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Services\User\UserTrackingService;
 
 class AnimalReleaseTransactionalService
 {
@@ -53,6 +54,13 @@ class AnimalReleaseTransactionalService
 				],
                 'changed_at' => $release->created_at,
 			]);
+
+			// Registrar tracking de liberación
+			try {
+				app(UserTrackingService::class)->logRelease($release, $animalFile);
+			} catch (\Exception $e) {
+				\Log::warning('Error registrando tracking de liberación: ' . $e->getMessage());
+			}
 
 			return $release;
 		});

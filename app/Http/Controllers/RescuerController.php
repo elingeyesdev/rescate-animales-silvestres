@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use App\Mail\RescuerApplicationResponse;
+use App\Services\User\UserTrackingService;
 
 class RescuerController extends Controller
 {
@@ -63,6 +64,18 @@ class RescuerController extends Controller
         // Si ya se crea aprobado, asignar rol al usuario vinculado
         if ($rescuer->aprobado === true && $rescuer->person?->user) {
             $rescuer->person->user->assignRole('rescatista');
+        }
+
+        // Registrar tracking de solicitud
+        try {
+            $user = $rescuer->person?->user;
+            app(UserTrackingService::class)->logApplication(
+                'rescuer',
+                $rescuer,
+                $user?->id
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Error registrando tracking de solicitud de rescatista: ' . $e->getMessage());
         }
 
         return Redirect::route('rescuers.index')
@@ -120,6 +133,20 @@ class RescuerController extends Controller
             }
         }
 
+        // Registrar tracking si cambió el estado de aprobación
+        if ($oldApproved !== $rescuer->aprobado) {
+            try {
+                app(UserTrackingService::class)->logRescuerApproval(
+                    $rescuer,
+                    $rescuer->aprobado === true,
+                    $oldApproved,
+                    $rescuer->motivo_revision
+                );
+            } catch (\Exception $e) {
+                \Log::warning('Error registrando tracking de aprobación de rescatista: ' . $e->getMessage());
+            }
+        }
+
         // Enviar correo al ciudadano si cambió el estado de aprobación y hay motivo de revisión
         if ($oldApproved !== $rescuer->aprobado && !empty($rescuer->motivo_revision) && $userModel && $userModel->email) {
             try {
@@ -163,6 +190,20 @@ class RescuerController extends Controller
                 $userModel->assignRole('rescatista');
             } elseif ($rescuer->aprobado === false || $rescuer->aprobado === null) {
                 $userModel->removeRole('rescatista');
+            }
+        }
+
+        // Registrar tracking de aprobación/rechazo
+        if ($oldApproved !== $rescuer->aprobado) {
+            try {
+                app(UserTrackingService::class)->logRescuerApproval(
+                    $rescuer,
+                    $rescuer->aprobado === true,
+                    $oldApproved,
+                    $rescuer->motivo_revision
+                );
+            } catch (\Exception $e) {
+                \Log::warning('Error registrando tracking de aprobación de rescatista: ' . $e->getMessage());
             }
         }
 

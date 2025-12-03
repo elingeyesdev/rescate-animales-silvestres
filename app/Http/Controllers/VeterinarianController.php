@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use App\Mail\VeterinarianApplicationResponse;
+use App\Services\User\UserTrackingService;
 
 class VeterinarianController extends Controller
 {
@@ -64,6 +65,18 @@ class VeterinarianController extends Controller
         // Si ya se crea aprobado, asignar rol al usuario vinculado
         if ($veterinarian->aprobado === true && $veterinarian->person?->user) {
             $veterinarian->person->user->assignRole('veterinario');
+        }
+
+        // Registrar tracking de solicitud
+        try {
+            $user = $veterinarian->person?->user;
+            app(UserTrackingService::class)->logApplication(
+                'veterinarian',
+                $veterinarian,
+                $user?->id
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Error registrando tracking de solicitud de veterinario: ' . $e->getMessage());
         }
 
         return Redirect::route('veterinarians.index')
@@ -121,6 +134,20 @@ class VeterinarianController extends Controller
             }
         }
 
+        // Registrar tracking si cambió el estado de aprobación
+        if ($oldApproved !== $veterinarian->aprobado) {
+            try {
+                app(UserTrackingService::class)->logVeterinarianApproval(
+                    $veterinarian,
+                    $veterinarian->aprobado === true,
+                    $oldApproved,
+                    $veterinarian->motivo_revision
+                );
+            } catch (\Exception $e) {
+                \Log::warning('Error registrando tracking de aprobación de veterinario: ' . $e->getMessage());
+            }
+        }
+
         // Enviar correo al ciudadano si cambió el estado de aprobación y hay motivo de revisión
         if ($oldApproved !== $veterinarian->aprobado && !empty($veterinarian->motivo_revision) && $userModel && $userModel->email) {
             try {
@@ -164,6 +191,20 @@ class VeterinarianController extends Controller
                 $userModel->assignRole('veterinario');
             } elseif ($veterinarian->aprobado === false || $veterinarian->aprobado === null) {
                 $userModel->removeRole('veterinario');
+            }
+        }
+
+        // Registrar tracking de aprobación/rechazo
+        if ($oldApproved !== $veterinarian->aprobado) {
+            try {
+                app(UserTrackingService::class)->logVeterinarianApproval(
+                    $veterinarian,
+                    $veterinarian->aprobado === true,
+                    $oldApproved,
+                    $veterinarian->motivo_revision
+                );
+            } catch (\Exception $e) {
+                \Log::warning('Error registrando tracking de aprobación de veterinario: ' . $e->getMessage());
             }
         }
 

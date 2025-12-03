@@ -74,7 +74,7 @@ class CheckFocosCalor extends Command
                 ['Fecha', 'Hora', 'Latitud', 'Longitud', 'Confianza', 'FRP'],
                 $recent->map(function ($foco) {
                     return [
-                        $foco->acq_date->format('Y-m-d'),
+                        $foco->acq_date->format('d/m/Y'),
                         $foco->acq_time,
                         number_format($foco->latitude, 4),
                         number_format($foco->longitude, 4),

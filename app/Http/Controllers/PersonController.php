@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
+use App\Services\User\UserTrackingService;
 
 class PersonController extends Controller
 {
@@ -114,7 +115,18 @@ class PersonController extends Controller
         // Verificar si hay solicitud de cuidador pendiente
         $cuidadorPendiente = (int)$person->es_cuidador === 1 && empty($person->cuidador_motivo_revision);
 
-        return view('person.show', compact('person', 'hasRescuer', 'hasVeterinarian', 'isAdmin', 'isEncargado', 'personIsAdmin', 'canApproveCuidador', 'cuidadorPendiente'));
+        // Obtener el tracking del usuario si tiene usuario asociado
+        $userTracking = [];
+        if ($person->user) {
+            try {
+                $trackingService = app(UserTrackingService::class);
+                $userTracking = $trackingService->getUserHistory($person->user->id);
+            } catch (\Exception $e) {
+                \Log::warning('Error obteniendo tracking del usuario: ' . $e->getMessage());
+            }
+        }
+
+        return view('person.show', compact('person', 'hasRescuer', 'hasVeterinarian', 'isAdmin', 'isEncargado', 'personIsAdmin', 'canApproveCuidador', 'cuidadorPendiente', 'userTracking'));
     }
 
     /**
@@ -224,6 +236,20 @@ class PersonController extends Controller
         // Si fue una acción de aprobación/rechazo, mostrar mensaje específico
         if ($isCuidadorAction) {
             $action = $request->input('action');
+            $oldApproved = $person->getOriginal('cuidador_aprobado');
+            
+            // Registrar tracking de aprobación/rechazo de cuidador
+            try {
+                app(UserTrackingService::class)->logCaregiverApproval(
+                    $person,
+                    $action === 'approve',
+                    $oldApproved,
+                    $person->cuidador_motivo_revision
+                );
+            } catch (\Exception $e) {
+                //
+            }
+            
             if ($action === 'approve') {
                 $message = 'Solicitud de cuidador aprobada correctamente.';
                 if ($person->user && $person->user->hasRole('cuidador')) {

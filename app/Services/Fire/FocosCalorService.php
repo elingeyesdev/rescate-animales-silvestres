@@ -145,7 +145,7 @@ class FocosCalorService
                 'lat' => (float) $hotspot->latitude,
                 'lng' => (float) $hotspot->longitude,
                 'confidence' => $hotspot->confidence,
-                'date' => $hotspot->acq_date->format('Y-m-d'),
+                'date' => $hotspot->acq_date->format('d/m/Y'),
                 'time' => $hotspot->acq_time,
                 'frp' => $hotspot->frp,
                 'brightness' => $hotspot->bright_ti4 ?? $hotspot->bright_ti5,

@@ -20,6 +20,7 @@ use App\Models\AnimalCondition;
 use App\Models\IncidentType;
 use App\Models\AnimalHistory;
 use App\Mail\NewReportNotification;
+use App\Services\User\UserTrackingService;
 
 class ReportController extends Controller
 {
@@ -155,6 +156,15 @@ class ReportController extends Controller
             
             $report->load(['person', 'condicionInicial', 'incidentType']);
 
+            // Registrar tracking de creación de reporte
+            if ($isAuthenticated) {
+                try {
+                    app(UserTrackingService::class)->logReportCreation($report, Auth::id());
+                } catch (\Exception $e) {
+                    \Log::warning('Error registrando tracking de creación de reporte: ' . $e->getMessage());
+                }
+            }
+
             // Enviar correo a todos los encargados y administradores
             $adminsAndEncargados = User::whereHas('roles', function ($query) {
                 $query->whereIn('name', ['admin', 'encargado']);
@@ -284,8 +294,22 @@ class ReportController extends Controller
             'action' => 'required|in:approve,reject',
         ]);
 
+        $oldApproved = $report->aprobado;
         $report->aprobado = $validated['action'] === 'approve' ? 1 : 0;
         $report->save();
+
+        // Registrar tracking de aprobación/rechazo de reporte
+        if ($oldApproved != $report->aprobado) {
+            try {
+                app(UserTrackingService::class)->logReportApproval(
+                    $report,
+                    $report->aprobado == 1,
+                    $oldApproved
+                );
+            } catch (\Exception $e) {
+                \Log::warning('Error registrando tracking de aprobación de reporte: ' . $e->getMessage());
+            }
+        }
 
         // Registrar en historial si existe
         $hist = AnimalHistory::whereNull('animal_file_id')

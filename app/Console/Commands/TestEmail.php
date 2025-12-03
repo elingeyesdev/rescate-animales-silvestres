@@ -78,7 +78,7 @@ class TestEmail extends Command
         $this->line('');
         
         try {
-            Mail::raw('Este es un correo de prueba desde Laravel con Brevo - ' . now()->format('Y-m-d H:i:s'), function ($message) use ($testEmail) {
+            Mail::raw('Este es un correo de prueba desde Laravel con Brevo - ' . now()->format('d-m-Y H:i:s'), function ($message) use ($testEmail) {
                 $message->to($testEmail)
                         ->subject('Test Brevo - ' . now()->format('H:i:s'));
             });

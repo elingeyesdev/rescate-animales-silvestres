@@ -9,6 +9,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Services\User\UserTrackingService;
 
 class AnimalCareTransactionalService
 {
@@ -39,7 +40,7 @@ class AnimalCareTransactionalService
 
 			$care = Care::create($careData);
 
-            AnimalHistory::create([
+			AnimalHistory::create([
 				'animal_file_id' => $animalFile->id,
 				'valores_antiguos' => null,
 				'valores_nuevos' => [
@@ -52,6 +53,13 @@ class AnimalCareTransactionalService
 				],
                 'observaciones' => null,
 			]);
+
+			// Registrar tracking de cuidado
+			try {
+				app(UserTrackingService::class)->logCare($care, $animalFile);
+			} catch (\Exception $e) {
+				\Log::warning('Error registrando tracking de cuidado: ' . $e->getMessage());
+			}
 
 			DB::commit();
 

@@ -13,9 +13,19 @@
                         <div class="float-left">
                             <span class="card-title">{{ __('Show') }} {{ __('Person') }}</span>
                         </div>
-                        <div class="float-right">
+                        <div class="float-right" style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto;">
+                            @if($person->user)
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                    <label class="btn btn-sm btn-outline-secondary active" id="btnViewInfo" style="font-weight: normal;">
+                                        <input type="radio" name="viewMode" value="info" checked> <i class="fa fa-info-circle"></i> Información
+                                    </label>
+                                    <label class="btn btn-sm btn-outline-secondary" id="btnViewTracking" style="font-weight: normal;">
+                                        <input type="radio" name="viewMode" value="tracking"> <i class="fa fa-history"></i> Seguimiento
+                                    </label>
+                                </div>
+                            @endif
                             @if($isAdmin)
-                                <a class="btn btn-success btn-sm mr-2" href="{{ route('people.edit', $person->id) }}">
+                                <a class="btn btn-success btn-sm" href="{{ route('people.edit', $person->id) }}">
                                     <i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}
                                 </a>
                             @endif
@@ -24,6 +34,8 @@
                     </div>
 
                     <div class="card-body bg-white">
+                        {{-- Vista de Información (por defecto) --}}
+                        <div id="viewInfo">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-2 mb20">
@@ -218,11 +230,161 @@
                                 @endif
                             </div>
                         @endif
+                        </div>
+                        {{-- Fin Vista de Información --}}
+
+                        {{-- Vista de Seguimiento --}}
+                        @if($person->user)
+                        <div id="viewTracking" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0"><i class="fa fa-history"></i> Seguimiento de Actividades</h5>
+                                <span class="badge badge-info">{{ count($userTracking) }} actividades registradas</span>
+                            </div>
+                            
+                            @if(count($userTracking) > 0)
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha/Hora</th>
+                                                <th>Tipo de Acción</th>
+                                                <th>Descripción</th>
+                                                <th>Realizado por</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($userTracking as $track)
+                                                @php
+                                                    $performer = $track->performer();
+                                                    $performerName = $performer ? ($performer->person->nombre ?? $performer->email) : 'Sistema';
+                                                    $actionTypeLabels = [
+                                                        'registro' => ['label' => 'Registro', 'badge' => 'success'],
+                                                        'solicitud' => ['label' => 'Solicitud', 'badge' => 'info'],
+                                                        'aprobacion' => ['label' => 'Aprobación', 'badge' => 'success'],
+                                                        'rechazo' => ['label' => 'Rechazo', 'badge' => 'danger'],
+                                                        'evaluacion_medica' => ['label' => 'Evaluación Médica', 'badge' => 'primary'],
+                                                        'reporte_creado' => ['label' => 'Reporte Creado', 'badge' => 'warning'],
+                                                        'traslado' => ['label' => 'Traslado', 'badge' => 'info'],
+                                                        'cuidado' => ['label' => 'Cuidado', 'badge' => 'primary'],
+                                                        'alimentacion' => ['label' => 'Alimentación', 'badge' => 'primary'],
+                                                        'liberacion' => ['label' => 'Liberación', 'badge' => 'success'],
+                                                        'actualizacion_perfil' => ['label' => 'Actualización Perfil', 'badge' => 'secondary'],
+                                                    ];
+                                                    $actionInfo = $actionTypeLabels[$track->action_type] ?? ['label' => ucfirst($track->action_type), 'badge' => 'secondary'];
+                                                @endphp
+                                                <tr>
+                                                    <td>
+                                                        <small>{{ $track->realizado_en ? $track->realizado_en->format('d/m/Y H:i') : '-' }}</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge badge-{{ $actionInfo['badge'] }}">{{ $actionInfo['label'] }}</span>
+                                                    </td>
+                                                    <td>{{ $track->action_description }}</td>
+                                                    <td>
+                                                        <small>{{ $performerName }}</small>
+                                                    </td>
+                                                    
+                                                </tr>
+                                                
+                                                {{-- Modal con detalles --}}
+                                                @if($track->metadata)
+                                                <div class="modal fade" id="modalTracking{{ $track->id }}" tabindex="-1" role="dialog">
+                                                    <div class="modal-dialog modal-lg" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">
+                                                                    <i class="fa fa-info-circle"></i> Detalles de la Actividad
+                                                                </h5>
+                                                                <button type="button" class="close" data-dismiss="modal">
+                                                                    <span>&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <strong>Descripción:</strong><br>
+                                                                        <p>{{ $track->action_description }}</p>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <strong>Fecha/Hora:</strong><br>
+                                                                        <p>{{ $track->realizado_en ? $track->realizado_en->format('d/m/Y H:i:s') : '-' }}</p>
+                                                                    </div>
+                                                                </div>
+                                                                @if($track->valores_antiguos || $track->valores_nuevos)
+                                                                    <hr>
+                                                                    <div class="row">
+                                                                        @if($track->valores_antiguos)
+                                                                            <div class="col-md-6">
+                                                                                <strong>Valores Anteriores:</strong>
+                                                                                <pre class="bg-light p-2 rounded">{{ json_encode($track->valores_antiguos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                                                            </div>
+                                                                        @endif
+                                                                        @if($track->valores_nuevos)
+                                                                            <div class="col-md-6">
+                                                                                <strong>Valores Nuevos:</strong>
+                                                                                <pre class="bg-light p-2 rounded">{{ json_encode($track->valores_nuevos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                                                            </div>
+                                                                        @endif
+                                                                    </div>
+                                                                @endif
+                                                                @if($track->metadata)
+                                                                    <hr>
+                                                                    <strong>Información Adicional:</strong>
+                                                                    <pre class="bg-light p-2 rounded">{{ json_encode($track->metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                                                @endif
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @endif
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="alert alert-info">
+                                    <i class="fa fa-info-circle"></i> No hay actividades registradas para este usuario.
+                                </div>
+                            @endif
+                        </div>
+                        @endif
+                        {{-- Fin Vista de Seguimiento --}}
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
+    {{-- Script para cambiar entre vistas --}}
+    @if($person->user)
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnViewInfo = document.getElementById('btnViewInfo');
+            const btnViewTracking = document.getElementById('btnViewTracking');
+            const viewInfo = document.getElementById('viewInfo');
+            const viewTracking = document.getElementById('viewTracking');
+            
+            if (btnViewInfo && btnViewTracking && viewInfo && viewTracking) {
+                btnViewInfo.addEventListener('click', function() {
+                    viewInfo.style.display = 'block';
+                    viewTracking.style.display = 'none';
+                    btnViewInfo.classList.add('active');
+                    btnViewTracking.classList.remove('active');
+                });
+                
+                btnViewTracking.addEventListener('click', function() {
+                    viewInfo.style.display = 'none';
+                    viewTracking.style.display = 'block';
+                    btnViewInfo.classList.remove('active');
+                    btnViewTracking.classList.add('active');
+                });
+            }
+        });
+    </script>
+    @endif
 
     {{-- Modal para aprobar/rechazar solicitud de cuidador --}}
     @if(isset($cuidadorPendiente) && $cuidadorPendiente && isset($canApproveCuidador) && $canApproveCuidador)

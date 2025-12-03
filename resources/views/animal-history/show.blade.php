@@ -14,7 +14,7 @@
                             <span class="card-title">
                                 {{ __('Detalles del animal') }}
                                 @if($animalHistory->animalFile?->animal?->nombre)
-                                    {{ ' ' . __('de') . ' ' . $animalHistory->animalFile->animal->nombre }}
+                                    {{ $animalHistory->animalFile->animal->nombre }}
                                 @endif
                             </span>
                             <a href="{{ route('animal-histories.index') }}" class="btn btn-info btn-sm">

@@ -11,6 +11,7 @@ use App\Models\Person;
 use App\Models\Report;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
+use App\Services\User\UserTrackingService;
 
 class RegisterController extends Controller
 {
@@ -90,7 +91,7 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        Person::create([
+        $person = Person::create([
             'usuario_id' => $user->id,
             'nombre' => $data['nombre'],
             'ci' => $data['ci'],
@@ -102,6 +103,20 @@ class RegisterController extends Controller
         if (method_exists($user, 'assignRole')) {
             $role = Role::firstOrCreate(['name' => 'ciudadano', 'guard_name' => 'web']);
             $user->assignRole($role);
+        }
+
+        // Registrar tracking de registro
+        try {
+            app(UserTrackingService::class)->logUserRegistration($user, [
+                'person' => [
+                    'id' => $person->id,
+                    'nombre' => $person->nombre,
+                    'ci' => $person->ci,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            // No fallar el registro si el tracking falla
+            \Log::warning('Error registrando tracking de usuario: ' . $e->getMessage());
         }
 
         return $user;

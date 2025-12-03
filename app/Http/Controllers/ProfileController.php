@@ -16,6 +16,7 @@ use App\Mail\NewRescuerApplicationNotification;
 use App\Mail\NewVeterinarianApplicationNotification;
 use App\Mail\CaregiverCommitmentConfirmation;
 use App\Rules\NotWebpImage;
+use App\Services\User\UserTrackingService;
 
 class ProfileController extends Controller
 {
@@ -88,9 +89,18 @@ class ProfileController extends Controller
 
         // Upsert de Person vinculada al usuario
         $person = $user->person;
+        $oldPersonData = null;
         if (!$person) {
             $person = new Person();
             $person->usuario_id = $user->id;
+        } else {
+            // Guardar valores antiguos para tracking
+            $oldPersonData = [
+                'nombre' => $person->nombre,
+                'ci' => $person->ci,
+                'telefono' => $person->telefono,
+                'es_cuidador' => $person->es_cuidador,
+            ];
         }
 
         $person->nombre = $validated['nombre'];
@@ -104,6 +114,15 @@ class ProfileController extends Controller
             $wasCuidador = (int)$person->es_cuidador === 1;
             $person->es_cuidador = $request->boolean('compromiso_cuidador');
             $isNewCommitment = !$wasCuidador && $person->es_cuidador;
+            
+            // Registrar tracking de solicitud de cuidador
+            if ($isNewCommitment) {
+                try {
+                    app(UserTrackingService::class)->logApplication('caregiver', $person, $user->id);
+                } catch (\Exception $e) {
+                    //
+                }
+            }
             
             // Si el usuario se desmarca como cuidador, remover el rol y limpiar campos de aprobación
             if (!$person->es_cuidador) {
@@ -132,6 +151,19 @@ class ProfileController extends Controller
             $person->foto_path = $path;
         }
         $person->save();
+
+        // Registrar tracking de actualización de perfil
+        try {
+            $newPersonData = [
+                'nombre' => $person->nombre,
+                'ci' => $person->ci,
+                'telefono' => $person->telefono,
+                'es_cuidador' => $person->es_cuidador,
+            ];
+            app(UserTrackingService::class)->logProfileUpdate($person, $oldPersonData, $newPersonData);
+        } catch (\Exception $e) {
+            //
+        }
 
         // NO asignamos el rol automáticamente aquí
         // El rol se asignará solo cuando un admin/encargado complete el motivo_revision
@@ -168,6 +200,13 @@ class ProfileController extends Controller
             $rescuer->save();
             $rescuer->load('person.user');
 
+            // Registrar tracking de solicitud desde perfil
+            try {
+                app(UserTrackingService::class)->logApplication('rescuer', $rescuer, $user->id);
+            } catch (\Exception $e) {
+                //
+            }
+
             // Enviar correo a encargados y administradores si es una nueva solicitud
             if ($isNew) {
                 $adminsAndEncargados = User::whereHas('roles', function ($query) {
@@ -178,7 +217,7 @@ class ProfileController extends Controller
                     try {
                         Mail::to($adminUser->email)->send(new NewRescuerApplicationNotification($rescuer));
                     } catch (\Exception $e) {
-                        \Log::error('Error enviando correo de nueva solicitud de rescatista: ' . $e->getMessage());
+                        //
                     }
                 }
             }
@@ -203,6 +242,13 @@ class ProfileController extends Controller
             $veterinarian->save();
             $veterinarian->load('person.user');
 
+            // Registrar tracking de solicitud desde perfil
+            try {
+                app(UserTrackingService::class)->logApplication('veterinarian', $veterinarian, $user->id);
+            } catch (\Exception $e) {
+                //
+            }
+
             // Enviar correo a encargados y administradores si es una nueva solicitud
             if ($isNew) {
                 $adminsAndEncargados = User::whereHas('roles', function ($query) {
@@ -213,7 +259,7 @@ class ProfileController extends Controller
                     try {
                         Mail::to($adminUser->email)->send(new NewVeterinarianApplicationNotification($veterinarian));
                     } catch (\Exception $e) {
-                        \Log::error('Error enviando correo de nueva solicitud de veterinario: ' . $e->getMessage());
+                        //
                     }
                 }
             }
@@ -229,7 +275,7 @@ class ProfileController extends Controller
                 try {
                     Mail::to($person->user->email)->send(new CaregiverCommitmentConfirmation($person, $center));
                 } catch (\Exception $e) {
-                    \Log::error('Error enviando correo de confirmación de cuidador: ' . $e->getMessage());
+                    //
                 }
             }
         }

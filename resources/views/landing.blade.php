@@ -168,7 +168,7 @@
                                         <span class="badge badge-success">Liberado</span>
                                     </div>
                                     <div class="release-meta mt-1">
-                                        <i class="fas fa-calendar-alt"></i> {{ optional($rel->created_at)->format('Y-m-d') }}
+                                        <i class="fas fa-calendar-alt"></i> {{ optional($rel->created_at)->format('d/m/Y') }}
                                     </div>
                                     @if(!empty($rel->direccion))
                                     <div class="release-meta"><i class="fas fa-map-marker-alt"></i> {{ $rel->direccion }}</div>

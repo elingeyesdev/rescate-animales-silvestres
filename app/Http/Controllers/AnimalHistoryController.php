@@ -117,7 +117,7 @@ class AnimalHistoryController extends Controller
 		$pdf = Pdf::loadView('animal-history.pdf', $data);
 		
 		// Nombre del archivo
-		$fileName = 'historial_' . ($animalFile->animal?->nombre ?? 'animal') . '_' . $animalFileId . '_' . date('Y-m-d') . '.pdf';
+		$fileName = 'historial_' . ($animalFile->animal?->nombre ?? 'animal') . '_' . $animalFileId . '_' . date('d_m_Y') . '.pdf';
 		
 		return $pdf->download($fileName);
 	}

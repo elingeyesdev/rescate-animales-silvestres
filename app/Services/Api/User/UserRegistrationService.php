@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Person;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
+use App\Services\User\UserTrackingService;
 
 class UserRegistrationService
 {
@@ -37,6 +38,20 @@ class UserRegistrationService
             if (method_exists($user, 'assignRole')) {
                 $role = Role::firstOrCreate(['name' => 'ciudadano', 'guard_name' => 'web']);
                 $user->assignRole($role);
+            }
+
+            // Registrar tracking de registro
+            try {
+                app(UserTrackingService::class)->logUserRegistration($user, [
+                    'person' => [
+                        'id' => $person->id,
+                        'nombre' => $person->nombre,
+                        'ci' => $person->ci,
+                    ],
+                ]);
+            } catch (\Exception $e) {
+                // No fallar el registro si el tracking falla
+                \Log::warning('Error registrando tracking de usuario (API): ' . $e->getMessage());
             }
 
             return [

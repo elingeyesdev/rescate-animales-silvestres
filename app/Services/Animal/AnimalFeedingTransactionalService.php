@@ -9,6 +9,7 @@ use App\Models\CareFeeding;
 use App\Models\CareType;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Services\User\UserTrackingService;
 
 class AnimalFeedingTransactionalService
 {
@@ -69,6 +70,13 @@ class AnimalFeedingTransactionalService
 					'texto' => $data['observaciones'] ?? 'Registro de alimentación',
 				],
 			]);
+
+			// Registrar tracking de alimentación
+			try {
+				app(UserTrackingService::class)->logFeeding($careFeeding, $care);
+			} catch (\Exception $e) {
+				\Log::warning('Error registrando tracking de alimentación: ' . $e->getMessage());
+			}
 
 			DB::commit();
 
