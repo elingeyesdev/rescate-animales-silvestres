@@ -39,4 +39,9 @@ return [
         'url' => env('FIRE_PREDICTION_API_URL', ''),
     ],
 
+    'nasa_firms' => [
+        'api_key' => env('NASA_FIRMS_API_KEY', ''),
+        'api_base' => env('NASA_FIRMS_API_BASE', 'https://firms.modaps.eosdis.nasa.gov/api/area/csv'),
+    ],
+
 ];

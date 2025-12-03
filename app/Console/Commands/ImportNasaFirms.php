@@ -14,9 +14,22 @@ class ImportNasaFirms extends Command
 
     protected $description = 'Import NASA FIRMS fire hotspot data into the database';
 
-    // NASA FIRMS API configuration
-    private const NASA_API_KEY = 'fefe458ab3c6d99e4c92f448dec288a5';
-    private const NASA_API_BASE = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv';
+    // NASA FIRMS API configuration - loaded from config/services.php
+    private function getNasaApiKey(): string
+    {
+        $key = config('services.nasa_firms.api_key');
+        if (empty($key)) {
+            $this->error('NASA_FIRMS_API_KEY no está configurada en el archivo .env');
+            $this->info('Por favor, agrega NASA_FIRMS_API_KEY=tu_api_key en tu archivo .env');
+            exit(1);
+        }
+        return $key;
+    }
+
+    private function getNasaApiBase(): string
+    {
+        return config('services.nasa_firms.api_base', 'https://firms.modaps.eosdis.nasa.gov/api/area/csv');
+    }
     
     // Bolivia bounding box
     private const BOLIVIA_BOUNDS = [
@@ -42,8 +55,8 @@ class ImportNasaFirms extends Command
             // Use area endpoint with Bolivia bounds
             $url = sprintf(
                 '%s/%s/%s/%s,%s,%s,%s/%s',
-                self::NASA_API_BASE,
-                self::NASA_API_KEY,
+                $this->getNasaApiBase(),
+                $this->getNasaApiKey(),
                 $satellite,
                 self::BOLIVIA_BOUNDS['min_lng'],
                 self::BOLIVIA_BOUNDS['min_lat'],
