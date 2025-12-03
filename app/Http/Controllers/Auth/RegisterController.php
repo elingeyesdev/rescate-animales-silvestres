@@ -59,6 +59,7 @@ class RegisterController extends Controller
             'telefono' => ['nullable', 'string', 'max:50'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'foto' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:5120', new \App\Rules\NotWebpImage()],
         ];
 
         $messages = [
@@ -73,6 +74,10 @@ class RegisterController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos :min caracteres.',
             'password.confirmed' => 'La confirmación de contraseña no coincide.',
+            'foto.required' => 'La foto de perfil es obligatoria.',
+            'foto.file' => 'La foto debe ser un archivo válido.',
+            'foto.mimes' => 'La foto debe ser una imagen en formato JPG, JPEG o PNG.',
+            'foto.max' => 'La foto no puede superar los 5MB.',
         ];
 
         return Validator::make($data, $rules, $messages);
@@ -91,11 +96,18 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
+        // Guardar foto de perfil
+        $fotoPath = null;
+        if (isset($data['foto']) && $data['foto']->isValid()) {
+            $fotoPath = $data['foto']->store('personas', 'public');
+        }
+
         $person = Person::create([
             'usuario_id' => $user->id,
             'nombre' => $data['nombre'],
             'ci' => $data['ci'],
             'telefono' => $data['telefono'] ?? null,
+            'foto_path' => $fotoPath,
             'es_cuidador' => false,
         ]);
 
