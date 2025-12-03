@@ -35,6 +35,7 @@
         margin-right: 8px;
     }
     .register-logo a { display: inline-flex; align-items: center; }
+    .custom-file-label::after { content: 'Subir'; }
     
     #foto-preview-container {
         margin-top: 15px;
@@ -149,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function(){
                             class="custom-file-input @error('foto') is-invalid @enderror" 
                             accept="image/jpeg,image/jpg,image/png"
                             required>
-                        <label class="custom-file-label" for="foto" id="foto-label" style="overflow: hidden;">Seleccionar</label>
+                        <label class="custom-file-label" for="foto" data-browse="Subir" id="foto-label" style="overflow: hidden;"></label>
                     </div>
                     @error('foto') 
                         <span class="invalid-feedback d-block" role="alert">
@@ -252,3 +253,4 @@ document.addEventListener('DOMContentLoaded', function(){
         <a href="{{ route('login') }}">Ya tengo una cuenta</a>
     </p>
 @endsection
+@include('partials.custom-file')
