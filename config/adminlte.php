@@ -64,7 +64,7 @@ return [
     */
 
     'logo' => '<b>Rescate</b>Animales',
-    'logo_img' => 'images/paw-primary.svg',
+    'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
@@ -84,9 +84,9 @@ return [
     */
 
     'auth_logo' => [
-        'enabled' => false,
+        'enabled' => true,
         'img' => [
-            'path' => 'images/paw-classic.svg',
+            'path' => 'images/paw-logo.svg',
             'alt' => 'Huella Animal',
             'class' => 'img-circle elevation-3',
             'width' => 64,
@@ -110,7 +110,7 @@ return [
     */
 
     'preloader' => [
-        'enabled' => false,
+        'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
             'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
@@ -139,7 +139,7 @@ return [
     'usermenu_header_class' => 'bg-primary',
     'usermenu_image' => false,
     // Mostrar debajo del nombre una breve descripción (aquí: los roles Spatie del usuario)
-    'usermenu_desc' => false,
+    'usermenu_desc' => true,
     'usermenu_profile_url' => true,
 
     /*
@@ -200,7 +200,7 @@ return [
     'classes_content' => '',
     'classes_sidebar' => 'sidebar-dark-primary elevation-4',
     'classes_sidebar_nav' => '',
-    'classes_topnav' => 'navbar-dark navbar-navy',
+    'classes_topnav' => 'navbar-light bg-light',
     'classes_topnav_nav' => 'navbar-expand',
     'classes_topnav_container' => 'container',
 
@@ -364,7 +364,7 @@ return [
             'can'  => 'veterinario|admin|cuidador',
         ],
         
-        ['header' => 'DIAGNOSTICO','can'=> 'admin|veterinario|cuidador'],
+        ['header' => 'DIAGNOSTICO','can'=> 'admin|encargado|veterinario|cuidador'],
         [
             'text' => 'Evaluaciones Médicas',
             'url' => 'medical-evaluations',
