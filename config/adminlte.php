@@ -1,7 +1,7 @@
 <?php
-
+ 
 return [
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Title
@@ -13,11 +13,11 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
-
+ 
     'title' => 'Rescate Animales',
     'title_prefix' => '',
     'title_postfix' => '',
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Favicon
@@ -29,10 +29,10 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
-
+ 
     'use_ico_only' => false,
     'use_full_favicon' => false,
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Google Fonts
@@ -46,11 +46,11 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
-
+ 
     'google_fonts' => [
         'allowed' => true,
     ],
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Admin Panel Logo
@@ -62,14 +62,14 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
-
+ 
     'logo' => '<b>Rescate</b>Animales',
-    'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+    'logo_img' => 'images/paw-primary.svg',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
     'logo_img_alt' => 'Admin Logo',
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Authentication Logo
@@ -82,9 +82,9 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
-
+ 
     'auth_logo' => [
-        'enabled' => true,
+        'enabled' => false,
         'img' => [
             'path' => 'images/paw-logo.svg',
             'alt' => 'Huella Animal',
@@ -93,7 +93,7 @@ return [
             'height' => 64,
         ],
     ],
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Preloader Animation
@@ -108,9 +108,9 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
-
+ 
     'preloader' => [
-        'enabled' => true,
+        'enabled' => false,
         'mode' => 'fullscreen',
         'img' => [
             'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
@@ -120,7 +120,7 @@ return [
             'height' => 60,
         ],
     ],
-
+ 
     /*
     |--------------------------------------------------------------------------
     | User Menu
@@ -132,7 +132,7 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
-
+ 
     'usermenu_enabled' => true,
     // Mostramos un header dentro del dropdown del usuario (ahí se verá nombre + roles)
     'usermenu_header' => true,
@@ -141,7 +141,7 @@ return [
     // Mostrar debajo del nombre una breve descripción (aquí: los roles Spatie del usuario)
     'usermenu_desc' => true,
     'usermenu_profile_url' => true,
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Layout
@@ -153,14 +153,14 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Layout-and-Styling-Configuration
     |
     */
-
+ 
     'layout_topnav' => null,
     'layout_boxed' => null,
     'layout_fixed_sidebar' => null,
     'layout_fixed_navbar' => null,
     'layout_fixed_footer' => null,
     'layout_dark_mode' => null,
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Authentication Views Classes
@@ -172,14 +172,14 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Layout-and-Styling-Configuration
     |
     */
-
+ 
     'classes_auth_card' => 'card-outline card-primary',
     'classes_auth_header' => '',
     'classes_auth_body' => '',
     'classes_auth_footer' => '',
     'classes_auth_icon' => '',
     'classes_auth_btn' => 'btn-flat btn-primary',
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Admin Panel Classes
@@ -191,7 +191,7 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Layout-and-Styling-Configuration
     |
     */
-
+ 
     'classes_body' => '',
     'classes_brand' => '',
     'classes_brand_text' => '',
@@ -203,7 +203,7 @@ return [
     'classes_topnav' => 'navbar-light bg-light',
     'classes_topnav_nav' => 'navbar-expand',
     'classes_topnav_container' => 'container',
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Sidebar
@@ -215,7 +215,7 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Layout-and-Styling-Configuration
     |
     */
-
+ 
     'sidebar_mini' => 'lg',
     'sidebar_collapse' => false,
     'sidebar_collapse_auto_size' => false,
@@ -225,7 +225,7 @@ return [
     'sidebar_scrollbar_auto_hide' => 'l',
     'sidebar_nav_accordion' => true,
     'sidebar_nav_animation_speed' => 300,
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Control Sidebar (Right Sidebar)
@@ -237,7 +237,7 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Layout-and-Styling-Configuration
     |
     */
-
+ 
     'right_sidebar' => false,
     'right_sidebar_icon' => 'fas fa-cogs',
     'right_sidebar_theme' => 'dark',
@@ -245,7 +245,7 @@ return [
     'right_sidebar_push' => true,
     'right_sidebar_scrollbar_theme' => 'os-theme-light',
     'right_sidebar_scrollbar_auto_hide' => 'l',
-
+ 
     /*
     |--------------------------------------------------------------------------
     | URLs
@@ -257,7 +257,7 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
-
+ 
     'use_route_url' => false,
     'dashboard_url' => 'home',
     'logout_url' => 'logout',
@@ -268,7 +268,7 @@ return [
     // El perfil del usuario se resuelve a través de User::adminlte_profile_url()
     'profile_url' => false,
     'disable_darkmode_routes' => false,
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Laravel Asset Bundling
@@ -284,11 +284,11 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Other-Configuration
     |
     */
-
+ 
     'laravel_asset_bundling' => false,
     'laravel_css_path' => 'css/app.css',
     'laravel_js_path' => 'js/app.js',
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Menu Items
@@ -300,7 +300,7 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Menu-Configuration
     |
     */
-
+ 
     'menu' => [
         // Navbar items:
         [
@@ -312,7 +312,7 @@ return [
             'type' => 'fullscreen-widget',
             'topnav_right' => true,
         ],
-
+ 
         // Sidebar items:
         [
             'text' => 'Inicio',
@@ -329,7 +329,7 @@ return [
             'url' => 'admin/blog',
             'can' => 'manage-blog',
         ],
-        
+       
         ['header' => 'ANIMALES'],
         /*[
             'text' => 'profile',
@@ -363,15 +363,15 @@ return [
             'icon' => 'fas fa-fw fa-history',
             'can'  => 'veterinario|admin|cuidador',
         ],
-        
-        ['header' => 'DIAGNOSTICO','can'=> 'admin|encargado|veterinario|cuidador'],
+       
+        ['header' => 'DIAGNOSTICO','can'=> 'admin|veterinario|cuidador'],
         [
             'text' => 'Evaluaciones Médicas',
             'url' => 'medical-evaluations',
             'icon' => 'fas fa-fw fa-stethoscope',
             'can'  => 'veterinario|admin',
         ],
-        
+       
         [
             'text' => 'Cuidados de Animales',
             'url' => 'cares',
@@ -384,7 +384,7 @@ return [
             'icon' => 'fas fa-fw fa-utensils',
             'can'  => 'admin|veterinario',
         ],
-        
+       
         ['header' => 'DISPOSICION', 'can'=> 'admin|encargado|rescatista|veterinario'],
         [
             'text' => 'Traslados',
@@ -416,7 +416,7 @@ return [
             'icon' => 'fas fa-fw fa-user-injured',
             'can'  => 'admin|encargado',
         ],
-        
+       
         [
             'text' => 'Centros',
             'url' => 'centers',
@@ -522,8 +522,8 @@ return [
             ],
         ]*/
     ],
-
-
+ 
+ 
     /*
     |--------------------------------------------------------------------------
     | Menu Filters
@@ -535,7 +535,7 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Menu-Configuration
     |
     */
-
+ 
     'filters' => [
         App\Menu\Filters\SpatieRoleFilter::class, // Filtro personalizado para roles de Spatie (debe ir primero)
         JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class,
@@ -546,7 +546,7 @@ return [
         JeroenNoten\LaravelAdminLte\Menu\Filters\LangFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\DataFilter::class,
     ],
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Plugins Initialization
@@ -558,7 +558,7 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Plugins-Configuration
     |
     */
-
+ 
     'plugins' => [
         'Datatables' => [
             'active' => false,
@@ -641,7 +641,7 @@ return [
             ],
         ],
     ],
-
+ 
     /*
     |--------------------------------------------------------------------------
     | IFrame
@@ -654,7 +654,7 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/IFrame-Mode-Configuration
     |
     */
-
+ 
     'iframe' => [
         'default_tab' => [
             'url' => null,
@@ -674,7 +674,7 @@ return [
             'use_navbar_items' => true,
         ],
     ],
-
+ 
     /*
     |--------------------------------------------------------------------------
     | Livewire
@@ -686,6 +686,7 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Other-Configuration
     |
     */
-
+ 
     'livewire' => false,
 ];
+ 

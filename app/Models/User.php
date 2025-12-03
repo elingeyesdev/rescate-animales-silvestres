@@ -77,8 +77,8 @@ class User extends Authenticatable
     }
 
     /**
-     * Descripción que muestra AdminLTE debajo del nombre en el header.
-     * Aquí devolvemos la lista de roles del usuario (por ejemplo: "admin, encargado").
+     * Descripción que muestra AdminLTE para el usuario.
+     * Se usa en el header del menú de usuario (dropdown), no en el toggler.
      */
     public function adminlte_desc(): ?string
     {
@@ -91,7 +91,6 @@ class User extends Authenticatable
             return null;
         }
 
-        // Capitalizar cada rol y separarlos por coma
         return $roles->map(fn ($r) => ucfirst($r))->implode(', ');
     }
 }
