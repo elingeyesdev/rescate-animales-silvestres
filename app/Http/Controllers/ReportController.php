@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use App\Services\Animal\AnimalTransferTransactionalService;
 use App\Services\Report\ReportUrgencyService;
+use App\Services\Fire\FocosCalorService;
 use App\Models\AnimalCondition;
 use App\Models\IncidentType;
 use App\Models\AnimalHistory;
@@ -24,7 +25,8 @@ class ReportController extends Controller
 {
     public function __construct(
         private readonly AnimalTransferTransactionalService $transferService,
-        private readonly ReportUrgencyService $urgencyService
+        private readonly ReportUrgencyService $urgencyService,
+        private readonly FocosCalorService $focosCalorService
     ) {
         // Permitir create y store sin autenticación (para usuarios anónimos desde landing)
         $this->middleware('auth')->except(['create', 'store']);
@@ -145,6 +147,12 @@ class ReportController extends Controller
             $data['urgencia'] = $this->urgencyService->compute($data);
 
             $report = Report::create($data);
+            
+            // NOTA: No asociamos reportes con focos de calor por ID porque:
+            // - La API de NASA FIRMS no proporciona IDs de incendios
+            // - Los focos de calor son detecciones independientes
+            // - La relación se hace por proximidad geográfica cuando se visualiza en el mapa
+            
             $report->load(['person', 'condicionInicial', 'incidentType']);
 
             // Enviar correo a todos los encargados y administradores
@@ -222,9 +230,12 @@ class ReportController extends Controller
      */
     public function show($id): View
     {
-        $report = Report::with(['firstTransfer.center'])->findOrFail($id);
+        $report = Report::with(['firstTransfer.center', 'incidentType'])->findOrFail($id);
+        
+        // Obtener focos de calor cercanos (por proximidad, no por ID)
+        $nearbyFocosCalor = $report->getNearbyFocosCalor(20, 7);
 
-        return view('report.show', compact('report'));
+        return view('report.show', compact('report', 'nearbyFocosCalor'));
     }
 
     /**
@@ -349,30 +360,30 @@ class ReportController extends Controller
             ];
         });
 
-        // Agregar reporte simulado si no hay ninguno con incendio_id = 1
-        $hasFireReport = $reports->contains(function ($report) {
-            return isset($report['incendio_id']) && $report['incendio_id'] == 1;
-        });
+        // SIEMPRE agregar reporte simulado de incendio para demostración
+        // Este reporte es independiente y siempre se muestra con su predicción
+        // Es un módulo separado que coexiste con los datos reales
+        $reports->push([
+            'id' => 'simulado',
+            'latitud' => '-17.718397',
+            'longitud' => '-60.774994',
+            'urgencia' => 5,
+            'incendio_id' => 1, // ID para cargar la predicción desde la API
+            'direccion' => 'San Jose de Chiquitos, Santa Cruz, Bolivia',
+            'condicion_inicial' => [
+                'nombre' => 'Hallazgo en incendio (Simulación)',
+            ],
+            'incident_type' => [
+                'nombre' => 'Incendio forestal',
+            ],
+        ]);
 
-        if (!$hasFireReport) {
-            // Coordenadas del foco de incendio: San Jose de Chiquitos
-            $reports->push([
-                'id' => 'simulado',
-                'latitud' => '-17.718397',
-                'longitud' => '-60.774994',
-                'urgencia' => 5,
-                'incendio_id' => 1,
-                'direccion' => 'San Jose de Chiquitos, Santa Cruz, Bolivia',
-                'condicion_inicial' => [
-                    'nombre' => 'Hallazgo en incendio',
-                ],
-                'incident_type' => [
-                    'nombre' => 'Incendio forestal',
-                ],
-            ]);
-        }
+        // Obtener focos de calor reales desde la BD (en lugar de llamar a la API)
+        // Esto es mucho más eficiente y no excede los límites de la API
+        $focosCalor = $this->focosCalorService->getRecentHotspots(2);
+        $focosCalorFormatted = $this->focosCalorService->formatForMap($focosCalor);
 
-        return view('report.mapa-campo', compact('reports'));
+        return view('report.mapa-campo', compact('reports', 'focosCalorFormatted'));
     }
 
     /**

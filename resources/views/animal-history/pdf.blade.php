@@ -6,366 +6,353 @@
     <title>Historial de Animal - {{ $animalFile->animal?->nombre ?? 'Sin nombre' }}</title>
     <style>
         /* RESET & BASICS */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        @page {
+            margin: 0cm; /* Sin margen para que el header toque los bordes */
         }
-        
+
         body {
-            font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif; /* DejaVu Sans es mejor para DomPDF y acentos */
-            font-size: 10pt;
-            color: #2c3e50; /* Gris oscuro azulado en lugar de negro puro */
+            font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif;
+            font-size: 9pt;
+            color: #333;
             line-height: 1.5;
             background-color: #ffffff;
-            padding: 40px 50px; /* Márgenes de hoja A4 estándar */
+            margin: 0;
         }
 
-        /* HEADER / MEMBRETE */
-        .header {
-            border-bottom: 2px solid #2980b9; /* Azul corporativo */
-            padding-bottom: 15px;
-            margin-bottom: 35px;
+        /* --- HEADER EMPRESARIAL (LIMPIO) --- */
+        .header-banner {
+            background-color: #2c3e50; /* Azul Corporativo Oscuro */
+            color: #ffffff;
+            padding: 40px 50px;
+            height: 110px; 
+            /* Se eliminó el border-bottom rojo */
             display: table;
             width: 100%;
+            box-sizing: border-box; 
         }
 
-        .header-logo-text {
+        .header-left {
             display: table-cell;
-            vertical-align: bottom;
+            vertical-align: middle;
             text-align: left;
             width: 60%;
         }
 
-        .header-logo-text h1 {
-            font-size: 24px;
-            color: #2c3e50;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        .header-logo-text p {
-            font-size: 10px;
-            color: #7f8c8d;
-            margin-top: 4px;
-            text-transform: uppercase;
-        }
-
-        .header-meta {
+        .header-right {
             display: table-cell;
-            vertical-align: bottom;
+            vertical-align: middle;
             text-align: right;
             width: 40%;
         }
 
-        .report-badge {
-            background-color: #f4f6f7;
-            color: #2c3e50;
-            padding: 5px 10px;
-            border: 1px solid #bdc3c7;
-            font-size: 9px;
+        .header-title {
+            font-size: 26px;
             font-weight: bold;
-            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            line-height: 1.2;
         }
 
-        /* SECCIONES */
+        .header-subtitle {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .header-meta-item {
+            font-size: 10px;
+            margin-bottom: 3px;
+            color: #ecf0f1;
+        }
+        
+        .header-meta-item strong {
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        /* --- CONTENEDOR DEL CONTENIDO --- */
+        .content-wrapper {
+            padding: 50px;
+        }
+
+        /* --- ESTILOS GENERALES --- */
         .section {
-            margin-bottom: 35px;
+            margin-bottom: 40px;
             page-break-inside: avoid;
         }
 
         .section-title {
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
-            color: #2980b9;
+            color: #2c3e50;
             text-transform: uppercase;
-            border-bottom: 1px solid #ecf0f1;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
+            border-bottom: 1px solid #2c3e50;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
         }
 
-        /* TABLA DE INFO (HOJA DE VIDA) */
-        .animal-file-box {
-            background-color: transparent;
-            border: none;
-            padding: 0;
-            margin: 0;
-        }
-
+        /* TABLA DE INFO */
         .info-grid {
-            display: table;
             width: 100%;
             border-collapse: collapse;
-            font-size: 10pt;
+            font-size: 9pt;
         }
 
-        .info-row {
-            display: table-row;
-        }
-
-        /* Zebra Striping sutil para profesionalismo */
-        .info-row:nth-child(odd) {
-            background-color: #ffffff;
-        }
-        .info-row:nth-child(even) {
-            background-color: #f8f9fa; 
+        .info-row td {
+            padding: 8px 5px;
+            border-bottom: 1px solid #eee;
         }
 
         .info-label {
-            display: table-cell;
             width: 30%;
-            padding: 8px 10px;
             font-weight: bold;
-            color: #34495e;
-            border-bottom: 1px solid #ecf0f1;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 8pt;
             vertical-align: top;
         }
 
         .info-value {
-            display: table-cell;
             width: 70%;
-            padding: 8px 10px;
-            color: #555;
-            border-bottom: 1px solid #ecf0f1;
+            color: #000;
             vertical-align: top;
         }
 
-        /* STATUS BADGE */
+        /* BADGE */
         .status-badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 9px;
+            padding: 2px 6px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            color: #333;
+            border-radius: 2px;
+            font-size: 8px;
             font-weight: bold;
-            background-color: #27ae60; /* Verde éxito corporativo */
-            color: white;
             text-transform: uppercase;
         }
 
-        /* IMÁGENES */
-        .animal-image {
-            max-width: 160px;
-            max-height: 160px;
-            border: 4px solid #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-top: 5px;
-        }
-
-        /* LÍNEA DE TIEMPO (Estilo Corporativo Limpio) */
+        /* TIMELINE ESTILO AUDITORÍA */
         .timeline {
-            margin: 10px 0;
-            padding-left: 10px;
-            border-left: 2px solid #bdc3c7; /* Línea guía gris */
+            border-left: 2px solid #ddd;
+            margin-left: 5px;
+            padding-left: 25px;
         }
 
         .timeline-item {
-            margin-bottom: 25px;
-            padding-left: 20px;
+            margin-bottom: 30px;
             position: relative;
         }
 
-        /* Pseudo-elemento para el punto de la timeline (simulado con borde) */
-        .timeline-header {
-            font-size: 12px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 4px;
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -31px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            background-color: #fff;
+            border: 2px solid #2c3e50;
+            border-radius: 50%;
         }
 
-        .timeline-date-time {
-            font-size: 9px;
-            color: #7f8c8d;
-            margin-bottom: 8px;
-            font-family: monospace; /* Para tabular números */
-        }
-
-        .timeline-details {
-            background-color: #fcfcfc;
-            border: 1px solid #f1f1f1;
-            padding: 10px;
-            font-size: 10px;
-            border-radius: 2px;
-        }
-
-        .timeline-detail-item {
-            margin-bottom: 4px;
-            color: #555;
-        }
-
-        .timeline-detail-item strong {
-            color: #333;
-        }
-
-        .timeline-image {
-            max-width: 120px;
-            max-height: 120px;
-            border: 1px solid #ddd;
-            padding: 2px;
-            background: white;
-            margin-top: 8px;
-        }
-
-        /* SEPARADOR DE FECHA */
         .date-separator {
             font-size: 10px;
             font-weight: bold;
+            background: #2c3e50;
             color: #fff;
-            background-color: #95a5a6;
-            padding: 4px 10px;
-            border-radius: 10px;
             display: inline-block;
-            margin: 15px 0 15px -20px; /* Alineado a la izquierda sobre la línea */
-            position: relative;
-            z-index: 10;
+            padding: 3px 8px;
+            border-radius: 2px;
+            margin: 0 0 15px -25px;
+        }
+
+        .timeline-header {
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        .timeline-meta {
+            font-size: 9px;
+            color: #7f8c8d;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+
+        .timeline-details {
+            background-color: #f9f9f9;
+            border-left: 3px solid #ccc;
+            padding: 10px;
+            font-size: 9pt;
+        }
+
+        .timeline-detail-item { margin-bottom: 4px; color: #444; }
+        .timeline-detail-item strong { color: #222; font-size: 8pt; text-transform: uppercase; }
+
+        .image-container { margin-top: 10px; }
+        .evidence-img {
+            max-width: 120px;
+            border: 1px solid #ddd;
+            padding: 3px;
+            background: #fff;
         }
 
         /* FOOTER */
         .footer {
-            margin-top: 50px;
-            padding-top: 15px;
-            border-top: 1px solid #bdc3c7;
+            position: fixed;
+            bottom: 40px;
+            left: 50px;
+            right: 50px;
             text-align: center;
-            font-size: 8px;
-            color: #95a5a6;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+
+        .footer p {
+            font-size: 7pt;
+            color: #999;
+            margin: 2px 0;
+            text-transform: uppercase;
         }
 
         .no-data {
-            color: #7f8c8d;
-            font-style: italic;
-            background: #f9f9f9;
-            padding: 15px;
+            padding: 20px;
             text-align: center;
-            border: 1px dashed #ccc;
+            color: #999;
+            border: 1px dashed #ddd;
+            background: #fafafa;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-logo-text">
-            <h1>Rescate Animal</h1>
-            <p>Reporte Oficial de Historial y Seguimiento</p>
+
+    <div class="header-banner">
+        <div class="header-left">
+            <h1 class="header-title">Rescate Animal</h1>
+            <p class="header-subtitle">Reporte Oficial de Seguimiento</p>
         </div>
-        <div class="header-meta">
+        <div class="header-right">
+            <div class="header-meta-item"><strong>Expediente:</strong> {{ $animalFile->id ?? '---' }}</div>
+            <div class="header-meta-item"><strong>Fecha:</strong> {{ date('d/m/Y') }}</div>
+            <div class="header-meta-item"><strong>Uso Interno</strong></div>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        
+        <div class="section">
+            <div class="section-title">I. Información General del Paciente</div>
             
-            <div style="margin-top: 5px; font-size: 9px; color: #7f8c8d;">
-                Ref: {{ $animalFile->id ?? 'N/A' }}
-            </div>
-        </div>
-    </div>
-    
-    <div class="section">
-        <div class="section-title">Ficha Técnica del Animal</div>
-        
-        <div class="animal-file-box">
-            <div class="info-grid">
-                <div class="info-row">
-                    <div class="info-label">Nombre</div>
-                    <div class="info-value">{{ $animalFile->animal?->nombre ?? '-' }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Sexo</div>
-                    <div class="info-value">{{ $animalFile->animal?->sexo ?? '-' }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Especie</div>
-                    <div class="info-value">{{ $animalFile->species?->nombre ?? '-' }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Estado Actual</div>
-                    <div class="info-value">
-                        @if($animalFile->animalStatus)
-                            <span class="status-badge">{{ $animalFile->animalStatus->nombre }}</span>
-                        @else
-                            -
-                        @endif
-                    </div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Centro Actual</div>
-                    <div class="info-value">{{ $animalFile->center?->nombre ?? '-' }}</div>
-                </div>
-                
-                @if(!empty($animalFileImagePath))
-                <div class="info-row">
-                    <div class="info-label">Registro Fotográfico</div>
-                    <div class="info-value">
-                        @php
-                            $imageFullPath = str_starts_with($animalFileImagePath, 'temp/') 
-                                ? storage_path('app/' . $animalFileImagePath)
-                                : public_path('storage/' . $animalFileImagePath);
-                        @endphp
-                        @if(file_exists($imageFullPath))
-                            <img src="{{ $imageFullPath }}" class="animal-image" alt="Imagen del animal">
-                        @endif
-                    </div>
-                </div>
-                @endif
-            </div>
-        </div>
-    </div>
-    
-    <div class="section">
-        <div class="section-title">Eventos y Seguimiento</div>
-        
-        @if(!empty($timeline))
-            <div class="timeline">
-                @php $currentDate = null; @endphp
-                @foreach($timeline as $t)
-                    @php
-                        $datetime = trim($t['changed_at'] ?? '');
-                        $date = $datetime ? explode(' ', $datetime)[0] : '';
-                        $time = $datetime && strpos($datetime, ' ') !== false ? trim(substr($datetime, strpos($datetime, ' '))) : '';
-                        $title = $t['title'] ?? 'Actualización';
-                    @endphp
+            <div class="animal-file-box">
+                <table class="info-grid">
+                    <tr class="info-row">
+                        <td class="info-label">Nombre</td>
+                        <td class="info-value">{{ $animalFile->animal?->nombre ?? '-' }}</td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">Especie / Sexo</td>
+                        <td class="info-value">
+                            {{ $animalFile->species?->nombre ?? '-' }} / 
+                            {{ $animalFile->animal?->sexo ?? '-' }}
+                        </td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">Estado Administrativo</td>
+                        <td class="info-value">
+                            @if($animalFile->animalStatus)
+                                <span class="status-badge">{{ $animalFile->animalStatus->nombre }}</span>
+                            @else
+                                -
+                            @endif
+                        </td>
+                    </tr>
+                    <tr class="info-row">
+                        <td class="info-label">Ubicación (Centro)</td>
+                        <td class="info-value">{{ $animalFile->center?->nombre ?? '-' }}</td>
+                    </tr>
                     
-                    @if($date && $date !== $currentDate)
-                        <div class="date-separator">
-                            {{ $date }}
-                        </div>
-                        @php $currentDate = $date; @endphp
-                    @endif
-                    
-                    <div class="timeline-item">
-                        <div class="timeline-header">{{ $title }}</div>
-                        <div class="timeline-date-time">
-                            Hora: {{ $time ?: '--:--' }}
-                        </div>
-                        
-                        @if(!empty($t['details']))
-                            <div class="timeline-details">
-                                @foreach($t['details'] as $d)
-                                    <div class="timeline-detail-item">
-                                        <strong>{{ $d['label'] }}:</strong> {{ $d['value'] }}
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                        
-                        @if(!empty($t['image_url']))
+                    @if(!empty($animalFileImagePath))
+                    <tr class="info-row">
+                        <td class="info-label">Registro Visual</td>
+                        <td class="info-value">
                             @php
-                                $imageFullPath = str_starts_with($t['image_url'], 'temp/') 
-                                    ? storage_path('app/' . $t['image_url'])
-                                    : public_path('storage/' . $t['image_url']);
+                                $imageFullPath = str_starts_with($animalFileImagePath, 'temp/') 
+                                    ? storage_path('app/' . $animalFileImagePath)
+                                    : public_path('storage/' . $animalFileImagePath);
                             @endphp
                             @if(file_exists($imageFullPath))
-                                <div>
-                                    <img src="{{ $imageFullPath }}" class="timeline-image" alt="Evidencia">
+                                <img src="{{ $imageFullPath }}" class="evidence-img" alt="Foto Paciente">
+                            @endif
+                        </td>
+                    </tr>
+                    @endif
+                </table>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">II. Registro Cronológico de Eventos</div>
+            
+            @if(!empty($timeline))
+                <div class="timeline">
+                    @php $currentDate = null; @endphp
+                    @foreach($timeline as $t)
+                        @php
+                            $datetime = trim($t['changed_at'] ?? '');
+                            $date = $datetime ? explode(' ', $datetime)[0] : '';
+                            $time = $datetime && strpos($datetime, ' ') !== false ? trim(substr($datetime, strpos($datetime, ' '))) : '';
+                            $title = $t['title'] ?? 'REGISTRO DE SISTEMA';
+                        @endphp
+                        
+                        @if($date && $date !== $currentDate)
+                            <div class="date-separator">{{ $date }}</div>
+                            @php $currentDate = $date; @endphp
+                        @endif
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-header">{{ $title }}</div>
+                            <div class="timeline-meta">REGISTRADO A LAS {{ $time ?: '--:--' }} HRS</div>
+                            
+                            @if(!empty($t['details']))
+                                <div class="timeline-details">
+                                    @foreach($t['details'] as $d)
+                                        <div class="timeline-detail-item">
+                                            <strong>{{ $d['label'] }}:</strong> {{ $d['value'] }}
+                                        </div>
+                                    @endforeach
                                 </div>
                             @endif
-                        @endif
-                    </div>
-                @endforeach
-            </div>
-        @else
-            <div class="no-data">No se encontraron registros históricos para este expediente.</div>
-        @endif
-    </div>
-    
-    <div class="footer">
-        <p>Generado el {{ $generatedAt }} | Sistema de Gestión Integral - Rescate Animal</p>
-        <p>Este documento es para uso interno exclusivo. La información contenida está protegida.</p>
+                            
+                            @if(!empty($t['image_url']))
+                                @php
+                                    $imageFullPath = str_starts_with($t['image_url'], 'temp/') 
+                                        ? storage_path('app/' . $t['image_url'])
+                                        : public_path('storage/' . $t['image_url']);
+                                @endphp
+                                @if(file_exists($imageFullPath))
+                                    <div class="image-container">
+                                        <img src="{{ $imageFullPath }}" class="evidence-img" alt="Evidencia">
+                                    </div>
+                                @endif
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="no-data">No constan registros de actividad para este expediente.</div>
+            @endif
+        </div>
+        
+        <div class="footer">
+            <p>Sistema de Gestión Integral - Rescate Animal</p>
+            <p>Información Confidencial | Generado el {{ $generatedAt }}</p>
+        </div>
+
     </div>
 </body>
 </html>

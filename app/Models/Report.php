@@ -113,4 +113,29 @@ class Report extends Model
         return $this->hasOne(Transfer::class, 'reporte_id', 'id')
             ->where('primer_traslado', true);
     }
+
+    /**
+     * Obtener focos de calor cercanos a este reporte (por proximidad geográfica)
+     * 
+     * NOTA: No hay relación directa por ID porque la API de NASA FIRMS
+     * no proporciona IDs de incendios. La relación se hace por coordenadas.
+     * 
+     * @param float $radiusKm Radio en kilómetros (default: 20 km)
+     * @param int|null $days Días hacia atrás (default: 2)
+     * @return \Illuminate\Support\Collection
+     */
+    public function getNearbyFocosCalor(float $radiusKm = 20, ?int $days = 2): \Illuminate\Support\Collection
+    {
+        if (!$this->latitud || !$this->longitud) {
+            return collect();
+        }
+
+        $service = app(\App\Services\Fire\FocosCalorService::class);
+        return $service->getNearbyHotspots(
+            (float) $this->latitud,
+            (float) $this->longitud,
+            $radiusKm,
+            $days
+        );
+    }
 }

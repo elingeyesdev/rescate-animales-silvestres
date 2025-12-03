@@ -23,13 +23,25 @@
                     </div>
 
                     <div class="card-body bg-white">
-                        <!-- Checkbox de predicciones -->
+                        <!-- Toggles independientes para cada módulo -->
                         <div class="mb-3">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="togglePredictions" checked>
-                                <label class="form-check-label" for="togglePredictions">
-                                    <i class="fas fa-fire"></i> {{ __('Mostrar predicciones de incendios') }}
-                                </label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="togglePredictions" checked>
+                                        <label class="form-check-label" for="togglePredictions">
+                                            <i class="fas fa-fire"></i> {{ __('Predicciones de incendios (simulación)') }}
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="toggleFocosCalor" checked>
+                                        <label class="form-check-label" for="toggleFocosCalor">
+                                            <i class="fas fa-satellite"></i> {{ __('Focos de Calor NASA FIRMS') }}
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -54,15 +66,18 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-2">
-                                        <strong>{{ __('Incendios:') }}</strong>
+                                        <strong>{{ __('Focos de Calor NASA FIRMS:') }}</strong>
                                     </div>
                                     <div class="mb-1">
-                                        <span style="display: inline-block; width: 20px; height: 20px; background-color: #ff4444; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); vertical-align: middle;"></span>
-                                        <span class="ml-2">{{ __('Hallazgo en incendio') }}</span>
+                                        <span style="display: inline-block; width: 12px; height: 12px; background-color: #ff0000; border: 1px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.5); vertical-align: middle;"></span>
+                                        <span class="ml-2">{{ __('Punto rojo - Foco de calor detectado') }}</span>
+                                    </div>
+                                    <div class="mb-2 mt-3">
+                                        <strong>{{ __('Predicciones (Simulación):') }}</strong>
                                     </div>
                                     <div class="mb-1">
                                         <span style="display: inline-block; width: 20px; height: 20px; background-color: #ff8800; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); vertical-align: middle;"></span>
-                                        <span class="ml-2">{{ __('Predicción de propagación') }}</span>
+                                        <span class="ml-2">{{ __('Círculo - Predicción de propagación') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -82,9 +97,13 @@
         let map = null;
         let markers = [];
         let predictionLayers = [];
+        let focosCalorMarkers = [];
+        let loadedPredictions = new Set(); // Para evitar cargar predicciones duplicadas
         let showPredictions = true;
+        let showFocosCalor = true;
 
         const reportsData = @json($reports ?? []);
+        const focosCalorData = @json($focosCalorFormatted ?? []);
 
         function initMap() {
             if (typeof L === 'undefined') {
@@ -103,8 +122,11 @@
 
             // Agregar marcadores de hallazgos
             addReportsMarkers();
+            
+            // Agregar marcadores de focos de calor (desde BD, no API)
+            addFocosCalorMarkers();
 
-            // Toggle de predicciones
+            // Toggle de predicciones (simulación)
             const togglePredictions = document.getElementById('togglePredictions');
             if (togglePredictions) {
                 togglePredictions.addEventListener('change', function() {
@@ -112,10 +134,105 @@
                     updatePredictionLayers();
                 });
             }
+
+            // Toggle de focos de calor (NASA FIRMS)
+            const toggleFocosCalor = document.getElementById('toggleFocosCalor');
+            if (toggleFocosCalor) {
+                toggleFocosCalor.addEventListener('change', function() {
+                    showFocosCalor = this.checked;
+                    updateFocosCalorMarkers();
+                });
+            }
+        }
+        
+        function addFocosCalorMarkers() {
+            if (!map) return;
+            
+            // Módulo independiente: Focos de Calor NASA FIRMS
+            // Si no hay datos, simplemente no mostrar nada (no es error)
+            if (!focosCalorData || focosCalorData.length === 0) {
+                console.log('[Focos Calor] No hay datos de NASA FIRMS para mostrar');
+                return;
+            }
+            
+            console.log(`[Focos Calor] Agregando ${focosCalorData.length} focos de calor al mapa`);
+            
+            focosCalorData.forEach(function(foco) {
+                if (!foco.lat || !foco.lng) return;
+                
+                // Crear punto rojo simple (no círculo)
+                const point = L.circleMarker([foco.lat, foco.lng], {
+                    radius: 6,
+                    fillColor: '#ff0000',
+                    color: '#ffffff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                });
+                
+                // Solo agregar al mapa si el toggle está activado
+                if (showFocosCalor) {
+                    point.addTo(map);
+                }
+                
+                // Popup con información del foco
+                const confidence = foco.confidence || 0;
+                const popupContent = `
+                    <div style="min-width: 200px;">
+                        <h6 style="margin: 0 0 8px 0; font-weight: bold;">
+                            <i class="fas fa-satellite"></i> Foco de Calor NASA FIRMS
+                        </h6>
+                        <div style="font-size: 12px; margin-bottom: 4px;">
+                            <strong>Confianza:</strong> 
+                            <span class="badge badge-${confidence >= 70 ? 'danger' : (confidence >= 30 ? 'warning' : 'secondary')}">
+                                ${confidence}%
+                            </span>
+                        </div>
+                        <div style="font-size: 12px; margin-bottom: 4px;">
+                            <strong>Fecha:</strong> ${foco.date}
+                        </div>
+                        <div style="font-size: 12px; margin-bottom: 4px;">
+                            <strong>Hora:</strong> ${foco.time}
+                        </div>
+                        ${foco.frp ? `
+                            <div style="font-size: 12px; margin-bottom: 4px;">
+                                <strong>FRP:</strong> ${foco.frp.toFixed(2)} MW
+                            </div>
+                        ` : ''}
+                        ${foco.brightness ? `
+                            <div style="font-size: 12px; margin-bottom: 4px;">
+                                <strong>Brillo:</strong> ${foco.brightness.toFixed(2)} K
+                            </div>
+                        ` : ''}
+                        <div style="font-size: 11px; color: #6c757d; margin-top: 8px;">
+                            <i class="fas fa-info-circle"></i> Datos de NASA FIRMS
+                        </div>
+                    </div>
+                `;
+                
+                point.bindPopup(popupContent);
+                focosCalorMarkers.push(point);
+            });
+        }
+
+        function updateFocosCalorMarkers() {
+            focosCalorMarkers.forEach(function(marker) {
+                if (showFocosCalor) {
+                    if (!map.hasLayer(marker)) {
+                        marker.addTo(map);
+                    }
+                } else {
+                    if (map.hasLayer(marker)) {
+                        map.removeLayer(marker);
+                    }
+                }
+            });
         }
 
         function addReportsMarkers() {
             if (!map) return;
+
+            console.log(`[Reportes] Agregando ${reportsData.length} reportes al mapa`);
 
             reportsData.forEach(function(report) {
                 if (!report.latitud || !report.longitud) return;
@@ -140,11 +257,14 @@
                     }
                 }
 
-                // Si tiene incendio_id, usar un marcador especial
+                // Si tiene incendio_id, usar un marcador especial (simulación o reporte real con incendio)
                 if (report.incendio_id) {
                     color = '#ff4444'; // rojo más intenso para incendios
                     iconClass = 'fa-fire';
                 }
+                
+                // Marcar reporte simulado
+                const isSimulado = report.id === 'simulado';
 
                 // Crear icono personalizado
                 const icon = L.divIcon({
@@ -193,12 +313,17 @@
                             </div>
                         ` : ''}
                         <div style="font-size: 11px; color: #6c757d; margin-top: 8px;">
-                            ${report.id !== 'simulado' ? `
+                            ${isSimulado ? `
+                                <span class="badge badge-warning">
+                                    <i class="fas fa-flask"></i> Simulación de demostración
+                                </span>
+                                <div style="margin-top: 4px; font-size: 10px; color: #6c757d;">
+                                    Este reporte muestra la funcionalidad de predicción de incendios
+                                </div>
+                            ` : `
                                 <a href="${window.location.origin}/reports/${report.id}" class="btn btn-sm btn-primary" target="_blank" style="color: white;">
                                     <i class="fas fa-eye"></i> Ver detalles
                                 </a>
-                            ` : `
-                                <span class="badge badge-info">Reporte simulado para demostración</span>
                             `}
                         </div>
                     </div>
@@ -210,12 +335,19 @@
                     report: report,
                     marker: marker
                 });
-
-                // Si tiene incendio_id, cargar predicción
-                if (report.incendio_id && showPredictions) {
-                    loadFirePrediction(report.incendio_id);
-                }
             });
+
+            // Módulo independiente: Predicciones de incendios (simulación)
+            // Cargar predicciones para todos los reportes con incendio_id
+            // Esto se hace después de agregar todos los marcadores
+            if (showPredictions) {
+                reportsData.forEach(function(report) {
+                    if (report.incendio_id) {
+                        console.log(`[Predicciones] Cargando predicción para reporte ${report.id} (incendio_id: ${report.incendio_id})`);
+                        loadFirePrediction(report.incendio_id);
+                    }
+                });
+            }
 
             // Ajustar vista para mostrar todos los marcadores
             if (markers.length > 0) {
@@ -225,16 +357,32 @@
         }
 
         function loadFirePrediction(focoIncendioId) {
+            // Evitar cargar la misma predicción dos veces
+            if (loadedPredictions.has(focoIncendioId)) {
+                console.log(`[Predicciones] Predicción ${focoIncendioId} ya cargada, omitiendo`);
+                return;
+            }
+            
+            loadedPredictions.add(focoIncendioId);
+            console.log(`[Predicciones] Solicitando predicción para foco_incendio_id: ${focoIncendioId}`);
+            
             fetch(`/api/fire-predictions?foco_incendio_id=${focoIncendioId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data && data.data && data.data.length > 0) {
                         const prediction = data.data[0];
+                        console.log(`[Predicciones] Predicción recibida, dibujando en mapa`);
                         drawFirePrediction(prediction);
+                    } else {
+                        console.warn(`[Predicciones] No se encontraron datos de predicción para foco_incendio_id: ${focoIncendioId}`);
+                        // Si no hay datos, remover del set para permitir reintento
+                        loadedPredictions.delete(focoIncendioId);
                     }
                 })
                 .catch(error => {
-                    console.error('Error al cargar predicción:', error);
+                    console.error(`[Predicciones] Error al cargar predicción para foco_incendio_id ${focoIncendioId}:`, error);
+                    // Remover del set en caso de error para permitir reintento
+                    loadedPredictions.delete(focoIncendioId);
                 });
         }
 
@@ -244,6 +392,9 @@
             const path = prediction.path;
             const circles = [];
             let polyline = null;
+            
+            // Guardar el foco_incendio_id en las opciones para evitar duplicados
+            const focoIncendioId = prediction.foco_incendio_id || prediction.id || null;
 
             // Primero crear la línea punteada (para que quede debajo de los círculos)
             if (path.length > 1 && showPredictions) {
@@ -257,7 +408,8 @@
                         weight: 4,
                         opacity: 0.8,
                         dashArray: '10, 5',
-                        zIndexOffset: -100 // Asegurar que esté debajo
+                        zIndexOffset: -100, // Asegurar que esté debajo
+                        focoIncendioId: focoIncendioId // Guardar ID para evitar duplicados
                     });
                     
                     if (showPredictions) {
@@ -304,7 +456,8 @@
                     fillColor: color,
                     fillOpacity: opacity,
                     weight: borderWidth,
-                    zIndexOffset: 100 // Asegurar que esté encima de la línea
+                    zIndexOffset: 100, // Asegurar que esté encima de la línea
+                    focoIncendioId: focoIncendioId // Guardar ID para evitar duplicados
                 });
 
                 if (showPredictions) {
@@ -334,6 +487,7 @@
         }
 
         function updatePredictionLayers() {
+            // Actualizar capas existentes
             predictionLayers.forEach(function(layer) {
                 if (showPredictions) {
                     if (!map.hasLayer(layer)) {
@@ -345,6 +499,15 @@
                     }
                 }
             });
+
+            // Si se activó el toggle y hay reportes con incendio_id, cargar predicciones
+            if (showPredictions) {
+                reportsData.forEach(function(report) {
+                    if (report.incendio_id && !loadedPredictions.has(report.incendio_id)) {
+                        loadFirePrediction(report.incendio_id);
+                    }
+                });
+            }
         }
 
         // Inicializar cuando el DOM esté listo
