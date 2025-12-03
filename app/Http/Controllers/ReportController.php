@@ -104,7 +104,7 @@ class ReportController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $report = new Report();
 
@@ -112,7 +112,19 @@ class ReportController extends Controller
         $conditions = AnimalCondition::where('activo', true)->orderBy('nombre')->get(['id','nombre']);
         $incidentTypes = IncidentType::where('activo', true)->orderBy('nombre')->get(['id','nombre']);
 
-        return view('report.create', compact('report','centers','conditions','incidentTypes'));
+        // Detectar si viene desde landing o desde el panel interno
+        $referer = $request->headers->get('referer');
+        $hasFromParam = $request->has('from') && $request->get('from') === 'landing';
+        $fromLanding = $referer && (str_contains($referer, route('landing', [], false)) || str_contains($referer, '/landing'));
+        $fromReports = $referer && (str_contains($referer, route('reports.index', [], false)) || str_contains($referer, '/reports'));
+        
+        // Si viene con parámetro 'from=landing' o desde landing, usar formato simple
+        $useSimpleFormat = $hasFromParam || $fromLanding;
+        
+        // Si está autenticado y viene desde reports (o no viene desde landing), usar formato completo
+        $useFullFormat = Auth::check() && ($fromReports || (!$fromLanding && !$hasFromParam));
+
+        return view('report.create', compact('report','centers','conditions','incidentTypes', 'useSimpleFormat', 'useFullFormat'));
     }
 
     /**

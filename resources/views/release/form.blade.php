@@ -98,7 +98,7 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-group mb-2 mb20">
-                        <label class="form-label">{{ __('Ubicación (clic en el mapa)') }}</label>
+                        <label class="form-label">{{ __('Selecciona la ubicación en el mapa') }}</label>
                         <div id="release_map" style="height: 300px; border-radius: 4px;"></div>
                         <input type="hidden" name="latitud" id="latitud" value="{{ old('latitud', $release?->latitud) }}">
                         <input type="hidden" name="longitud" id="longitud" value="{{ old('longitud', $release?->longitud) }}">

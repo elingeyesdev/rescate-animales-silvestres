@@ -113,7 +113,7 @@
 
         @if(empty($report?->id))
         <div class="form-group mb-2 mb20">
-            <label class="form-label">{{ __('Ubicación (clic en el mapa)') }}</label>
+            <label class="form-label">{{ __('Selecciona la ubicación en el mapa') }}</label>
             <div class="row">
                 <div class="col-12">
                     <div id="mapid" style="height: 360px; width: 100%; border-radius: 4px;"></div>

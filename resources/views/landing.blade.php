@@ -90,7 +90,7 @@
                 </div>
                 <div class="cta">
                     <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-sign-in-alt"></i> Ingresar</a>
-                    <a href="{{ route('reports.create') }}" class="btn btn-warning btn-sm btn-pulse"><i class="fas fa-bolt"></i> Registro rápido</a>
+                    <a href="{{ route('reports.create', ['from' => 'landing']) }}" class="btn btn-warning btn-sm btn-pulse"><i class="fas fa-bolt"></i> Registro rápido</a>
                 </div>
             </div>
 

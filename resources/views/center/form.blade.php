@@ -7,7 +7,7 @@
             {!! $errors->first('nombre', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
-            <label class="form-label">{{ __('Ubicación (clic en el mapa)') }}</label>
+            <label class="form-label">{{ __('Selecciona la ubicación en el mapa') }}</label>
             <div id="center_map" style="height: 300px; border-radius: 4px;"></div>
             <input type="hidden" name="latitud" id="latitud" value="{{ old('latitud', $center?->latitud) }}">
             <input type="hidden" name="longitud" id="longitud" value="{{ old('longitud', $center?->longitud) }}">
