@@ -21,6 +21,10 @@ use App\Models\IncidentType;
 use App\Models\AnimalHistory;
 use App\Mail\NewReportNotification;
 use App\Services\User\UserTrackingService;
+use App\Models\Animal;
+use App\Models\AnimalFile;
+use App\Models\Species;
+use App\Models\Release;
 
 class ReportController extends Controller
 {
@@ -374,6 +378,7 @@ class ReportController extends Controller
             abort(403, 'No tienes permiso para acceder al mapa de campo.');
         }
         
+        // Obtener reportes/hallazgos
         $query = Report::with(['person', 'condicionInicial', 'incidentType'])
             ->whereNotNull('latitud')
             ->whereNotNull('longitud')
@@ -419,7 +424,98 @@ class ReportController extends Controller
         $focosCalor = $this->focosCalorService->getRecentHotspots(2);
         $focosCalorFormatted = $this->focosCalorService->formatForMap($focosCalor);
 
-        return view('report.mapa-campo', compact('reports', 'focosCalorFormatted'));
+        // Obtener animales con sus especies y ubicación desde el reporte
+        $animals = Animal::with(['report', 'animalFiles' => function ($query) {
+                $query->orderByDesc('id');
+            }, 'animalFiles.species', 'animalFiles.animalStatus'])
+            ->whereHas('report', function ($query) {
+                $query->whereNotNull('latitud')
+                      ->whereNotNull('longitud');
+            })
+            ->get()
+            ->map(function ($animal) {
+                $report = $animal->report;
+                // Obtener la hoja de vida más reciente (última creada)
+                $animalFile = $animal->animalFiles->first();
+                
+                return [
+                    'id' => $animal->id,
+                    'nombre' => $animal->nombre,
+                    'latitud' => $report->latitud ?? null,
+                    'longitud' => $report->longitud ?? null,
+                    'especie_id' => $animalFile->especie_id ?? null,
+                    'especie' => $animalFile->species ? [
+                        'id' => $animalFile->species->id,
+                        'nombre' => $animalFile->species->nombre,
+                    ] : null,
+                    'estado' => $animalFile->animalStatus ? [
+                        'id' => $animalFile->animalStatus->id,
+                        'nombre' => $animalFile->animalStatus->nombre,
+                    ] : null,
+                    'reporte_id' => $report->id ?? null,
+                    'direccion' => $report->direccion ?? null,
+                ];
+            })
+            ->filter(function ($animal) {
+                return $animal['latitud'] !== null && $animal['longitud'] !== null;
+            })
+            ->values();
+
+        // Obtener liberaciones de animales
+        $releases = Release::with(['animalFile.species', 'animalFile.animal', 'animalFile.animalStatus'])
+            ->whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($release) {
+                $animalFile = $release->animalFile;
+                return [
+                    'id' => $release->id,
+                    'latitud' => $release->latitud,
+                    'longitud' => $release->longitud,
+                    'direccion' => $release->direccion,
+                    'detalle' => $release->detalle,
+                    'fecha' => $release->created_at ? $release->created_at->format('d/m/Y') : null,
+                    'especie_id' => $animalFile->especie_id ?? null,
+                    'especie' => $animalFile->species ? [
+                        'id' => $animalFile->species->id,
+                        'nombre' => $animalFile->species->nombre,
+                    ] : null,
+                    'animal' => $animalFile->animal ? [
+                        'id' => $animalFile->animal->id,
+                        'nombre' => $animalFile->animal->nombre,
+                    ] : null,
+                    'imagen_url' => $release->imagen_url,
+                ];
+            });
+
+        // Obtener centros de refugio
+        $centers = Center::whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->orderBy('nombre')
+            ->get()
+            ->map(function ($center) {
+                return [
+                    'id' => $center->id,
+                    'nombre' => $center->nombre,
+                    'latitud' => $center->latitud,
+                    'longitud' => $center->longitud,
+                    'direccion' => $center->direccion,
+                    'contacto' => $center->contacto,
+                ];
+            });
+
+        // Obtener todas las especies para el filtro
+        $species = Species::orderBy('nombre')->get(['id', 'nombre']);
+
+        return view('report.mapa-campo', compact(
+            'reports', 
+            'focosCalorFormatted', 
+            'animals', 
+            'releases', 
+            'centers', 
+            'species'
+        ));
     }
 
     /**
