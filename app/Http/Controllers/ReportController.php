@@ -12,6 +12,7 @@ use App\Http\Requests\ReportRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use App\Services\Animal\AnimalTransferTransactionalService;
 use App\Services\Report\ReportUrgencyService;
@@ -25,6 +26,7 @@ use App\Models\Animal;
 use App\Models\AnimalFile;
 use App\Models\Species;
 use App\Models\Release;
+use App\Models\Transfer;
 
 class ReportController extends Controller
 {
@@ -378,13 +380,24 @@ class ReportController extends Controller
             abort(403, 'No tienes permiso para acceder al mapa de campo.');
         }
         
-        // Obtener reportes/hallazgos
+        // Obtener solo reportes/hallazgos aprobados con información de si tienen hoja de vida
         $query = Report::with(['person', 'condicionInicial', 'incidentType'])
+            ->where('aprobado', 1)
             ->whereNotNull('latitud')
             ->whereNotNull('longitud')
             ->orderByDesc('id');
 
         $reports = $query->get()->map(function ($report) {
+            // Verificar si el reporte tiene animales con hojas de vida (ya rescatados)
+            $tieneHojaVida = false;
+            
+            // Verificar de forma más eficiente usando una consulta directa
+            $hasAnimalFiles = AnimalFile::whereHas('animal', function ($q) use ($report) {
+                $q->where('reporte_id', $report->id);
+            })->exists();
+            
+            $tieneHojaVida = $hasAnimalFiles;
+            
             return [
                 'id' => $report->id,
                 'latitud' => $report->latitud,
@@ -392,6 +405,7 @@ class ReportController extends Controller
                 'urgencia' => $report->urgencia,
                 'incendio_id' => $report->incendio_id,
                 'direccion' => $report->direccion,
+                'tiene_hoja_vida' => $tieneHojaVida,
                 'condicion_inicial' => $report->condicionInicial ? [
                     'nombre' => $report->condicionInicial->nombre,
                 ] : null,
@@ -411,6 +425,7 @@ class ReportController extends Controller
             'urgencia' => 5,
             'incendio_id' => 1, // ID para cargar la predicción desde la API
             'direccion' => 'San Jose de Chiquitos, Santa Cruz, Bolivia',
+            'tiene_hoja_vida' => false,
             'condicion_inicial' => [
                 'nombre' => 'Hallazgo',
             ],
@@ -424,44 +439,9 @@ class ReportController extends Controller
         $focosCalor = $this->focosCalorService->getRecentHotspots(2);
         $focosCalorFormatted = $this->focosCalorService->formatForMap($focosCalor);
 
-        // Obtener animales con sus especies y ubicación desde el reporte
-        $animals = Animal::with(['report', 'animalFiles' => function ($query) {
-                $query->orderByDesc('id');
-            }, 'animalFiles.species', 'animalFiles.animalStatus'])
-            ->whereHas('report', function ($query) {
-                $query->whereNotNull('latitud')
-                      ->whereNotNull('longitud');
-            })
-            ->get()
-            ->map(function ($animal) {
-                $report = $animal->report;
-                // Obtener la hoja de vida más reciente (última creada)
-                $animalFile = $animal->animalFiles->first();
-                
-                return [
-                    'id' => $animal->id,
-                    'nombre' => $animal->nombre,
-                    'latitud' => $report->latitud ?? null,
-                    'longitud' => $report->longitud ?? null,
-                    'especie_id' => $animalFile->especie_id ?? null,
-                    'especie' => $animalFile->species ? [
-                        'id' => $animalFile->species->id,
-                        'nombre' => $animalFile->species->nombre,
-                    ] : null,
-                    'estado' => $animalFile->animalStatus ? [
-                        'id' => $animalFile->animalStatus->id,
-                        'nombre' => $animalFile->animalStatus->nombre,
-                    ] : null,
-                    'reporte_id' => $report->id ?? null,
-                    'direccion' => $report->direccion ?? null,
-                ];
-            })
-            ->filter(function ($animal) {
-                return $animal['latitud'] !== null && $animal['longitud'] !== null;
-            })
-            ->values();
+        // No obtener animales regulares, solo los liberados (que vienen en releases)
 
-        // Obtener liberaciones de animales
+        // Obtener solo animales liberados (releases)
         $releases = Release::with(['animalFile.species', 'animalFile.animal', 'animalFile.animalStatus'])
             ->whereNotNull('latitud')
             ->whereNotNull('longitud')
@@ -489,31 +469,14 @@ class ReportController extends Controller
                 ];
             });
 
-        // Obtener centros de refugio
-        $centers = Center::whereNotNull('latitud')
-            ->whereNotNull('longitud')
-            ->orderBy('nombre')
-            ->get()
-            ->map(function ($center) {
-                return [
-                    'id' => $center->id,
-                    'nombre' => $center->nombre,
-                    'latitud' => $center->latitud,
-                    'longitud' => $center->longitud,
-                    'direccion' => $center->direccion,
-                    'contacto' => $center->contacto,
-                ];
-            });
-
-        // Obtener todas las especies para el filtro
-        $species = Species::orderBy('nombre')->get(['id', 'nombre']);
+        // Obtener todas las especies para el filtro (solo de animales liberados)
+        $speciesIds = $releases->pluck('especie_id')->filter()->unique();
+        $species = Species::whereIn('id', $speciesIds)->orderBy('nombre')->get(['id', 'nombre']);
 
         return view('report.mapa-campo', compact(
             'reports', 
             'focosCalorFormatted', 
-            'animals', 
             'releases', 
-            'centers', 
             'species'
         ));
     }

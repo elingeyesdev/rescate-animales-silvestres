@@ -23,13 +23,42 @@
                     </div>
 
                     <div class="card-body bg-white">
+                        <!-- Leyenda de urgencia fuera del mapa -->
+                        <div class="mb-3">
+                            <div class="mb-2">
+                                <strong><i class="fas fa-exclamation-triangle"></i> {{ __('Hallazgos por Urgencia:') }}</strong>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge badge-danger mr-2" style="font-size: 14px; padding: 8px 12px;">
+                                    <i class="fas fa-exclamation-circle"></i> {{ __('Alta (4-5)') }}
+                                </span>
+                                <span class="badge badge-warning mr-2" style="font-size: 14px; padding: 8px 12px;">
+                                    <i class="fas fa-exclamation-triangle"></i> {{ __('Media (3)') }}
+                                </span>
+                                <span class="badge badge-info mr-2" style="font-size: 14px; padding: 8px 12px;">
+                                    <i class="fas fa-info-circle"></i> {{ __('Baja (1-2)') }}
+                                </span>
+                            </div>
+                        </div>
 
                         <!-- Contenedor del mapa con posición relativa para controles flotantes -->
-                        <div style="position: relative; width: 100%;">
-                            <div id="mapaCampo" style="height: 600px; width: 100%; border-radius: 6px; border: 1px solid #dee2e6;"></div>
+                        <div style="position: relative; width: 100%; min-height: 500px;">
+                            <div id="mapaCampo" style="height: 500px; width: 100%; border-radius: 6px; border: 1px solid #dee2e6; background-color: #f0f0f0;"></div>
                             
                             <!-- Controles flotantes dentro del mapa -->
                             <div class="map-controls" style="position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; padding: 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); max-width: 280px;">
+                                <!-- Filtro de estado de hallazgos -->
+                                <div class="mb-2">
+                                    <label for="filterReportStatus" class="form-label" style="font-size: 12px; font-weight: bold; margin-bottom: 4px;">
+                                        <i class="fas fa-filter"></i> {{ __('Estado Hallazgos') }}
+                                    </label>
+                                    <select class="form-control form-control-sm" id="filterReportStatus" style="font-size: 12px;">
+                                        <option value="all">{{ __('Hallazgos aprobados') }}</option>
+                                        <option value="with_file">{{ __('Tienen hoja de animal') }}</option>
+                                        <option value="without_file">{{ __('Pendientes') }}</option>
+                                    </select>
+                                </div>
+                                
                                 <!-- Filtro por especie -->
                                 <div class="mb-2">
                                     <label for="filterSpecies" class="form-label" style="font-size: 12px; font-weight: bold; margin-bottom: 4px;">
@@ -48,31 +77,13 @@
                                     <div class="form-check form-check-inline mb-1">
                                         <input class="form-check-input" type="checkbox" id="toggleReports" checked style="margin-top: 0.25rem;">
                                         <label class="form-check-label" for="toggleReports" style="font-size: 11px;">
-                                            <i class="fas fa-clipboard-list"></i> {{ __('Hallazgos') }}
-                                        </label>
-                                    </div>
-                                    <div class="form-check form-check-inline mb-1">
-                                        <input class="form-check-input" type="checkbox" id="toggleAnimals" checked style="margin-top: 0.25rem;">
-                                        <label class="form-check-label" for="toggleAnimals" style="font-size: 11px;">
-                                            <i class="fas fa-paw"></i> {{ __('Animales') }}
+                                            <i class="fas fa-clipboard-list"></i> {{ __('Hallazgos Aprobados') }}
                                         </label>
                                     </div>
                                     <div class="form-check form-check-inline mb-1">
                                         <input class="form-check-input" type="checkbox" id="toggleReleases" checked style="margin-top: 0.25rem;">
                                         <label class="form-check-label" for="toggleReleases" style="font-size: 11px;">
-                                            <i class="fas fa-dove"></i> {{ __('Liberaciones') }}
-                                        </label>
-                                    </div>
-                                    <div class="form-check form-check-inline mb-1">
-                                        <input class="form-check-input" type="checkbox" id="toggleCenters" checked style="margin-top: 0.25rem;">
-                                        <label class="form-check-label" for="toggleCenters" style="font-size: 11px;">
-                                            <i class="fas fa-home"></i> {{ __('Centros') }}
-                                        </label>
-                                    </div>
-                                    <div class="form-check form-check-inline mb-1">
-                                        <input class="form-check-input" type="checkbox" id="togglePredictions" checked style="margin-top: 0.25rem;">
-                                        <label class="form-check-label" for="togglePredictions" style="font-size: 11px;">
-                                            <i class="fas fa-fire"></i> {{ __('Predicciones') }}
+                                            <i class="fas fa-dove"></i> {{ __('Animales Liberados') }}
                                         </label>
                                     </div>
                                     <div class="form-check form-check-inline mb-1">
@@ -81,33 +92,42 @@
                                             <i class="fas fa-satellite"></i> {{ __('Focos') }}
                                         </label>
                                     </div>
+                                    <div class="form-check form-check-inline mb-1">
+                                        <input class="form-check-input" type="checkbox" id="togglePredictions" checked style="margin-top: 0.25rem;">
+                                        <label class="form-check-label" for="togglePredictions" style="font-size: 11px;">
+                                            <i class="fas fa-fire"></i> {{ __('Predicciones') }}
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             
                             <!-- Leyenda flotante en la esquina inferior derecha -->
-                            <div class="map-legend" style="position: absolute; bottom: 10px; right: 10px; z-index: 1000; background: white; padding: 8px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); max-width: 220px; font-size: 11px;">
-                                <div style="font-weight: bold; margin-bottom: 6px; font-size: 12px;">
-                                    <i class="fas fa-info-circle"></i> {{ __('Leyenda') }}
+                            <div class="map-legend" style="position: absolute; bottom: 10px; right: 10px; z-index: 1000; background: white; padding: 8px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); max-width: 240px; font-size: 11px;">
+                                
+                                <div style="margin-bottom: 4px;">
+                                    <strong>{{ __('Hallazgos:') }}</strong>
+                                    <div style="margin-top: 2px;">
+                                        <span style="display: inline-block; width: 14px; height: 14px; background-color: #dc3545; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle;"></span>
+                                        <span style="margin-left: 4px;">{{ __('Alta') }}</span>
+                                        <span style="display: inline-block; width: 14px; height: 14px; background-color: #ffc107; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle; margin-left: 8px;"></span>
+                                        <span style="margin-left: 4px;">{{ __('Media') }}</span>
+                                        <span style="display: inline-block; width: 14px; height: 14px; background-color: #17a2b8; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle; margin-left: 8px;"></span>
+                                        <span style="margin-left: 4px;">{{ __('Baja') }}</span>
+                                    </div>
+                                    <div style="margin-top: 4px; font-size: 10px;">
+                                        <span style="display: inline-block; width: 14px; height: 14px; background-color: #dc3545; border: 3px solid #28a745; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle; position: relative;">
+                                            <i class="fas fa-check" style="position: absolute; bottom: -3px; right: -3px; color: #28a745; background: white; border-radius: 50%; font-size: 8px; width: 10px; height: 10px; display: flex; align-items: center; justify-content: center;"></i>
+                                        </span>
+                                        <span style="margin-left: 4px;">{{ __('Con hoja de vida') }}</span>
+                                    </div>
                                 </div>
                                 <div style="margin-bottom: 4px;">
-                                    <span style="display: inline-block; width: 14px; height: 14px; background-color: #dc3545; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle;"></span>
-                                    <span style="margin-left: 4px;">{{ __('Alta') }}</span>
-                                    <span style="display: inline-block; width: 14px; height: 14px; background-color: #ffc107; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle; margin-left: 8px;"></span>
-                                    <span style="margin-left: 4px;">{{ __('Media') }}</span>
-                                    <span style="display: inline-block; width: 14px; height: 14px; background-color: #17a2b8; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle; margin-left: 8px;"></span>
-                                    <span style="margin-left: 4px;">{{ __('Baja') }}</span>
+                                    <span style="display: inline-block; width: 14px; height: 14px; background-color: #007bff; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle;"></span>
+                                    <span style="margin-left: 4px;">{{ __('Animal Liberado') }}</span>
                                 </div>
                                 <div style="margin-bottom: 4px;">
-                                    <span style="display: inline-block; width: 14px; height: 14px; background-color: #28a745; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle;"></span>
-                                    <span style="margin-left: 4px;">{{ __('Animal') }}</span>
-                                    <span style="display: inline-block; width: 14px; height: 14px; background-color: #007bff; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle; margin-left: 8px;"></span>
-                                    <span style="margin-left: 4px;">{{ __('Liberación') }}</span>
-                                </div>
-                                <div style="margin-bottom: 4px;">
-                                    <span style="display: inline-block; width: 14px; height: 14px; background-color: #6f42c1; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle;"></span>
-                                    <span style="margin-left: 4px;">{{ __('Centro') }}</span>
-                                    <span style="display: inline-block; width: 10px; height: 10px; background-color: #ff0000; border: 1px solid #fff; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.3); vertical-align: middle; margin-left: 8px;"></span>
-                                    <span style="margin-left: 4px;">{{ __('Foco') }}</span>
+                                    <span style="display: inline-block; width: 10px; height: 10px; background-color: #ff0000; border: 1px solid #fff; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.3); vertical-align: middle;"></span>
+                                    <span style="margin-left: 4px;">{{ __('Foco de Calor') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -123,52 +143,61 @@
     (function() {
         let map = null;
         let markers = [];
-        let animalMarkers = [];
         let releaseMarkers = [];
-        let centerMarkers = [];
         let predictionLayers = [];
         let focosCalorMarkers = [];
         let loadedPredictions = new Set(); // Para evitar cargar predicciones duplicadas
         let showReports = true;
-        let showAnimals = true;
         let showReleases = true;
-        let showCenters = true;
         let showPredictions = true;
         let showFocosCalor = true;
         let selectedSpeciesId = null;
+        let reportStatusFilter = 'all'; // 'all', 'with_file', 'without_file'
 
         const reportsData = @json($reports ?? []);
-        const animalsData = @json($animals ?? []);
         const releasesData = @json($releases ?? []);
-        const centersData = @json($centers ?? []);
         const focosCalorData = @json($focosCalorFormatted ?? []);
 
         function initMap() {
             if (typeof L === 'undefined') {
+                console.log('[Mapa] Esperando a que Leaflet se cargue...');
                 setTimeout(initMap, 100);
                 return;
             }
 
             const mapEl = document.getElementById('mapaCampo');
-            if (!mapEl) return;
+            if (!mapEl) {
+                console.error('[Mapa] No se encontró el elemento #mapaCampo');
+                return;
+            }
 
+            // Verificar que el elemento tenga dimensiones
+            if (mapEl.offsetWidth === 0 || mapEl.offsetHeight === 0) {
+                console.warn('[Mapa] El contenedor del mapa no tiene dimensiones, reintentando...');
+                setTimeout(initMap, 200);
+                return;
+            }
+
+            console.log('[Mapa] Inicializando mapa...');
+            
             // Inicializar mapa centrado en Santa Cruz
-            map = L.map('mapaCampo').setView([-17.7833, -63.1821], 11);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-                maxZoom: 19 
-            }).addTo(map);
+            try {
+                map = L.map('mapaCampo').setView([-17.7833, -63.1821], 11);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                    maxZoom: 19 
+                }).addTo(map);
+                
+                console.log('[Mapa] Mapa inicializado correctamente');
+            } catch (error) {
+                console.error('[Mapa] Error al inicializar el mapa:', error);
+                return;
+            }
 
-            // Agregar marcadores de hallazgos
+            // Agregar marcadores de hallazgos aprobados
             addReportsMarkers();
             
-            // Agregar marcadores de animales
-            addAnimalMarkers();
-            
-            // Agregar marcadores de liberaciones
+            // Agregar marcadores de animales liberados
             addReleaseMarkers();
-            
-            // Agregar marcadores de centros
-            addCenterMarkers();
             
             // Agregar marcadores de focos de calor (desde BD, no API)
             addFocosCalorMarkers();
@@ -182,30 +211,12 @@
                 });
             }
 
-            // Toggle de animales
-            const toggleAnimals = document.getElementById('toggleAnimals');
-            if (toggleAnimals) {
-                toggleAnimals.addEventListener('change', function() {
-                    showAnimals = this.checked;
-                    updateAnimalMarkers();
-                });
-            }
-
             // Toggle de liberaciones
             const toggleReleases = document.getElementById('toggleReleases');
             if (toggleReleases) {
                 toggleReleases.addEventListener('change', function() {
                     showReleases = this.checked;
                     updateReleaseMarkers();
-                });
-            }
-
-            // Toggle de centros
-            const toggleCenters = document.getElementById('toggleCenters');
-            if (toggleCenters) {
-                toggleCenters.addEventListener('change', function() {
-                    showCenters = this.checked;
-                    updateCenterMarkers();
                 });
             }
 
@@ -227,12 +238,21 @@
                 });
             }
 
-            // Filtro por especie
+            // Filtro de estado de hallazgos
+            const filterReportStatus = document.getElementById('filterReportStatus');
+            if (filterReportStatus) {
+                filterReportStatus.addEventListener('change', function() {
+                    reportStatusFilter = this.value;
+                    updateReportsMarkers();
+                });
+            }
+
+            // Filtro por especie (solo para liberaciones)
             const filterSpecies = document.getElementById('filterSpecies');
             if (filterSpecies) {
                 filterSpecies.addEventListener('change', function() {
                     selectedSpeciesId = this.value ? parseInt(this.value) : null;
-                    updateAnimalMarkers();
+                    updateReleaseMarkers();
                 });
             }
         }
@@ -318,96 +338,6 @@
             });
         }
 
-        function addAnimalMarkers() {
-            if (!map) return;
-
-            console.log(`[Animales] Agregando ${animalsData.length} animales al mapa`);
-
-            animalsData.forEach(function(animal) {
-                if (!animal.latitud || !animal.longitud) return;
-
-                const lat = parseFloat(animal.latitud);
-                const lng = parseFloat(animal.longitud);
-                
-                if (isNaN(lat) || isNaN(lng)) return;
-
-                // Crear icono personalizado para animales (verde)
-                const icon = L.divIcon({
-                    className: 'custom-marker',
-                    html: `<div style="background-color: #28a745; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-paw" style="color: white; font-size: 12px;"></i>
-                    </div>`,
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 12],
-                });
-
-                const marker = L.marker([lat, lng], { icon: icon });
-                
-                if (showAnimals && (!selectedSpeciesId || animal.especie_id == selectedSpeciesId)) {
-                    marker.addTo(map);
-                }
-
-                // Popup con información del animal
-                const especieNombre = animal.especie && animal.especie.nombre 
-                    ? animal.especie.nombre 
-                    : 'Especie no identificada';
-                const estadoNombre = animal.estado && animal.estado.nombre 
-                    ? animal.estado.nombre 
-                    : 'Estado no disponible';
-                
-                let popupContent = `
-                    <div style="min-width: 200px;">
-                        <h6 style="margin: 0 0 8px 0; font-weight: bold;">
-                            <i class="fas fa-paw"></i> ${animal.nombre || 'Animal #' + animal.id}
-                        </h6>
-                        <div style="font-size: 12px; margin-bottom: 4px;">
-                            <strong>Especie:</strong> ${especieNombre}
-                        </div>
-                        <div style="font-size: 12px; margin-bottom: 4px;">
-                            <strong>Estado:</strong> ${estadoNombre}
-                        </div>
-                        ${animal.direccion ? `
-                            <div style="font-size: 12px; margin-bottom: 4px;">
-                                <i class="fas fa-map-pin"></i> ${animal.direccion}
-                            </div>
-                        ` : ''}
-                        <div style="font-size: 11px; color: #6c757d; margin-top: 8px;">
-                            ${animal.reporte_id ? `
-                                <a href="${window.location.origin}/reports/${animal.reporte_id}" class="btn btn-sm btn-primary" target="_blank" style="color: white;">
-                                    <i class="fas fa-eye"></i> Ver reporte
-                                </a>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-
-                marker.bindPopup(popupContent);
-
-                animalMarkers.push({
-                    animal: animal,
-                    marker: marker
-                });
-            });
-        }
-
-        function updateAnimalMarkers() {
-            animalMarkers.forEach(function(item) {
-                const animal = item.animal;
-                const marker = item.marker;
-                
-                const shouldShow = showAnimals && (!selectedSpeciesId || animal.especie_id == selectedSpeciesId);
-                
-                if (shouldShow) {
-                    if (!map.hasLayer(marker)) {
-                        marker.addTo(map);
-                    }
-                } else {
-                    if (map.hasLayer(marker)) {
-                        map.removeLayer(marker);
-                    }
-                }
-            });
-        }
 
         function addReleaseMarkers() {
             if (!map) return;
@@ -434,7 +364,7 @@
 
                 const marker = L.marker([lat, lng], { icon: icon });
                 
-                if (showReleases) {
+                if (showReleases && (!selectedSpeciesId || release.especie_id == selectedSpeciesId)) {
                     marker.addTo(map);
                 }
 
@@ -486,8 +416,12 @@
 
         function updateReleaseMarkers() {
             releaseMarkers.forEach(function(item) {
+                const release = item.release;
                 const marker = item.marker;
-                if (showReleases) {
+                
+                const shouldShow = showReleases && (!selectedSpeciesId || release.especie_id == selectedSpeciesId);
+                
+                if (shouldShow) {
                     if (!map.hasLayer(marker)) {
                         marker.addTo(map);
                     }
@@ -499,82 +433,23 @@
             });
         }
 
-        function addCenterMarkers() {
-            if (!map) return;
-
-            console.log(`[Centros] Agregando ${centersData.length} centros al mapa`);
-
-            centersData.forEach(function(center) {
-                if (!center.latitud || !center.longitud) return;
-
-                const lat = parseFloat(center.latitud);
-                const lng = parseFloat(center.longitud);
-                
-                if (isNaN(lat) || isNaN(lng)) return;
-
-                // Crear icono personalizado para centros (morado)
-                const icon = L.divIcon({
-                    className: 'custom-marker',
-                    html: `<div style="background-color: #6f42c1; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-home" style="color: white; font-size: 12px;"></i>
-                    </div>`,
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 12],
-                });
-
-                const marker = L.marker([lat, lng], { icon: icon });
-                
-                if (showCenters) {
-                    marker.addTo(map);
-                }
-
-                // Popup con información del centro
-                let popupContent = `
-                    <div style="min-width: 200px;">
-                        <h6 style="margin: 0 0 8px 0; font-weight: bold;">
-                            <i class="fas fa-home"></i> ${center.nombre}
-                        </h6>
-                        ${center.direccion ? `
-                            <div style="font-size: 12px; margin-bottom: 4px;">
-                                <i class="fas fa-map-pin"></i> ${center.direccion}
-                            </div>
-                        ` : ''}
-                        ${center.contacto ? `
-                            <div style="font-size: 12px; margin-bottom: 4px;">
-                                <i class="fas fa-phone"></i> ${center.contacto}
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-
-                marker.bindPopup(popupContent);
-
-                centerMarkers.push({
-                    center: center,
-                    marker: marker
-                });
-            });
-        }
-
-        function updateCenterMarkers() {
-            centerMarkers.forEach(function(item) {
-                const marker = item.marker;
-                if (showCenters) {
-                    if (!map.hasLayer(marker)) {
-                        marker.addTo(map);
-                    }
-                } else {
-                    if (map.hasLayer(marker)) {
-                        map.removeLayer(marker);
-                    }
-                }
-            });
-        }
 
         function updateReportsMarkers() {
             markers.forEach(function(item) {
+                const report = item.report;
                 const marker = item.marker;
-                if (showReports) {
+                
+                // Aplicar filtro de estado
+                let shouldShow = showReports;
+                if (shouldShow && reportStatusFilter !== 'all') {
+                    if (reportStatusFilter === 'with_file' && !report.tiene_hoja_vida) {
+                        shouldShow = false;
+                    } else if (reportStatusFilter === 'without_file' && report.tiene_hoja_vida) {
+                        shouldShow = false;
+                    }
+                }
+                
+                if (shouldShow) {
                     if (!map.hasLayer(marker)) {
                         marker.addTo(map);
                     }
@@ -587,7 +462,15 @@
         }
 
         function addReportsMarkers() {
-            if (!map) return;
+            if (!map) {
+                console.error('[Reportes] El mapa no está inicializado');
+                return;
+            }
+
+            if (!reportsData || !Array.isArray(reportsData)) {
+                console.error('[Reportes] No hay datos de reportes o no es un array');
+                return;
+            }
 
             console.log(`[Reportes] Agregando ${reportsData.length} reportes al mapa`);
 
@@ -623,14 +506,21 @@
                 // Marcar reporte simulado
                 const isSimulado = report.id === 'simulado';
 
+                // Si tiene hoja de vida, usar borde verde más grueso para indicar que ya fue rescatado
+                const tieneHojaVida = report.tiene_hoja_vida || false;
+                const borderColor = tieneHojaVida ? '#28a745' : 'white';
+                const borderWidth = tieneHojaVida ? 4 : 3;
+                const iconSize = tieneHojaVida ? 30 : 28;
+                
                 // Crear icono personalizado
                 const icon = L.divIcon({
                     className: 'custom-marker',
-                    html: `<div style="background-color: ${color}; width: 28px; height: 28px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+                    html: `<div style="background-color: ${color}; width: ${iconSize}px; height: ${iconSize}px; border-radius: 50%; border: ${borderWidth}px solid ${borderColor}; box-shadow: 0 2px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; position: relative;">
                         <i class="fas ${iconClass}" style="color: white; font-size: 14px;"></i>
+                        ${tieneHojaVida ? '<i class="fas fa-check-circle" style="position: absolute; bottom: -2px; right: -2px; color: #28a745; background: white; border-radius: 50%; font-size: 10px; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center;"></i>' : ''}
                     </div>`,
-                    iconSize: [28, 28],
-                    iconAnchor: [14, 14],
+                    iconSize: [iconSize, iconSize],
+                    iconAnchor: [iconSize/2, iconSize/2],
                 });
 
                 const marker = L.marker([lat, lng], { icon: icon });
@@ -649,15 +539,28 @@
                 
                 let popupContent = `
                     <div style="min-width: 200px;">
+                        <div style="margin-bottom: 8px; padding: 8px; background-color: ${color}; border-radius: 4px; text-align: center;">
+                            <div style="color: white; font-size: 24px; font-weight: bold; margin-bottom: 2px;">
+                                ${urgencia !== null && urgencia !== undefined ? urgencia : 'N/A'}
+                            </div>
+                            <div style="color: white; font-size: 11px; text-transform: uppercase;">
+                                ${urgencia >= 4 ? 'Alta Urgencia' : (urgencia === 3 ? 'Media Urgencia' : (urgencia <= 2 ? 'Baja Urgencia' : 'Sin Urgencia'))}
+                            </div>
+                        </div>
+                        ${tieneHojaVida ? `
+                            <div style="margin-bottom: 8px; padding: 6px; background-color: #28a745; border-radius: 4px; text-align: center;">
+                                <i class="fas fa-check-circle" style="color: white; margin-right: 4px;"></i>
+                                <span style="color: white; font-size: 12px; font-weight: bold;">Ya tiene hoja de vida (Rescatado)</span>
+                            </div>
+                        ` : `
+                            <div style="margin-bottom: 8px; padding: 6px; background-color: #ffc107; border-radius: 4px; text-align: center;">
+                                <i class="fas fa-clock" style="color: white; margin-right: 4px;"></i>
+                                <span style="color: white; font-size: 12px; font-weight: bold;">Pendiente de rescate</span>
+                            </div>
+                        `}
                         <h6 style="margin: 0 0 8px 0; font-weight: bold;">
                             <i class="fas fa-clipboard-list"></i> ${condicionNombre}
                         </h6>
-                        <div style="font-size: 12px; margin-bottom: 4px;">
-                            <strong>Urgencia:</strong> 
-                            <span class="badge badge-${urgencia >= 4 ? 'danger' : (urgencia === 3 ? 'warning' : 'info')}">
-                                ${urgencia || 'N/A'}
-                            </span>
-                        </div>
                         ${report.incendio_id ? `
                             <div style="font-size: 12px; margin-bottom: 4px; color: #ff4444;">
                                 <i class="fas fa-fire"></i> <strong>Hallazgo en incendio</strong>
@@ -712,10 +615,14 @@
 
             // Ajustar vista para mostrar todos los marcadores visibles
             const allVisibleMarkers = [
-                ...markers.filter(m => showReports).map(m => m.marker),
-                ...animalMarkers.filter(m => showAnimals && (!selectedSpeciesId || m.animal.especie_id == selectedSpeciesId)).map(m => m.marker),
-                ...releaseMarkers.filter(m => showReleases).map(m => m.marker),
-                ...centerMarkers.filter(m => showCenters).map(m => m.marker)
+                ...markers.filter(m => {
+                    if (!showReports) return false;
+                    if (reportStatusFilter === 'all') return true;
+                    if (reportStatusFilter === 'with_file' && m.report.tiene_hoja_vida) return true;
+                    if (reportStatusFilter === 'without_file' && !m.report.tiene_hoja_vida) return true;
+                    return false;
+                }).map(m => m.marker),
+                ...releaseMarkers.filter(m => showReleases && (!selectedSpeciesId || m.release.especie_id == selectedSpeciesId)).map(m => m.marker)
             ];
             
             if (allVisibleMarkers.length > 0) {
@@ -878,12 +785,24 @@
             }
         }
 
-        // Inicializar cuando el DOM esté listo
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initMap);
-        } else {
-            initMap();
+        // Inicializar cuando el DOM esté listo y Leaflet esté cargado
+        function startInit() {
+            if (typeof L === 'undefined') {
+                console.log('[Mapa] Leaflet aún no está cargado, esperando...');
+                setTimeout(startInit, 100);
+                return;
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(initMap, 100);
+                });
+            } else {
+                setTimeout(initMap, 100);
+            }
         }
+        
+        startInit();
     })();
     </script>
 
