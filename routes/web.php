@@ -43,6 +43,13 @@ Route::get('/', function () {
 
 Auth::routes();
 
+// Ruta para refrescar token CSRF (sin middleware CSRF)
+Route::get('/refresh-csrf', function () {
+    return response()->json([
+        'token' => csrf_token()
+    ]);
+})->middleware('web');
+
 Route::get('/landing', [App\Http\Controllers\LandingController::class, 'index'])->name('landing');
 
 Route::get('/reporte-rapido', function () {

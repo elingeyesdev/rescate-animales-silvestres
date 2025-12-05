@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
 
         // Usuario administrador por defecto (idempotente)
         $admin = User::firstOrCreate(
-            ['email' => 'crs6000919@est.univalle.edu'],
-            ['password' => 'crs6000919'] // se encripta automáticamente por el cast "hashed"
+            ['email' => 'rescateanimales25@gmail.com'],
+            ['password' => 'rescate123'] // se encripta automáticamente por el cast "hashed"
         );
 
         // Asignar rol admin

@@ -16,7 +16,7 @@ class UserController extends Controller
      */
     public function index(Request $request): View
     {
-        $users = User::where('email', '!=', 'alejandro5@gmail.com')->paginate();
+        $users = User::paginate();
 
         return view('user.index', compact('users'))
             ->with('i', ($request->input('page', 1) - 1) * $users->perPage());

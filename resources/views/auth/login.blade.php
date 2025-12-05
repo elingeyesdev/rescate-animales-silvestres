@@ -63,6 +63,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     @endif
+    
+    // Refrescar token CSRF cada 30 minutos para evitar error 419
+    setInterval(function() {
+        fetch('/refresh-csrf', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(function(response) {
+            return response.json();
+        }).then(function(data) {
+            if (data.token) {
+                var csrfInput = document.querySelector('input[name="_token"]');
+                if (csrfInput) {
+                    csrfInput.value = data.token;
+                }
+                // También actualizar meta tag si existe
+                var metaTag = document.querySelector('meta[name="csrf-token"]');
+                if (metaTag) {
+                    metaTag.setAttribute('content', data.token);
+                }
+            }
+        }).catch(function(error) {
+            console.log('Error refreshing CSRF token:', error);
+        });
+    }, 30 * 60 * 1000); // 30 minutos
 });
 </script>
 @endpush
