@@ -50,7 +50,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="email" class="form-label">{{ __('Email') }} @if(!$person || !$person->user)<span class="text-danger">*</span>@endif</label>
-                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $person?->user?->email) }}" id="email" placeholder="correo@ejemplo.com" @if(!$person || !$person->user)required @endif>
+                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $person?->user?->email) }}" id="email" placeholder="correo@gmail.com" @if(!$person || !$person->user)required @endif>
                             {!! $errors->first('email', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
                             @if($person && $person->user)
                                 <small class="form-text text-muted">

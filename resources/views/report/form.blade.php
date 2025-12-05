@@ -217,24 +217,66 @@ document.addEventListener('DOMContentLoaded', function () {
   obs?.addEventListener('input', updateCounter);
   updateCounter();
 
-  // Mensajes predeterminados para observaciones
+  // Función para actualizar el estado visual de los botones
+  function updateButtonStates() {
+    if (!obs) return;
+    const currentText = obs.value;
+    document.querySelectorAll('.preset-obs-btn').forEach(btn => {
+      const text = btn.getAttribute('data-text');
+      const isActive = currentText.includes(text);
+      if (isActive) {
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-secondary');
+      } else {
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-outline-secondary');
+      }
+    });
+  }
+
+  // Mensajes predeterminados para observaciones (toggle)
   document.querySelectorAll('.preset-obs-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const text = this.getAttribute('data-text');
       if (!obs) return;
-      const currentText = obs.value.trim();
-      const newText = currentText ? currentText + ' ' + text : text;
-      if (newText.length <= 500) {
-        obs.value = newText;
-        updateCounter();
-        obs.focus();
-        // Mover el cursor al final
-        obs.setSelectionRange(obs.value.length, obs.value.length);
+      let currentText = obs.value;
+      const isActive = currentText.includes(text);
+      
+      if (isActive) {
+        // Si el texto ya está, eliminarlo
+        // Remover el texto y espacios extra alrededor
+        currentText = currentText.replace(new RegExp('\\s*' + text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'g'), ' ').trim();
+        obs.value = currentText;
+        this.classList.remove('btn-secondary');
+        this.classList.add('btn-outline-secondary');
       } else {
-        alert('El texto excedería el límite de 500 caracteres.');
+        // Si el texto no está, agregarlo
+        const newText = currentText.trim() ? currentText.trim() + ' ' + text : text;
+        if (newText.length <= 500) {
+          obs.value = newText;
+          this.classList.remove('btn-outline-secondary');
+          this.classList.add('btn-secondary');
+        } else {
+          alert('El texto excedería el límite de 500 caracteres.');
+          return;
+        }
       }
+      
+      updateCounter();
+      obs.focus();
+      // Mover el cursor al final
+      obs.setSelectionRange(obs.value.length, obs.value.length);
     });
   });
+
+  // Actualizar estado de botones cuando cambia el texto manualmente
+  obs?.addEventListener('input', function() {
+    updateCounter();
+    updateButtonStates();
+  });
+
+  // Actualizar estado inicial de los botones
+  updateButtonStates();
 
   // Mostrar aviso cuando selección requiera Observaciones
   const condSel = document.getElementById('condicion_inicial_id');
@@ -436,4 +478,5 @@ document.addEventListener('DOMContentLoaded', function () {
   font-size: 12px;
   font-weight: 600;
 }
+</style>
 </style>

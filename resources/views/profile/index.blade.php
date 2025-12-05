@@ -94,7 +94,6 @@
                                     <small>Tu postulación no fue aceptada.</small>
                                 @else
                                     <span class="badge badge-warning mr-1">En revisión</span>
-                                    <small>Tu postulación está en proceso de revisión.</small>
                                 @endif
                             @else
                                 <span class="text-muted">Sin postulación</span>
