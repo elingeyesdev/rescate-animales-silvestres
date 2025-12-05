@@ -78,8 +78,9 @@ class PersonController extends Controller
     public function create(): View
     {
         $person = new Person();
+        $centers = \App\Models\Center::orderBy('nombre')->get(['id', 'nombre', 'latitud', 'longitud']);
 
-        return view('person.create', compact('person'));
+        return view('person.create', compact('person', 'centers'));
     }
 
     /**
@@ -87,10 +88,68 @@ class PersonController extends Controller
      */
     public function store(PersonRequest $request): RedirectResponse
     {
-        Person::create($request->validated());
+        $data = $request->validated();
+        
+        // Crear usuario primero
+        $user = \App\Models\User::create([
+            'email' => $data['email'],
+            'password' => $data['password'], // Se encripta automáticamente por el cast "hashed"
+        ]);
+        
+        // Preparar datos para la persona
+        $personData = [
+            'usuario_id' => $user->id,
+            'nombre' => $data['nombre'],
+            'ci' => $data['ci'],
+            'telefono' => $data['telefono'] ?? null,
+            'es_cuidador' => isset($data['es_cuidador']) && $data['es_cuidador'] == '1' ? true : false,
+            'cuidador_center_id' => $data['cuidador_center_id'] ?? null,
+            'cuidador_aprobado' => $data['cuidador_aprobado'] ?? null,
+            'cuidador_motivo_revision' => $data['cuidador_motivo_revision'] ?? null,
+        ];
+        
+        // Crear persona
+        $person = Person::create($personData);
+        
+        // Asignar rol de ciudadano por defecto
+        $role = Role::firstOrCreate(['name' => 'ciudadano', 'guard_name' => 'web']);
+        $user->assignRole($role);
+        
+        // Lógica de asignación de rol cuidador
+        // Solo se asigna el rol si:
+        // 1. es_cuidador = true
+        // 2. cuidador_motivo_revision NO es null (fue completado)
+        // 3. cuidador_aprobado = true (si fue aprobado)
+        $esCuidador = (bool) $person->es_cuidador;
+        $aprobado = (bool) $person->cuidador_aprobado;
+        $tieneMotivo = !empty(trim($person->cuidador_motivo_revision ?? ''));
+        
+        $shouldHaveRole = $esCuidador && $tieneMotivo && $aprobado;
+        
+        if ($shouldHaveRole) {
+            // Asignar rol cuidador
+            $cuidadorRole = Role::firstOrCreate(['name' => 'cuidador', 'guard_name' => 'web']);
+            if (!$user->hasRole('cuidador')) {
+                $user->assignRole($cuidadorRole);
+            }
+        }
+        
+        // Registrar tracking de creación
+        try {
+            app(UserTrackingService::class)->logUserRegistration($user, [
+                'person' => [
+                    'id' => $person->id,
+                    'nombre' => $person->nombre,
+                    'ci' => $person->ci,
+                ],
+                'created_by_admin' => true,
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('Error registrando tracking de usuario creado por admin: ' . $e->getMessage());
+        }
 
         return Redirect::route('people.index')
-            ->with('success', 'Persona creada correctamente.');
+            ->with('success', 'Persona y usuario creados correctamente.');
     }
 
     /**
@@ -135,8 +194,9 @@ class PersonController extends Controller
     public function edit($id): View
     {
         $person = Person::with('cuidadorCenter')->findOrFail($id);
+        $centers = \App\Models\Center::orderBy('nombre')->get(['id', 'nombre', 'latitud', 'longitud']);
 
-        return view('person.edit', compact('person'));
+        return view('person.edit', compact('person', 'centers'));
     }
 
     /**

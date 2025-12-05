@@ -26,4 +26,5 @@
         </div>
     </section>
     @include('partials.page-pad')
+    @include('partials.leaflet')
 @endsection
