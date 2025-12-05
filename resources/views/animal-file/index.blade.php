@@ -115,6 +115,14 @@
                         .animalfile-card .card-footer form { display: flex; width: 100%; }
                         .animalfile-card .card-footer form > * { flex: 1 1 0; }
                         .animalfile-card .card-footer form > * + * { margin-left: .5rem; }
+                        .animalfile-card .card-footer .btn-group-two {
+                            display: flex;
+                            width: 100%;
+                            gap: 0.5rem;
+                        }
+                        .animalfile-card .card-footer .btn-group-two > * {
+                            flex: 1 1 0;
+                        }
                         </style>
 
                         <div class="row mt-3 animalfile-card-grid">
@@ -174,7 +182,7 @@
                                                 </button>
                                             </form>
                                             @else
-                                            <div class="d-flex w-100">
+                                            <div class="btn-group-two">
                                                 <a class="btn btn-primary btn-sm" href="{{ route('animal-files.show', $animalFile->id) }}">
                                                     <i class="fa fa-fw fa-eye"></i> {{ __('Ver') }}
                                                 </a>

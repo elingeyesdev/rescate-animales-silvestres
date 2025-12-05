@@ -17,7 +17,7 @@ return new class extends Migration
         });
 
         DB::table('incident_types')->insert([
-            ['nombre' => 'Incendio cercano', 'riesgo' => 2, 'activo' => true],
+            ['nombre' => 'Incendio', 'riesgo' => 2, 'activo' => true],
             ['nombre' => 'Atropello', 'riesgo' => 2, 'activo' => true],
             ['nombre' => 'Cacería / arma de fuego', 'riesgo' => 2, 'activo' => true],
             ['nombre' => 'Encontrado atrapado', 'riesgo' => 1, 'activo' => true],

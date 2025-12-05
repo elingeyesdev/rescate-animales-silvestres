@@ -3,6 +3,34 @@
     <p class="my-0">
         <a href="{{ route('register') }}">Crear cuenta nueva</a>
     </p>
+    
+    {{-- Usuarios de prueba --}}
+    <div class="test-users-section">
+        <h6 class="text-center"><i class="fas fa-info-circle"></i> Usuarios de Prueba</h6>
+        <p class="password-info text-center">Contraseña para todos: <strong>rescate123</strong></p>
+        <div class="d-flex flex-column">
+            <div class="user-item d-flex justify-content-between align-items-center">
+                <span class="user-email">rescateanimales25@gmail.com</span>
+                <span class="badge badge-primary">admin</span>
+            </div>
+            <div class="user-item d-flex justify-content-between align-items-center">
+                <span class="user-email">sofia.crespo.r@gmail.com</span>
+                <span class="badge badge-warning">encargado</span>
+            </div>
+            <div class="user-item d-flex justify-content-between align-items-center">
+                <span class="user-email">sofivcr01@gmail.com</span>
+                <span class="badge badge-info">rescatista</span>
+            </div>
+            <div class="user-item d-flex justify-content-between align-items-center">
+                <span class="user-email">lucasaguilarn@gmail.com</span>
+                <span class="badge badge-success">cuidador</span>
+            </div>
+            <div class="user-item d-flex justify-content-between align-items-center">
+                <span class="user-email">lasof0137@gmail.com</span>
+                <span class="badge badge-danger">veterinario</span>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('css')
 <style>
@@ -32,6 +60,50 @@
         margin-right: 8px;
     }
     .login-logo a { display: inline-flex; align-items: center; }
+    /* Ocultar checkbox "Recordarme" */
+    .icheck-primary,
+    .form-check,
+    input[name="remember"],
+    label[for="remember"] {
+        display: none !important;
+    }
+    .test-users-section {
+        margin-top: 15px;
+        padding: 8px 10px;
+        background-color: #f8f9fa;
+        border-radius: 3px;
+        border: 1px solid #e9ecef;
+        opacity: 0.85;
+    }
+    .test-users-section h6 {
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-bottom: 5px;
+        color: #6c757d;
+    }
+    .test-users-section .user-item {
+        padding: 3px 5px;
+        margin-bottom: 2px;
+        background-color: transparent;
+        border-radius: 2px;
+    }
+    .test-users-section .user-item:last-child {
+        margin-bottom: 0;
+    }
+    .test-users-section .user-email {
+        font-size: 0.7rem;
+        font-weight: 400;
+        color: #6c757d;
+    }
+    .test-users-section .password-info {
+        font-size: 0.65rem;
+        color: #868e96;
+        margin-bottom: 6px;
+    }
+    .test-users-section .badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
 </style>
 @endpush
 @push('scripts')
