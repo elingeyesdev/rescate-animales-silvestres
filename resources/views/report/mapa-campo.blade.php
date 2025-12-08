@@ -101,6 +101,83 @@
                                 </div>
                             </div>
                             
+                            <!-- Panel de clima en la esquina superior derecha -->
+                            <div id="weatherPanel" class="weather-panel" style="position: absolute; top: 10px; right: 10px; z-index: 1000; background: white; padding: 0; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); max-width: 300px; min-width: 280px; display: none;">
+                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px; border-radius: 6px 6px 0 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <h6 style="margin: 0; font-weight: bold; color: white; font-size: 14px;">
+                                            <i class="fas fa-cloud-sun"></i> Clima
+                                        </h6>
+                                        <button id="closeWeatherPanel" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div id="weatherLoading" style="text-align: center; color: white; padding: 20px;">
+                                        <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 8px;"></i>
+                                        <div style="font-size: 12px;">Cargando datos meteorológicos...</div>
+                                    </div>
+                                    <div id="weatherContent" style="display: none;">
+                                        <div style="text-align: center; font-size: 32px; font-weight: bold; color: white; margin-bottom: 4px;">
+                                            <span id="weatherTemp">--</span><span style="font-size: 20px;">°C</span>
+                                        </div>
+                                        <div style="text-align: center; font-size: 12px; opacity: 0.9; color: white;">
+                                            <span id="weatherDesc">--</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="weatherDetails" style="padding: 12px; display: none;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; margin-bottom: 12px;">
+                                        <div style="padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
+                                            <div style="color: #6c757d; margin-bottom: 4px;">
+                                                <i class="fas fa-tint"></i> Humedad
+                                            </div>
+                                            <div style="font-weight: bold; font-size: 14px;">
+                                                <span id="weatherHumidity">--</span>%
+                                            </div>
+                                        </div>
+                                        <div style="padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
+                                            <div style="color: #6c757d; margin-bottom: 4px;">
+                                                <i class="fas fa-wind"></i> Viento
+                                            </div>
+                                            <div style="font-weight: bold; font-size: 14px;">
+                                                <span id="weatherWindSpeed">--</span> km/h
+                                            </div>
+                                        </div>
+                                        <div style="padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
+                                            <div style="color: #6c757d; margin-bottom: 4px;">
+                                                <i class="fas fa-compass"></i> Dirección
+                                            </div>
+                                            <div style="font-weight: bold; font-size: 14px;">
+                                                <span id="weatherWindDir">--</span>
+                                            </div>
+                                        </div>
+                                        <div style="padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
+                                            <div style="color: #6c757d; margin-bottom: 4px;">
+                                                <i class="fas fa-cloud-rain"></i> Precipitación
+                                            </div>
+                                            <div style="font-weight: bold; font-size: 14px;">
+                                                <span id="weatherPrecip">--</span> mm
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="padding: 8px; background-color: #e7f3ff; border-radius: 4px; font-size: 11px; color: #0066cc; margin-bottom: 8px;">
+                                        <i class="fas fa-map-marker-alt"></i> 
+                                        <span id="weatherCoords">--</span>
+                                    </div>
+                                    <div style="text-align: center; font-size: 10px; color: #6c757d;">
+                                        <i class="fas fa-info-circle"></i> Datos de OpenMeteo
+                                    </div>
+                                </div>
+                                <div id="weatherError" style="padding: 12px; display: none; text-align: center;">
+                                    <div style="color: #dc3545; margin-bottom: 8px;">
+                                        <i class="fas fa-exclamation-triangle" style="font-size: 24px;"></i>
+                                    </div>
+                                    <div style="font-size: 12px; color: #6c757d;">
+                                        No se pudieron obtener los datos meteorológicos.
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <!-- Leyenda flotante en la esquina inferior derecha -->
                             <div class="map-legend" style="position: absolute; bottom: 10px; right: 10px; z-index: 1000; background: white; padding: 8px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); max-width: 240px; font-size: 11px;">
                                 
@@ -153,6 +230,7 @@
         let showFocosCalor = true;
         let selectedSpeciesId = null;
         let reportStatusFilter = 'all'; // 'all', 'with_file', 'without_file'
+        let weatherRequestInProgress = false; // Para evitar múltiples peticiones simultáneas
 
         const reportsData = @json($reports ?? []);
         const releasesData = @json($releases ?? []);
@@ -255,6 +333,142 @@
                     updateReleaseMarkers();
                 });
             }
+
+            // Listener para obtener datos meteorológicos al hacer clic en el mapa (áreas vacías)
+            map.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                console.log('[Clima] Obteniendo datos meteorológicos para:', lat, lng);
+                getWeatherData(lat, lng);
+            });
+        }
+
+        /**
+         * Obtener datos meteorológicos para una ubicación y actualizar el panel
+         */
+        function getWeatherData(latitude, longitude) {
+            // Evitar múltiples peticiones simultáneas
+            if (weatherRequestInProgress) {
+                console.log('[Clima] Ya hay una petición en curso, omitiendo...');
+                return;
+            }
+
+            const weatherPanel = document.getElementById('weatherPanel');
+            const weatherLoading = document.getElementById('weatherLoading');
+            const weatherContent = document.getElementById('weatherContent');
+            const weatherDetails = document.getElementById('weatherDetails');
+            const weatherError = document.getElementById('weatherError');
+
+            // Mostrar panel y estado de carga
+            weatherPanel.style.display = 'block';
+            weatherLoading.style.display = 'block';
+            weatherContent.style.display = 'none';
+            weatherDetails.style.display = 'none';
+            weatherError.style.display = 'none';
+
+            weatherRequestInProgress = true;
+
+            // Realizar petición a la API
+            fetch(`/api/weather?latitude=${latitude}&longitude=${longitude}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('[Clima] Datos recibidos:', data);
+                    
+                    // Ocultar loading y mostrar contenido
+                    weatherLoading.style.display = 'none';
+                    weatherContent.style.display = 'block';
+                    weatherDetails.style.display = 'block';
+                    weatherError.style.display = 'none';
+
+                    // Actualizar datos en el panel
+                    const weatherDescription = getWeatherDescription(data.weatherCode);
+                    const windDirectionName = getWindDirectionName(data.windDirection);
+
+                    document.getElementById('weatherTemp').textContent = data.temperature;
+                    document.getElementById('weatherDesc').textContent = weatherDescription;
+                    document.getElementById('weatherHumidity').textContent = data.humidity;
+                    document.getElementById('weatherWindSpeed').textContent = data.windSpeed;
+                    document.getElementById('weatherWindDir').textContent = windDirectionName;
+                    document.getElementById('weatherPrecip').textContent = data.precipitation;
+                    document.getElementById('weatherCoords').textContent = `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`;
+                    
+                    weatherRequestInProgress = false;
+                })
+                .catch(error => {
+                    console.error('[Clima] Error al obtener datos meteorológicos:', error);
+                    
+                    // Ocultar loading y mostrar error
+                    weatherLoading.style.display = 'none';
+                    weatherContent.style.display = 'none';
+                    weatherDetails.style.display = 'none';
+                    weatherError.style.display = 'block';
+                    
+                    weatherRequestInProgress = false;
+                });
+        }
+
+        // Botón para cerrar el panel de clima
+        document.addEventListener('DOMContentLoaded', function() {
+            const closeWeatherPanel = document.getElementById('closeWeatherPanel');
+            if (closeWeatherPanel) {
+                closeWeatherPanel.addEventListener('click', function() {
+                    const weatherPanel = document.getElementById('weatherPanel');
+                    if (weatherPanel) {
+                        weatherPanel.style.display = 'none';
+                    }
+                });
+            }
+        });
+
+        /**
+         * Obtener descripción del código del clima
+         */
+        function getWeatherDescription(code) {
+            const descriptions = {
+                0: 'Despejado',
+                1: 'Mayormente despejado',
+                2: 'Parcialmente nublado',
+                3: 'Nublado',
+                45: 'Niebla',
+                48: 'Niebla depositada',
+                51: 'Llovizna ligera',
+                53: 'Llovizna moderada',
+                55: 'Llovizna densa',
+                56: 'Llovizna helada ligera',
+                57: 'Llovizna helada densa',
+                61: 'Lluvia ligera',
+                63: 'Lluvia moderada',
+                65: 'Lluvia intensa',
+                66: 'Lluvia helada ligera',
+                67: 'Lluvia helada intensa',
+                71: 'Nieve ligera',
+                73: 'Nieve moderada',
+                75: 'Nieve intensa',
+                77: 'Granizo',
+                80: 'Chubascos ligeros',
+                81: 'Chubascos moderados',
+                82: 'Chubascos intensos',
+                85: 'Nevadas ligeras',
+                86: 'Nevadas intensas',
+                95: 'Tormenta',
+                96: 'Tormenta con granizo',
+                99: 'Tormenta intensa con granizo',
+            };
+            return descriptions[code] || 'Desconocido';
+        }
+
+        /**
+         * Obtener nombre de la dirección del viento
+         */
+        function getWindDirectionName(degrees) {
+            const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            const index = Math.round(degrees / 22.5) % 16;
+            return directions[index] || 'N';
         }
         
         function addFocosCalorMarkers() {
@@ -320,6 +534,15 @@
                 `;
                 
                 point.bindPopup(popupContent);
+                
+                // Agregar evento de clic para obtener datos meteorológicos
+                point.on('click', function(e) {
+                    if (e.originalEvent) {
+                        e.originalEvent.stopPropagation();
+                    }
+                    getWeatherData(foco.lat, foco.lng);
+                });
+                
                 focosCalorMarkers.push(point);
             });
         }
@@ -406,6 +629,14 @@
                 `;
 
                 marker.bindPopup(popupContent);
+
+                // Agregar evento de clic para obtener datos meteorológicos
+                marker.on('click', function(e) {
+                    if (e.originalEvent) {
+                        e.originalEvent.stopPropagation();
+                    }
+                    getWeatherData(lat, lng);
+                });
 
                 releaseMarkers.push({
                     release: release,
@@ -594,6 +825,14 @@
                 `;
 
                 marker.bindPopup(popupContent);
+
+                // Agregar evento de clic para obtener datos meteorológicos
+                marker.on('click', function(e) {
+                    if (e.originalEvent) {
+                        e.originalEvent.stopPropagation();
+                    }
+                    getWeatherData(lat, lng);
+                });
 
                 markers.push({
                     report: report,
@@ -830,6 +1069,19 @@
         100% {
             transform: scale(1);
             opacity: 1;
+        }
+    }
+    .weather-panel {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        transition: all 0.3s ease;
+    }
+    .weather-panel button:hover {
+        background: rgba(255,255,255,0.3) !important;
+    }
+    @media (max-width: 768px) {
+        .weather-panel {
+            max-width: 260px;
+            min-width: 240px;
         }
     }
     .map-controls {

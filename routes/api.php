@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\IncidentTypeApiController;
 use App\Http\Controllers\Api\RescuerApiController;
 use App\Http\Controllers\Api\AnimalApiController;
 use App\Http\Controllers\Api\PersonApiController;
+use App\Http\Controllers\Api\WeatherApiController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -52,4 +53,5 @@ Route::name('api.')->group(function () {
     Route::apiResource('fire-predictions', FirePredictionApiController::class)->only(['index']);
     Route::apiResource('animal-conditions', AnimalConditionApiController::class)->only(['index', 'show']);
     Route::apiResource('incident-types', IncidentTypeApiController::class)->only(['index', 'show']);
+    Route::get('weather', [WeatherApiController::class, 'index'])->name('weather');
 });
