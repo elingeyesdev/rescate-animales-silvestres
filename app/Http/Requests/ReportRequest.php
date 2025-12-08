@@ -38,6 +38,8 @@ class ReportRequest extends FormRequest
             // traslado_inmediato y centro solo aplican al crear
             'traslado_inmediato' => $isUpdate ? 'nullable' : 'nullable|boolean',
             'centro_id' => $isUpdate ? 'nullable' : 'nullable|exists:centers,id|required_if:traslado_inmediato,1',
+            // incendio_id para endpoints externos (API Gateway)
+            'incendio_id' => 'nullable|integer',
         ];
 
         if ($isUpdate) {

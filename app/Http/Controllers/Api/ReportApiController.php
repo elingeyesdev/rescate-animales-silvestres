@@ -18,7 +18,8 @@ class ReportApiController extends Controller
         private readonly AnimalTransferTransactionalService $transferService,
         private readonly ReportUrgencyService $urgencyService
     ) {
-        $this->middleware('auth:sanctum');
+        // Permitir store sin autenticación para endpoints externos
+        $this->middleware('auth:sanctum')->except(['store']);
     }
 
     /**
@@ -38,9 +39,14 @@ class ReportApiController extends Controller
     {
         $data = $request->validated();
 
-        // persona_id del usuario logueado
-        $personId = Person::where('usuario_id', Auth::id())->value('id');
-        $data['persona_id'] = $personId;
+        // persona_id del usuario logueado (si está autenticado)
+        // Si no está autenticado (endpoint externo), persona_id será null
+        if (Auth::check()) {
+            $personId = Person::where('usuario_id', Auth::id())->value('id');
+            $data['persona_id'] = $personId;
+        } else {
+            $data['persona_id'] = null;
+        }
         $data['aprobado'] = 0;
 
 

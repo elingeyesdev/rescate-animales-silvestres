@@ -15,23 +15,30 @@ class ReleaseApiController extends Controller
     public function __construct(
         private readonly AnimalReleaseTransactionalService $releaseService
     ) {
-        $this->middleware('auth:sanctum');
+        // Permitir index sin autenticación para endpoints externos
+        $this->middleware('auth:sanctum')->except(['index']);
     }
 
     /**
      * Listado de liberaciones.
      * Permite filtrar por ?animal_file_id=ID.
+     * Endpoint público - no requiere autenticación.
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Release::with('animalFile.animal')
-            ->orderByDesc('id');
+        $query = Release::with([
+            'animalFile.animal.report',
+            'animalFile.species',
+            'animalFile.animalStatus',
+        ])
+        ->where('aprobada', true)
+        ->orderByDesc('created_at');
 
         if ($request->filled('animal_file_id')) {
             $query->where('animal_file_id', (int) $request->input('animal_file_id'));
         }
 
-        $releases = $query->paginate(20);
+        $releases = $query->get();
 
         return response()->json($releases);
     }
