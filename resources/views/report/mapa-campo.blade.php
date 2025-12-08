@@ -102,78 +102,78 @@
                             </div>
                             
                             <!-- Panel de clima en la esquina superior derecha -->
-                            <div id="weatherPanel" class="weather-panel" style="position: absolute; top: 10px; right: 10px; z-index: 1000; background: white; padding: 0; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); max-width: 300px; min-width: 280px; display: none;">
-                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px; border-radius: 6px 6px 0 0;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <h6 style="margin: 0; font-weight: bold; color: white; font-size: 14px;">
+                            <div id="weatherPanel" class="weather-panel" style="position: absolute; top: 10px; right: 10px; z-index: 1000; background: white; padding: 0; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); max-width: 200px; min-width: 170px; display: none;">
+                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px; border-radius: 6px 6px 0 0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <h6 style="margin: 0; font-weight: bold; color: white; font-size: 12px;">
                                             <i class="fas fa-cloud-sun"></i> Clima
                                         </h6>
-                                        <button id="closeWeatherPanel" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                                        <button id="closeWeatherPanel" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px;">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
-                                    <div id="weatherLoading" style="text-align: center; color: white; padding: 20px;">
-                                        <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 8px;"></i>
-                                        <div style="font-size: 12px;">Cargando datos meteorológicos...</div>
+                                    <div id="weatherLoading" style="text-align: center; color: white; padding: 12px;">
+                                        <i class="fas fa-spinner fa-spin" style="font-size: 18px; margin-bottom: 6px;"></i>
+                                        <div style="font-size: 10px;">Cargando...</div>
                                     </div>
                                     <div id="weatherContent" style="display: none;">
-                                        <div style="text-align: center; font-size: 32px; font-weight: bold; color: white; margin-bottom: 4px;">
-                                            <span id="weatherTemp">--</span><span style="font-size: 20px;">°C</span>
+                                        <div style="text-align: center; font-size: 24px; font-weight: bold; color: white; margin-bottom: 2px;">
+                                            <span id="weatherTemp">--</span><span style="font-size: 16px;">°C</span>
                                         </div>
-                                        <div style="text-align: center; font-size: 12px; opacity: 0.9; color: white;">
+                                        <div style="text-align: center; font-size: 10px; opacity: 0.9; color: white;">
                                             <span id="weatherDesc">--</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div id="weatherDetails" style="padding: 12px; display: none;">
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; margin-bottom: 12px;">
-                                        <div style="padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
-                                            <div style="color: #6c757d; margin-bottom: 4px;">
+                                <div id="weatherDetails" style="padding: 8px; display: none;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 10px; margin-bottom: 8px;">
+                                        <div style="padding: 6px; background-color: #f8f9fa; border-radius: 4px;">
+                                            <div style="color: #6c757d; margin-bottom: 2px; font-size: 9px;">
                                                 <i class="fas fa-tint"></i> Humedad
                                             </div>
-                                            <div style="font-weight: bold; font-size: 14px;">
+                                            <div style="font-weight: bold; font-size: 12px;">
                                                 <span id="weatherHumidity">--</span>%
                                             </div>
                                         </div>
-                                        <div style="padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
-                                            <div style="color: #6c757d; margin-bottom: 4px;">
+                                        <div style="padding: 6px; background-color: #f8f9fa; border-radius: 4px;">
+                                            <div style="color: #6c757d; margin-bottom: 2px; font-size: 9px;">
                                                 <i class="fas fa-wind"></i> Viento
                                             </div>
-                                            <div style="font-weight: bold; font-size: 14px;">
+                                            <div style="font-weight: bold; font-size: 12px;">
                                                 <span id="weatherWindSpeed">--</span> km/h
                                             </div>
                                         </div>
-                                        <div style="padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
-                                            <div style="color: #6c757d; margin-bottom: 4px;">
+                                        <div style="padding: 6px; background-color: #f8f9fa; border-radius: 4px;">
+                                            <div style="color: #6c757d; margin-bottom: 2px; font-size: 9px;">
                                                 <i class="fas fa-compass"></i> Dirección
                                             </div>
-                                            <div style="font-weight: bold; font-size: 14px;">
+                                            <div style="font-weight: bold; font-size: 12px;">
                                                 <span id="weatherWindDir">--</span>
                                             </div>
                                         </div>
-                                        <div style="padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
-                                            <div style="color: #6c757d; margin-bottom: 4px;">
-                                                <i class="fas fa-cloud-rain"></i> Precipitación
+                                        <div style="padding: 6px; background-color: #f8f9fa; border-radius: 4px;">
+                                            <div style="color: #6c757d; margin-bottom: 2px; font-size: 9px;">
+                                                <i class="fas fa-cloud-rain"></i> Precip.
                                             </div>
-                                            <div style="font-weight: bold; font-size: 14px;">
+                                            <div style="font-weight: bold; font-size: 12px;">
                                                 <span id="weatherPrecip">--</span> mm
                                             </div>
                                         </div>
                                     </div>
-                                    <div style="padding: 8px; background-color: #e7f3ff; border-radius: 4px; font-size: 11px; color: #0066cc; margin-bottom: 8px;">
+                                    <div style="padding: 6px; background-color: #e7f3ff; border-radius: 4px; font-size: 9px; color: #0066cc; margin-bottom: 6px;">
                                         <i class="fas fa-map-marker-alt"></i> 
                                         <span id="weatherCoords">--</span>
                                     </div>
-                                    <div style="text-align: center; font-size: 10px; color: #6c757d;">
-                                        <i class="fas fa-info-circle"></i> Datos de OpenMeteo
+                                    <div style="text-align: center; font-size: 9px; color: #6c757d;">
+                                        <i class="fas fa-info-circle"></i> OpenMeteo
                                     </div>
                                 </div>
-                                <div id="weatherError" style="padding: 12px; display: none; text-align: center;">
-                                    <div style="color: #dc3545; margin-bottom: 8px;">
-                                        <i class="fas fa-exclamation-triangle" style="font-size: 24px;"></i>
+                                <div id="weatherError" style="padding: 8px; display: none; text-align: center;">
+                                    <div style="color: #dc3545; margin-bottom: 6px;">
+                                        <i class="fas fa-exclamation-triangle" style="font-size: 18px;"></i>
                                     </div>
-                                    <div style="font-size: 12px; color: #6c757d;">
-                                        No se pudieron obtener los datos meteorológicos.
+                                    <div style="font-size: 10px; color: #6c757d;">
+                                        No se pudieron obtener los datos.
                                     </div>
                                 </div>
                             </div>
@@ -781,7 +781,7 @@
                         ${tieneHojaVida ? `
                             <div style="margin-bottom: 8px; padding: 6px; background-color: #28a745; border-radius: 4px; text-align: center;">
                                 <i class="fas fa-check-circle" style="color: white; margin-right: 4px;"></i>
-                                <span style="color: white; font-size: 12px; font-weight: bold;">Ya tiene hoja de vida (Rescatado)</span>
+                                <span style="color: white; font-size: 12px; font-weight: bold;">Ya tiene hoja de vida</span>
                             </div>
                         ` : `
                             <div style="margin-bottom: 8px; padding: 6px; background-color: #ffc107; border-radius: 4px; text-align: center;">
@@ -1080,8 +1080,8 @@
     }
     @media (max-width: 768px) {
         .weather-panel {
-            max-width: 260px;
-            min-width: 240px;
+            max-width: 200px;
+            min-width: 180px;
         }
     }
     .map-controls {
