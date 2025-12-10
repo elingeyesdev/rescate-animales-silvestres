@@ -415,19 +415,190 @@
              role="tabpanel" 
              aria-labelledby="management-tab">
             
+            <!-- Gráfico de Eficacia Mensual -->
             <div class="card mt-3">
                 <div class="card-header bg-info text-white">
                     <h3 class="card-title mb-0">
-                        <i class="fas fa-cog mr-2"></i>Reportes de Gestión
+                        <i class="fas fa-chart-line mr-2"></i>Eficacia Mensual del Rescate de Animales
                     </h3>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle mr-2"></i>Esta sección estará disponible próximamente.
+                <div class="card-body py-2">
+                    <div class="row align-items-center">
+                        <div class="col-md-5 d-flex justify-content-center">
+                            <canvas id="eficaciaMensualChart" style="max-height: 180px; max-width: 180px;"></canvas>
+                        </div>
+                        <div class="col-md-7 d-flex align-items-center justify-content-center">
+                            <div class="text-center">
+                                <h2 class="mb-0" style="font-size: 2.5rem; font-weight: bold; color: #17a2b8;">
+                                    {{ $eficaciaMensual ?? 0 }}%
+                                </h2>
+                                <p class="text-muted mb-0">Eficacia (Últimos 30 días)</p>
+                                <small class="text-muted">
+                                    {{ $traslados30Dias ?? 0 }} traslados / {{ $hallazgos30Dias ?? 0 }} hallazgos
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtro y Tabla de Datos Diarios -->
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-table mr-2"></i>Eficacia Diaria de Rescates
+                    </h3>
+                </div>
+                <div class="card-body py-2">
+                    <!-- Filtro -->
+                    <form method="GET" action="{{ route('reportes.index') }}" class="mb-3">
+                        <input type="hidden" name="tab" value="management">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <span class="text-muted"><i class="fas fa-filter mr-1"></i>Filtrar por:</span>
+                            </div>
+                            <div class="col-auto">
+                                <select name="filtro" id="filtro" class="form-control" onchange="toggleFechaInputs()">
+                                    <option value="semana" {{ ($filtro ?? 'mes') === 'semana' ? 'selected' : '' }}>Última Semana</option>
+                                    <option value="mes" {{ ($filtro ?? 'mes') === 'mes' ? 'selected' : '' }}>Último Mes</option>
+                                    <option value="rango" {{ ($filtro ?? 'mes') === 'rango' ? 'selected' : '' }}>Rango entre Fechas</option>
+                                </select>
+                            </div>
+                            <div class="col-auto" id="rangoFechas" style="display: {{ ($filtro ?? 'mes') === 'rango' ? 'block' : 'none' }};">
+                                <label for="fecha_desde" class="form-label mb-0 mr-2">
+                                    <i class="fas fa-calendar-alt mr-1"></i>Desde
+                                </label>
+                                <input type="date" 
+                                       class="form-control d-inline-block" 
+                                       style="width: auto;"
+                                       id="fecha_desde" 
+                                       name="fecha_desde" 
+                                       value="{{ $fechaDesde ?? '' }}"
+                                       max="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
+                            </div>
+                            <div class="col-auto" id="rangoFechasHasta" style="display: {{ ($filtro ?? 'mes') === 'rango' ? 'block' : 'none' }};">
+                                <label for="fecha_hasta" class="form-label mb-0 mr-2">
+                                    <i class="fas fa-calendar-alt mr-1"></i>Hasta
+                                </label>
+                                <input type="date" 
+                                       class="form-control d-inline-block" 
+                                       style="width: auto;"
+                                       id="fecha_hasta" 
+                                       name="fecha_hasta" 
+                                       value="{{ $fechaHasta ?? '' }}"
+                                       max="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-info">
+                                    <i class="fas fa-filter mr-1"></i>Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover mb-0">
+                            <thead class="bg-info text-white">
+                                <tr>
+                                    <th style="width: 20%;">Fecha</th>
+                                    <th style="width: 20%;">Cantidad de Hallazgos</th>
+                                    <th style="width: 20%;">Cantidad de Traslados</th>
+                                    <th style="width: 20%;">Eficacia Diaria (%)</th>
+                                    <th style="width: 20%;">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if(isset($datosDiarios) && !empty($datosDiarios))
+                                    @foreach($datosDiarios as $dato)
+                                        <tr>
+                                            <td>{{ $dato['fecha']->format('d/m/Y') }}</td>
+                                            <td>{{ $dato['hallazgos'] }}</td>
+                                            <td>{{ $dato['traslados'] }}</td>
+                                            <td>{{ number_format($dato['eficacia'], 2) }}%</td>
+                                            <td>
+                                                @if($dato['color'] === 'verde')
+                                                    <span class="badge badge-success" style="background-color: #28a745; padding: 8px 12px; font-size: 0.9rem;">100%</span>
+                                                @elseif($dato['color'] === 'amarillo')
+                                                    <span class="badge badge-warning" style="background-color: #ffc107; padding: 8px 12px; font-size: 0.9rem;">> 50%</span>
+                                                @elseif($dato['color'] === 'azul')
+                                                    <span class="badge badge-info" style="background-color: #17a2b8; padding: 8px 12px; font-size: 0.9rem;">> 100%</span>
+                                                @else
+                                                    <span class="badge badge-danger" style="background-color: #dc3545; padding: 8px 12px; font-size: 0.9rem;">≤ 50%</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            No hay datos disponibles para el período seleccionado
+                                        </td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+@stop
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de Eficacia Mensual
+    @if(isset($eficaciaMensual))
+    const eficaciaCtx = document.getElementById('eficaciaMensualChart');
+    if (eficaciaCtx) {
+        new Chart(eficaciaCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Eficacia', 'Restante'],
+                datasets: [{
+                    data: [{{ $eficaciaMensual }}, {{ max(0, 100 - $eficaciaMensual) }}],
+                    backgroundColor: ['#17a2b8', '#e9ecef'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    @endif
+});
+
+// Función para mostrar/ocultar campos de fecha según el filtro
+function toggleFechaInputs() {
+    const filtro = document.getElementById('filtro').value;
+    const rangoFechas = document.getElementById('rangoFechas');
+    const rangoFechasHasta = document.getElementById('rangoFechasHasta');
+    
+    if (filtro === 'rango') {
+        rangoFechas.style.display = 'block';
+        rangoFechasHasta.style.display = 'block';
+    } else {
+        rangoFechas.style.display = 'none';
+        rangoFechasHasta.style.display = 'none';
+    }
+}
+</script>
 @stop

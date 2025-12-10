@@ -34,7 +34,7 @@ class ReportsController extends Controller
             }
             return $this->activityReports();
         } elseif ($tab === 'management') {
-            return $this->managementReports();
+            return $this->managementReports($request);
         }
         
         return $this->activityReports();
@@ -344,12 +344,100 @@ class ReportsController extends Controller
     }
 
     /**
-     * Reportes de Gestión (placeholder)
+     * Reportes de Gestión
      */
-    private function managementReports(): View
+    private function managementReports(Request $request): View
     {
+        // Calcular eficacia mensual (últimos 30 días)
+        $fechaInicio30Dias = Carbon::now()->subDays(30)->startOfDay();
+        $fechaFin30Dias = Carbon::now()->endOfDay();
+        
+        $traslados30Dias = Transfer::where('primer_traslado', true)
+            ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+            ->count();
+        
+        $hallazgos30Dias = Report::where('aprobado', true)
+            ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+            ->count();
+        
+        $eficaciaMensual = $hallazgos30Dias > 0 ? round(($traslados30Dias / $hallazgos30Dias) * 100, 2) : 0;
+        
+        // Obtener parámetros del filtro
+        $filtro = $request->get('filtro', 'mes'); // semana, mes, rango
+        $fechaDesde = $request->get('fecha_desde');
+        $fechaHasta = $request->get('fecha_hasta');
+        
+        // Determinar rango de fechas según el filtro
+        $fechaInicio = null;
+        $fechaFin = Carbon::now()->endOfDay();
+        
+        if ($filtro === 'semana') {
+            $fechaInicio = Carbon::now()->subDays(7)->startOfDay();
+        } elseif ($filtro === 'mes') {
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        } elseif ($filtro === 'rango' && $fechaDesde && $fechaHasta) {
+            $fechaInicio = Carbon::parse($fechaDesde)->startOfDay();
+            $fechaFin = Carbon::parse($fechaHasta)->endOfDay();
+        } else {
+            // Por defecto último mes
+            $filtro = 'mes';
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        }
+        
+        // Generar datos diarios
+        $datosDiarios = [];
+        $fechaActual = Carbon::parse($fechaInicio);
+        
+        while ($fechaActual->lte($fechaFin)) {
+            $fechaInicioDia = $fechaActual->copy()->startOfDay();
+            $fechaFinDia = $fechaActual->copy()->endOfDay();
+            
+            // Contar hallazgos aprobados del día
+            $hallazgosDia = Report::where('aprobado', true)
+                ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                ->count();
+            
+            // Contar traslados del día
+            $trasladosDia = Transfer::where('primer_traslado', true)
+                ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                ->count();
+            
+            // Solo agregar días que tengan al menos un hallazgo o un traslado
+            if ($hallazgosDia > 0 || $trasladosDia > 0) {
+                // Calcular eficacia diaria
+                $eficaciaDia = $hallazgosDia > 0 ? round(($trasladosDia / $hallazgosDia) * 100, 2) : 0;
+                
+                // Determinar color según eficacia
+                $color = 'rojo'; // <= 50
+                if ($eficaciaDia > 100) {
+                    $color = 'azul';
+                } elseif ($eficaciaDia == 100) {
+                    $color = 'verde';
+                } elseif ($eficaciaDia > 50) {
+                    $color = 'amarillo';
+                }
+                
+                $datosDiarios[] = [
+                    'fecha' => $fechaActual->copy(),
+                    'hallazgos' => $hallazgosDia,
+                    'traslados' => $trasladosDia,
+                    'eficacia' => $eficaciaDia,
+                    'color' => $color,
+                ];
+            }
+            
+            $fechaActual->addDay();
+        }
+        
         return view('reports.index', [
             'tab' => 'management',
+            'eficaciaMensual' => $eficaciaMensual,
+            'traslados30Dias' => $traslados30Dias,
+            'hallazgos30Dias' => $hallazgos30Dias,
+            'datosDiarios' => $datosDiarios,
+            'filtro' => $filtro,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
             'enPeligro' => [],
             'rescatados' => [],
             'tratados' => [],
