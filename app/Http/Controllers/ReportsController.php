@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Response;
 
 class ReportsController extends Controller
 {
@@ -833,6 +835,577 @@ class ReportsController extends Controller
         }
         
         return null;
+    }
+
+    /**
+     * Exporta el reporte actual a PDF
+     */
+    public function exportPdf(Request $request): Response
+    {
+        $tab = $request->get('tab', 'activity');
+        $subtab = $request->get('subtab', 'states');
+        $managementSubtab = $request->get('management_subtab', 'rescue');
+        
+        // Determinar qué reporte exportar según el tab activo
+        if ($tab === 'activity') {
+            if ($subtab === 'health') {
+                return $this->exportHealthAnimalPdf($request);
+            } else {
+                return $this->exportActivityStatesPdf($request);
+            }
+        } elseif ($tab === 'management') {
+            if ($managementSubtab === 'treatment') {
+                return $this->exportTreatmentEfficiencyPdf($request);
+            } elseif ($managementSubtab === 'release') {
+                return $this->exportReleaseEfficiencyPdf($request);
+            } else {
+                return $this->exportRescueEfficiencyPdf($request);
+            }
+        }
+        
+        // Por defecto, exportar reporte de actividad por estados
+        return $this->exportActivityStatesPdf($request);
+    }
+
+    /**
+     * Exporta el reporte de Actividad por Estados a PDF
+     */
+    private function exportActivityStatesPdf(Request $request): Response
+    {
+        // Obtener los mismos datos que en activityReports()
+        $reports = Report::where('aprobado', true)
+            ->with([
+                'animals' => function($query) {
+                    $query->with(['animalFiles' => function($q) {
+                        $q->with(['release', 'center']);
+                    }]);
+                },
+                'transfers' => function($query) {
+                    $query->where('primer_traslado', true)->with('center');
+                }
+            ])
+            ->get();
+
+        $enPeligro = [];
+        $rescatados = [];
+        $tratados = [];
+        $liberados = [];
+        
+        foreach ($reports as $report) {
+            $province = $this->extractProvince($report->direccion);
+            if (!$province) {
+                $province = 'Sin Provincia';
+            }
+            
+            $hasFirstTransfer = $report->transfers->isNotEmpty();
+            $animals = $report->animals;
+            $animalFiles = $animals->flatMap->animalFiles;
+            $hasAnimalFile = $animalFiles->isNotEmpty();
+            
+            // Obtener nombre del animal (tomar el primero si hay varios)
+            $animalNombre = 'Sin nombre';
+            if ($animals->isNotEmpty()) {
+                $firstAnimal = $animals->first();
+                $animalNombre = $firstAnimal->nombre ?? 'Sin nombre';
+            }
+            
+            $release = null;
+            $animalFileWithRelease = $animalFiles->first(function($animalFile) {
+                return $animalFile->release !== null;
+            });
+            if ($animalFileWithRelease) {
+                $release = $animalFileWithRelease->release;
+            }
+            
+            $center = null;
+            $fechaTraslado = null;
+            if ($hasFirstTransfer) {
+                $firstTransfer = $report->transfers->first();
+                if ($firstTransfer) {
+                    if ($firstTransfer->centro_id) {
+                        $center = $firstTransfer->center;
+                    }
+                    $fechaTraslado = $firstTransfer->created_at;
+                }
+            }
+            
+            $treatmentCenter = null;
+            $animalFileCreatedAt = null;
+            if ($hasAnimalFile) {
+                $firstAnimalFile = $animalFiles->first();
+                if ($firstAnimalFile && $firstAnimalFile->centro_id) {
+                    $treatmentCenter = $firstAnimalFile->center;
+                }
+                if (!$treatmentCenter && $center) {
+                    $treatmentCenter = $center;
+                }
+                $animalFileCreatedAt = $firstAnimalFile->created_at;
+            }
+            
+            $tiempoTranscurrido = $this->calculateTimeElapsed($report->created_at);
+            $tiempoDesdeTratamiento = null;
+            if ($hasAnimalFile && $animalFileCreatedAt) {
+                $tiempoDesdeTratamiento = $this->calculateTimeElapsed($animalFileCreatedAt);
+            }
+            $tiempoHallazgoTraslado = null;
+            if ($fechaTraslado) {
+                $tiempoHallazgoTraslado = $this->calculateTimeElapsed($report->created_at, $fechaTraslado);
+            }
+            
+            $reportData = [
+                'id' => $report->id,
+                'province' => $province,
+                'nombre' => $animalNombre,
+                'fecha_hallazgo' => $report->created_at,
+                'tiempo_transcurrido' => $tiempoTranscurrido,
+            ];
+            
+            if ($release) {
+                $reportData['estado'] = 'Liberado';
+                $reportData['fecha_liberacion'] = $release->created_at;
+                $liberados[] = $reportData;
+            } elseif ($hasAnimalFile) {
+                $reportData['estado'] = 'Tratado';
+                $reportData['centro'] = $treatmentCenter;
+                $reportData['fecha_tratamiento'] = $animalFileCreatedAt;
+                $reportData['tiempo_desde_tratamiento'] = $tiempoDesdeTratamiento;
+                $tratados[] = $reportData;
+            } elseif ($hasFirstTransfer) {
+                $reportData['estado'] = 'En Traslado';
+                $reportData['centro'] = $center;
+                $reportData['fecha_traslado'] = $fechaTraslado;
+                $reportData['tiempo_hallazgo_traslado'] = $tiempoHallazgoTraslado;
+                $rescatados[] = $reportData;
+            } else {
+                $reportData['estado'] = 'En Peligro';
+                $enPeligro[] = $reportData;
+            }
+        }
+        
+        $sortFunction = function($a, $b) {
+            if ($a['province'] !== $b['province']) {
+                return strcmp($a['province'], $b['province']);
+            }
+            return $a['id'] - $b['id'];
+        };
+        
+        usort($enPeligro, $sortFunction);
+        usort($rescatados, $sortFunction);
+        usort($tratados, $sortFunction);
+        usort($liberados, $sortFunction);
+        
+        $totals = [
+            'en_peligro' => count($enPeligro),
+            'rescatados' => count($rescatados),
+            'tratados' => count($tratados),
+            'liberados' => count($liberados),
+        ];
+        
+        $pdf = Pdf::loadView('reports.pdf.activity-states', [
+            'enPeligro' => $enPeligro,
+            'rescatados' => $rescatados,
+            'tratados' => $tratados,
+            'liberados' => $liberados,
+            'totals' => $totals,
+            'fechaGeneracion' => Carbon::now()->format('d/m/Y H:i:s'),
+        ]);
+        
+        $fileName = 'reporte_actividad_estados_' . date('d_m_Y') . '.pdf';
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Exporta el reporte de Salud Animal Actual a PDF
+     */
+    private function exportHealthAnimalPdf(Request $request): Response
+    {
+        // Obtener los mismos datos que en healthAnimalReport()
+        $fechaDesde = $request->get('fecha_desde');
+        $fechaHasta = $request->get('fecha_hasta');
+        
+        $primeraFecha = AnimalFile::whereDoesntHave('release')
+            ->min('created_at');
+        
+        if (!$fechaDesde && $primeraFecha) {
+            $fechaDesde = Carbon::parse($primeraFecha)->format('Y-m-d');
+        }
+        if (!$fechaHasta) {
+            $fechaHasta = Carbon::now()->format('Y-m-d');
+        }
+        
+        $query = AnimalFile::whereDoesntHave('release')
+            ->with([
+                'center',
+                'animalStatus',
+                'animal' => function($query) {
+                    $query->with(['report' => function($q) {
+                        $q->with('condicionInicial');
+                    }]);
+                },
+                'medicalEvaluations' => function($query) {
+                    $query->with('treatmentType')
+                          ->orderBy('fecha', 'desc')
+                          ->orderBy('created_at', 'desc')
+                          ->limit(1);
+                }
+            ]);
+        
+        if ($fechaDesde) {
+            $query->whereDate('created_at', '>=', Carbon::parse($fechaDesde)->startOfDay());
+        }
+        if ($fechaHasta) {
+            $query->whereDate('created_at', '<=', Carbon::parse($fechaHasta)->endOfDay());
+        }
+        
+        $animalFiles = $query->get();
+
+        $healthData = [];
+        
+        foreach ($animalFiles as $animalFile) {
+            $animal = $animalFile->animal;
+            
+            $nombreAnimal = $animal?->nombre ?? 'Sin nombre';
+            $nombreCentro = $animalFile->center?->nombre ?? 'Sin centro asignado';
+            $diagnosticoInicial = $animal?->descripcion ?? 'Sin diagnóstico inicial';
+            $fechaCreacionHoja = $animalFile->created_at;
+            
+            $ultimaIntervencion = null;
+            $fechaUltimaEvaluacion = null;
+            $ultimaEvaluacion = $animalFile->medicalEvaluations->first();
+            if ($ultimaEvaluacion) {
+                $fechaIntervencion = $ultimaEvaluacion->fecha ?? $ultimaEvaluacion->created_at;
+                if ($fechaIntervencion) {
+                    $fechaIntervencion = Carbon::parse($fechaIntervencion);
+                    $fechaUltimaEvaluacion = $fechaIntervencion;
+                }
+                $tipoTratamiento = $ultimaEvaluacion->treatmentType?->nombre ?? 'Sin tipo';
+                $descripcion = $ultimaEvaluacion->descripcion ?? '';
+                $diagnostico = $ultimaEvaluacion->diagnostico ?? '';
+                
+                $ultimaIntervencion = [
+                    'fecha' => $fechaIntervencion,
+                    'tipo' => $tipoTratamiento,
+                    'descripcion' => $descripcion,
+                    'diagnostico' => $diagnostico,
+                ];
+            }
+            
+            $estadoActual = $animalFile->animalStatus?->nombre ?? 'Sin estado';
+            
+            $healthData[] = [
+                'centro' => $nombreCentro,
+                'nombre_animal' => $nombreAnimal,
+                'diagnostico_inicial' => $diagnosticoInicial,
+                'fecha_creacion_hoja' => $fechaCreacionHoja,
+                'fecha_ultima_evaluacion' => $fechaUltimaEvaluacion,
+                'ultima_intervencion' => $ultimaIntervencion,
+                'estado_actual' => $estadoActual,
+            ];
+        }
+        
+        usort($healthData, function($a, $b) {
+            if ($a['centro'] !== $b['centro']) {
+                return strcmp($a['centro'], $b['centro']);
+            }
+            return strcmp($a['nombre_animal'], $b['nombre_animal']);
+        });
+        
+        $pdf = Pdf::loadView('reports.pdf.health-animal', [
+            'healthData' => $healthData,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
+            'fechaGeneracion' => Carbon::now()->format('d/m/Y H:i:s'),
+        ]);
+        
+        $fileName = 'reporte_salud_animal_' . date('d_m_Y') . '.pdf';
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Exporta el reporte de Eficacia de Rescate a PDF
+     */
+    private function exportRescueEfficiencyPdf(Request $request): Response
+    {
+        // Obtener los mismos datos que en managementReports()
+        $fechaInicio30Dias = Carbon::now()->subDays(30)->startOfDay();
+        $fechaFin30Dias = Carbon::now()->endOfDay();
+        
+        $traslados30Dias = Transfer::where('primer_traslado', true)
+            ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+            ->count();
+        
+        $hallazgos30Dias = Report::where('aprobado', true)
+            ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+            ->count();
+        
+        $eficaciaMensual = $hallazgos30Dias > 0 ? round(($traslados30Dias / $hallazgos30Dias) * 100, 2) : 0;
+        
+        $filtro = $request->get('filtro', 'mes');
+        $fechaDesde = $request->get('fecha_desde');
+        $fechaHasta = $request->get('fecha_hasta');
+        
+        $fechaInicio = null;
+        $fechaFin = Carbon::now()->endOfDay();
+        
+        if ($filtro === 'semana') {
+            $fechaInicio = Carbon::now()->subDays(7)->startOfDay();
+        } elseif ($filtro === 'mes') {
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        } elseif ($filtro === 'rango' && $fechaDesde && $fechaHasta) {
+            $fechaInicio = Carbon::parse($fechaDesde)->startOfDay();
+            $fechaFin = Carbon::parse($fechaHasta)->endOfDay();
+        } else {
+            $filtro = 'mes';
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        }
+        
+        $datosDiarios = [];
+        $fechaActual = Carbon::parse($fechaInicio);
+        
+        while ($fechaActual->lte($fechaFin)) {
+            $fechaInicioDia = $fechaActual->copy()->startOfDay();
+            $fechaFinDia = $fechaActual->copy()->endOfDay();
+            
+            $hallazgosDia = Report::where('aprobado', true)
+                ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                ->count();
+            
+            $trasladosDia = Transfer::where('primer_traslado', true)
+                ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                ->count();
+            
+            if ($hallazgosDia > 0 || $trasladosDia > 0) {
+                $eficaciaDia = $hallazgosDia > 0 ? round(($trasladosDia / $hallazgosDia) * 100, 2) : 0;
+                
+                $color = 'rojo';
+                if ($eficaciaDia > 100) {
+                    $color = 'azul';
+                } elseif ($eficaciaDia == 100) {
+                    $color = 'verde';
+                } elseif ($eficaciaDia > 50) {
+                    $color = 'amarillo';
+                }
+                
+                $datosDiarios[] = [
+                    'fecha' => $fechaActual->copy(),
+                    'hallazgos' => $hallazgosDia,
+                    'traslados' => $trasladosDia,
+                    'eficacia' => $eficaciaDia,
+                    'color' => $color,
+                ];
+            }
+            
+            $fechaActual->addDay();
+        }
+        
+        $pdf = Pdf::loadView('reports.pdf.efficiency-rescue', [
+            'eficaciaMensual' => $eficaciaMensual,
+            'traslados30Dias' => $traslados30Dias,
+            'hallazgos30Dias' => $hallazgos30Dias,
+            'datosDiarios' => $datosDiarios,
+            'filtro' => $filtro,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
+            'fechaGeneracion' => Carbon::now()->format('d/m/Y H:i:s'),
+        ]);
+        
+        $fileName = 'reporte_eficacia_rescate_' . date('d_m_Y') . '.pdf';
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Exporta el reporte de Eficacia de Tratamiento a PDF
+     */
+    private function exportTreatmentEfficiencyPdf(Request $request): Response
+    {
+        $fechaInicio30Dias = Carbon::now()->subDays(30)->startOfDay();
+        $fechaFin30Dias = Carbon::now()->endOfDay();
+        
+        $animalesEnTratamiento30Dias = AnimalFile::whereDoesntHave('release')
+            ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+            ->count();
+        
+        $estableStatusId = AnimalStatus::whereRaw('LOWER(nombre) = ?', ['estable'])->value('id');
+        $animalesEstables30Dias = 0;
+        if ($estableStatusId) {
+            $animalesEstables30Dias = AnimalFile::where('estado_id', $estableStatusId)
+                ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+                ->count();
+        }
+        
+        $eficaciaMensual = $animalesEnTratamiento30Dias > 0 ? round(($animalesEstables30Dias / $animalesEnTratamiento30Dias) * 100, 2) : 0;
+        
+        $filtro = $request->get('filtro', 'mes');
+        $fechaDesde = $request->get('fecha_desde');
+        $fechaHasta = $request->get('fecha_hasta');
+        
+        $fechaInicio = null;
+        $fechaFin = Carbon::now()->endOfDay();
+        
+        if ($filtro === 'semana') {
+            $fechaInicio = Carbon::now()->subDays(7)->startOfDay();
+        } elseif ($filtro === 'mes') {
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        } elseif ($filtro === 'rango' && $fechaDesde && $fechaHasta) {
+            $fechaInicio = Carbon::parse($fechaDesde)->startOfDay();
+            $fechaFin = Carbon::parse($fechaHasta)->endOfDay();
+        } else {
+            $filtro = 'mes';
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        }
+        
+        $datosDiarios = [];
+        $fechaActual = Carbon::parse($fechaInicio);
+        $estableStatusId = AnimalStatus::whereRaw('LOWER(nombre) = ?', ['estable'])->value('id');
+        
+        while ($fechaActual->lte($fechaFin)) {
+            $fechaInicioDia = $fechaActual->copy()->startOfDay();
+            $fechaFinDia = $fechaActual->copy()->endOfDay();
+            
+            $animalesEnTratamientoDia = AnimalFile::whereDoesntHave('release')
+                ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                ->count();
+            
+            $animalesEstablesDia = 0;
+            if ($estableStatusId) {
+                $animalesEstablesDia = AnimalFile::where('estado_id', $estableStatusId)
+                    ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                    ->count();
+            }
+            
+            if ($animalesEnTratamientoDia > 0 || $animalesEstablesDia > 0) {
+                $eficaciaDia = $animalesEnTratamientoDia > 0 ? round(($animalesEstablesDia / $animalesEnTratamientoDia) * 100, 2) : 0;
+                
+                $color = 'rojo';
+                if ($eficaciaDia > 100) {
+                    $color = 'azul';
+                } elseif ($eficaciaDia == 100) {
+                    $color = 'verde';
+                } elseif ($eficaciaDia > 50) {
+                    $color = 'amarillo';
+                }
+                
+                $datosDiarios[] = [
+                    'fecha' => $fechaActual->copy(),
+                    'en_tratamiento' => $animalesEnTratamientoDia,
+                    'estables' => $animalesEstablesDia,
+                    'eficacia' => $eficaciaDia,
+                    'color' => $color,
+                ];
+            }
+            
+            $fechaActual->addDay();
+        }
+        
+        $pdf = Pdf::loadView('reports.pdf.efficiency-treatment', [
+            'eficaciaMensual' => $eficaciaMensual,
+            'animalesEnTratamiento30Dias' => $animalesEnTratamiento30Dias,
+            'animalesEstables30Dias' => $animalesEstables30Dias,
+            'datosDiarios' => $datosDiarios,
+            'filtro' => $filtro,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
+            'fechaGeneracion' => Carbon::now()->format('d/m/Y H:i:s'),
+        ]);
+        
+        $fileName = 'reporte_eficacia_tratamiento_' . date('d_m_Y') . '.pdf';
+        return $pdf->download($fileName);
+    }
+
+    /**
+     * Exporta el reporte de Eficacia de Liberación a PDF
+     */
+    private function exportReleaseEfficiencyPdf(Request $request): Response
+    {
+        $fechaInicio30Dias = Carbon::now()->subDays(30)->startOfDay();
+        $fechaFin30Dias = Carbon::now()->endOfDay();
+        
+        $estableStatusId = AnimalStatus::whereRaw('LOWER(nombre) = ?', ['estable'])->value('id');
+        $animalesEstables30Dias = 0;
+        if ($estableStatusId) {
+            $animalesEstables30Dias = AnimalFile::where('estado_id', $estableStatusId)
+                ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+                ->count();
+        }
+        
+        $animalesLiberados30Dias = Release::whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+            ->count();
+        
+        $eficaciaMensual = $animalesEstables30Dias > 0 ? round(($animalesLiberados30Dias / $animalesEstables30Dias) * 100, 2) : 0;
+        
+        $filtro = $request->get('filtro', 'mes');
+        $fechaDesde = $request->get('fecha_desde');
+        $fechaHasta = $request->get('fecha_hasta');
+        
+        $fechaInicio = null;
+        $fechaFin = Carbon::now()->endOfDay();
+        
+        if ($filtro === 'semana') {
+            $fechaInicio = Carbon::now()->subDays(7)->startOfDay();
+        } elseif ($filtro === 'mes') {
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        } elseif ($filtro === 'rango' && $fechaDesde && $fechaHasta) {
+            $fechaInicio = Carbon::parse($fechaDesde)->startOfDay();
+            $fechaFin = Carbon::parse($fechaHasta)->endOfDay();
+        } else {
+            $filtro = 'mes';
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        }
+        
+        $datosDiarios = [];
+        $fechaActual = Carbon::parse($fechaInicio);
+        
+        while ($fechaActual->lte($fechaFin)) {
+            $fechaInicioDia = $fechaActual->copy()->startOfDay();
+            $fechaFinDia = $fechaActual->copy()->endOfDay();
+            
+            $animalesEstablesDia = 0;
+            if ($estableStatusId) {
+                $animalesEstablesDia = AnimalFile::where('estado_id', $estableStatusId)
+                    ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                    ->count();
+            }
+            
+            $animalesLiberadosDia = Release::whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                ->count();
+            
+            if ($animalesEstablesDia > 0 || $animalesLiberadosDia > 0) {
+                $eficaciaDia = $animalesEstablesDia > 0 ? round(($animalesLiberadosDia / $animalesEstablesDia) * 100, 2) : 0;
+                
+                $color = 'rojo';
+                if ($eficaciaDia > 100) {
+                    $color = 'azul';
+                } elseif ($eficaciaDia == 100) {
+                    $color = 'verde';
+                } elseif ($eficaciaDia > 50) {
+                    $color = 'amarillo';
+                }
+                
+                $datosDiarios[] = [
+                    'fecha' => $fechaActual->copy(),
+                    'estables' => $animalesEstablesDia,
+                    'liberados' => $animalesLiberadosDia,
+                    'eficacia' => $eficaciaDia,
+                    'color' => $color,
+                ];
+            }
+            
+            $fechaActual->addDay();
+        }
+        
+        $pdf = Pdf::loadView('reports.pdf.efficiency-release', [
+            'eficaciaMensual' => $eficaciaMensual,
+            'animalesEstables30Dias' => $animalesEstables30Dias,
+            'animalesLiberados30Dias' => $animalesLiberados30Dias,
+            'datosDiarios' => $datosDiarios,
+            'filtro' => $filtro,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
+            'fechaGeneracion' => Carbon::now()->format('d/m/Y H:i:s'),
+        ]);
+        
+        $fileName = 'reporte_eficacia_liberacion_' . date('d_m_Y') . '.pdf';
+        return $pdf->download($fileName);
     }
 }
 

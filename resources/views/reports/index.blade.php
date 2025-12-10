@@ -11,24 +11,33 @@
 @section('content')
 <div class="container-fluid">
     <!-- Pestañas -->
-    <ul class="nav nav-tabs" id="reportsTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <a class="nav-link {{ $tab === 'activity' ? 'active' : '' }}" 
-               id="activity-tab" 
-               href="{{ route('reportes.index', ['tab' => 'activity']) }}"
-               role="tab">
-                <i class="fas fa-chart-line mr-2"></i>Reportes de Actividad
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <ul class="nav nav-tabs" id="reportsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {{ $tab === 'activity' ? 'active' : '' }}" 
+                   id="activity-tab" 
+                   href="{{ route('reportes.index', ['tab' => 'activity']) }}"
+                   role="tab">
+                    <i class="fas fa-chart-line mr-2"></i>Reportes de Actividad
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {{ $tab === 'management' ? 'active' : '' }}" 
+                   id="management-tab" 
+                   href="{{ route('reportes.index', ['tab' => 'management']) }}"
+                   role="tab">
+                    <i class="fas fa-cog mr-2"></i>Reportes de Gestión
+                </a>
+            </li>
+        </ul>
+        <div>
+            <a href="{{ route('reportes.export-pdf', request()->all()) }}" 
+               class="btn btn-danger btn-sm" 
+               target="_blank">
+                <i class="fas fa-file-pdf mr-2"></i>Exportar a PDF
             </a>
-        </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link {{ $tab === 'management' ? 'active' : '' }}" 
-               id="management-tab" 
-               href="{{ route('reportes.index', ['tab' => 'management']) }}"
-               role="tab">
-                <i class="fas fa-cog mr-2"></i>Reportes de Gestión
-            </a>
-        </li>
-    </ul>
+        </div>
+    </div>
 
     <!-- Contenido de las pestañas -->
     <div class="tab-content" id="reportsTabContent">

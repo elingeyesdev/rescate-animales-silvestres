@@ -39,7 +39,7 @@
             <input type="hidden" name="management_subtab" value="{{ $management_subtab }}">
             <div class="row align-items-center">
                 <div class="col-auto">
-                    <span class="text-muted"><i class="fas fa-filter mr-1"></i>Filtrar por:</span>
+                    <span class="text-muted"><i class="fas fa-filter mr-1"></i>Buscar por:</span>
                 </div>
                 <div class="col-auto">
                     <select name="filtro" id="filtro{{ $management_subtab }}" class="form-control" onchange="toggleFechaInputs{{ $management_subtab }}()">

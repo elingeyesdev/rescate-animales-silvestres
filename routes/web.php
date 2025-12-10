@@ -106,4 +106,6 @@ Route::resource('animal-feeding-records', AnimalFeedingTransactionalController::
 Route::resource('medical-evaluation-transactions', AnimalMedicalEvaluationTransactionalController::class)->middleware('auth');
 Route::resource('animal-care-records', AnimalCareTransactionalController::class)->middleware('auth');
 Route::resource('animal-histories', AnimalHistoryController::class)->only(['index','show'])->middleware('auth');
+
 Route::get('reportes', [ReportsController::class, 'index'])->name('reportes.index')->middleware('auth');
+Route::get('reportes/exportar-pdf', [ReportsController::class, 'exportPdf'])->name('reportes.export-pdf')->middleware('auth');
