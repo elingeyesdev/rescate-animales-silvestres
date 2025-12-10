@@ -16,7 +16,7 @@
                             </span>
                             <div class="float-right">
                                 <a href="{{ route('reports.index') }}" class="btn btn-secondary btn-sm float-right">
-                                    {{ __('Volver a Hallazgos') }}
+                                    {{ __('Volver') }}
                                 </a>
                             </div>
                         </div>

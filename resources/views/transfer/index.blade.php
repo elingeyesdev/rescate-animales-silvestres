@@ -102,7 +102,7 @@
                                     </div>
                                     <div class="col-md-6 d-none text-center" id="first_map_panel">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <button type="button" class="btn btn-secondary btn-sm" id="first_back_btn"><i class="fa fa-arrow-left"></i> {{ __('Volver a hallazgos aprobados') }}</button>
+                                            <button type="button" class="btn btn-secondary btn-sm" id="first_back_btn"><i class="fa fa-arrow-left"></i> {{ __('Volver') }}</button>
                                         </div>
                                         <label class="form-label d-block mb-1">{{ __('Seleccione el centro de destino en el mapa') }}</label>
                                         <small class="text-muted d-block mb-2">{{ __('Haga clic en un centro o en su nombre en la lista para seleccionarlo') }}</small>

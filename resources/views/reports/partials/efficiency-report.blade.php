@@ -15,7 +15,7 @@
                     <h2 class="mb-0" style="font-size: 2.5rem; font-weight: bold; color: #17a2b8;">
                         {{ $eficaciaMensual }}%
                     </h2>
-                    <p class="text-muted mb-0">Eficacia (Últimos 30 días)</p>
+                    <p class="text-muted mb-0">Eficacia de los Últimos 30 días</p>
                     <small class="text-muted">
                         {{ $valor230Dias }} {{ $label2 }} / {{ $valor130Dias }} {{ $label1 }}
                     </small>

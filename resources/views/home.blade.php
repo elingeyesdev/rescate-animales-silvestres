@@ -174,7 +174,7 @@
                 <div class="card shadow-sm mb-0 h-100">
                     <div class="card-header bg-gradient-primary text-white py-2">
                         <h4 class="card-title mb-0" style="font-size: 0.95rem;">
-                            <i class="fas fa-chart-line mr-1"></i>Actividad (7 días)
+                            <i class="fas fa-chart-line mr-1"></i>Actividad
                         </h4>
                     </div>
                     <div class="card-body p-2">
@@ -334,7 +334,7 @@
                 <div class="card card-outline card-purple shadow-sm w-100">
                     <div class="card-header border-0">
                         <h3 class="card-title font-weight-bold text-dark">
-                            <i class="fas fa-chart-bar mr-2 text-purple"></i> Comparativa Operativa (Totales)
+                            <i class="fas fa-chart-bar mr-2 text-purple"></i> Comparativa Operativa
                         </h3>
                     </div>
                     <div class="card-body d-flex justify-content-center align-items-center">

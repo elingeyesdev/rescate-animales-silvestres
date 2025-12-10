@@ -2140,7 +2140,7 @@ class ReportsController extends Controller
             fputcsv($handle, []);
             
             // Resumen de eficacia
-            fputcsv($handle, ['Eficacia (Últimos 30 días):', $eficaciaMensual . '%']);
+            fputcsv($handle, ['Eficacia de los últimos 30 días:', $eficaciaMensual . '%']);
             fputcsv($handle, [$detalles]);
             fputcsv($handle, []);
             

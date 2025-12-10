@@ -130,7 +130,7 @@
     <div class="efficiency-summary">
         <div class="percentage">{{ $eficaciaMensual }}%</div>
         <div class="details">
-            Eficacia (Últimos 30 días)<br>
+            Eficacia de los Últimos 30 días<br>
             {{ $traslados30Dias }} traslados / {{ $hallazgos30Dias }} hallazgos
         </div>
     </div>
@@ -155,7 +155,7 @@
                 <th style="width: 20%;">Fecha</th>
                 <th style="width: 20%;">Cantidad de Hallazgos</th>
                 <th style="width: 20%;">Cantidad de Traslados</th>
-                <th style="width: 20%;">Eficacia Diaria (%)</th>
+                <th style="width: 20%;">Eficacia Diaria</th>
                 <th style="width: 20%;">Estado</th>
             </tr>
         </thead>

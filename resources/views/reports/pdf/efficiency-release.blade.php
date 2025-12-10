@@ -130,7 +130,7 @@
     <div class="efficiency-summary">
         <div class="percentage">{{ $eficaciaMensual }}%</div>
         <div class="details">
-            Eficacia (Últimos 30 días)<br>
+            Eficacia de los Últimos 30 días<br>
             {{ $animalesLiberados30Dias }} animales liberados / {{ $animalesEstables30Dias }} animales estables
         </div>
     </div>
@@ -155,7 +155,7 @@
                 <th style="width: 20%;">Fecha</th>
                 <th style="width: 20%;">Animales Estables</th>
                 <th style="width: 20%;">Animales Liberados</th>
-                <th style="width: 20%;">Eficacia Diaria (%)</th>
+                <th style="width: 20%;">Eficacia Diaria</th>
                 <th style="width: 20%;">Estado</th>
             </tr>
         </thead>
