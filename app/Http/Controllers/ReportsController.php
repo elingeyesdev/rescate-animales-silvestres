@@ -8,6 +8,7 @@ use App\Models\AnimalFile;
 use App\Models\Center;
 use App\Models\Release;
 use App\Models\MedicalEvaluation;
+use App\Models\AnimalStatus;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +35,16 @@ class ReportsController extends Controller
             }
             return $this->activityReports();
         } elseif ($tab === 'management') {
+            $managementSubtab = $request->get('management_subtab', 'rescue');
+            // Temporalmente deshabilitado: initial_review
+            // if ($managementSubtab === 'initial_review') {
+            //     return $this->initialReviewEfficiencyReport($request);
+            // } elseif 
+            if ($managementSubtab === 'treatment') {
+                return $this->treatmentEfficiencyReport($request);
+            } elseif ($managementSubtab === 'release') {
+                return $this->releaseEfficiencyReport($request);
+            }
             return $this->managementReports($request);
         }
         
@@ -431,9 +442,354 @@ class ReportsController extends Controller
         
         return view('reports.index', [
             'tab' => 'management',
+            'management_subtab' => 'rescue',
             'eficaciaMensual' => $eficaciaMensual,
             'traslados30Dias' => $traslados30Dias,
             'hallazgos30Dias' => $hallazgos30Dias,
+            'datosDiarios' => $datosDiarios,
+            'filtro' => $filtro,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
+            'enPeligro' => [],
+            'rescatados' => [],
+            'tratados' => [],
+            'liberados' => [],
+            'totals' => ['en_peligro' => 0, 'rescatados' => 0, 'tratados' => 0, 'liberados' => 0],
+        ]);
+    }
+
+    /**
+     * Eficacia de Revisión Inicial
+     */
+    private function initialReviewEfficiencyReport(Request $request): View
+    {
+        // Calcular eficacia mensual (últimos 30 días)
+        $fechaInicio30Dias = Carbon::now()->subDays(30)->startOfDay();
+        $fechaFin30Dias = Carbon::now()->endOfDay();
+        
+        $traslados30Dias = Transfer::where('primer_traslado', true)
+            ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+            ->count();
+        
+        // Contar evaluaciones médicas iniciales (primera evaluación de cada animal_file)
+        // Obtener todos los animal_files creados en el período y contar sus primeras evaluaciones
+        $animalFiles30Dias = AnimalFile::whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])->pluck('id');
+        $evaluacionesIniciales30Dias = MedicalEvaluation::whereIn('animal_file_id', $animalFiles30Dias)
+            ->get()
+            ->groupBy('animal_file_id')
+            ->map(function($evaluations) {
+                return $evaluations->sortBy('created_at')->first();
+            })
+            ->count();
+        
+        $eficaciaMensual = $traslados30Dias > 0 ? round(($evaluacionesIniciales30Dias / $traslados30Dias) * 100, 2) : 0;
+        
+        // Obtener parámetros del filtro
+        $filtro = $request->get('filtro', 'mes');
+        $fechaDesde = $request->get('fecha_desde');
+        $fechaHasta = $request->get('fecha_hasta');
+        
+        // Determinar rango de fechas según el filtro
+        $fechaInicio = null;
+        $fechaFin = Carbon::now()->endOfDay();
+        
+        if ($filtro === 'semana') {
+            $fechaInicio = Carbon::now()->subDays(7)->startOfDay();
+        } elseif ($filtro === 'mes') {
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        } elseif ($filtro === 'rango' && $fechaDesde && $fechaHasta) {
+            $fechaInicio = Carbon::parse($fechaDesde)->startOfDay();
+            $fechaFin = Carbon::parse($fechaHasta)->endOfDay();
+        } else {
+            $filtro = 'mes';
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        }
+        
+        // Generar datos diarios
+        $datosDiarios = [];
+        $fechaActual = Carbon::parse($fechaInicio);
+        
+        while ($fechaActual->lte($fechaFin)) {
+            $fechaInicioDia = $fechaActual->copy()->startOfDay();
+            $fechaFinDia = $fechaActual->copy()->endOfDay();
+            
+            // Contar traslados del día
+            $trasladosDia = Transfer::where('primer_traslado', true)
+                ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                ->count();
+            
+            // Contar evaluaciones médicas iniciales del día (primera evaluación de cada animal_file creado ese día)
+            $animalFilesDia = AnimalFile::whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])->pluck('id');
+            $evaluacionesInicialesDia = 0;
+            if ($animalFilesDia->isNotEmpty()) {
+                $evaluacionesInicialesDia = MedicalEvaluation::whereIn('animal_file_id', $animalFilesDia)
+                    ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                    ->get()
+                    ->groupBy('animal_file_id')
+                    ->map(function($evaluations) {
+                        return $evaluations->sortBy('created_at')->first();
+                    })
+                    ->filter(function($eval) use ($fechaInicioDia, $fechaFinDia) {
+                        return $eval->created_at->between($fechaInicioDia, $fechaFinDia);
+                    })
+                    ->count();
+            }
+            
+            // Solo agregar días que tengan al menos un traslado o una evaluación
+            if ($trasladosDia > 0 || $evaluacionesInicialesDia > 0) {
+                // Calcular eficacia diaria
+                $eficaciaDia = $trasladosDia > 0 ? round(($evaluacionesInicialesDia / $trasladosDia) * 100, 2) : 0;
+                
+                // Determinar color según eficacia
+                $color = 'rojo';
+                if ($eficaciaDia > 100) {
+                    $color = 'azul';
+                } elseif ($eficaciaDia == 100) {
+                    $color = 'verde';
+                } elseif ($eficaciaDia > 50) {
+                    $color = 'amarillo';
+                }
+                
+                $datosDiarios[] = [
+                    'fecha' => $fechaActual->copy(),
+                    'traslados' => $trasladosDia,
+                    'evaluaciones' => $evaluacionesInicialesDia,
+                    'eficacia' => $eficaciaDia,
+                    'color' => $color,
+                ];
+            }
+            
+            $fechaActual->addDay();
+        }
+        
+        return view('reports.index', [
+            'tab' => 'management',
+            'management_subtab' => 'initial_review',
+            'eficaciaMensual' => $eficaciaMensual,
+            'traslados30Dias' => $traslados30Dias,
+            'evaluaciones30Dias' => $evaluacionesIniciales30Dias,
+            'datosDiarios' => $datosDiarios,
+            'filtro' => $filtro,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
+            'enPeligro' => [],
+            'rescatados' => [],
+            'tratados' => [],
+            'liberados' => [],
+            'totals' => ['en_peligro' => 0, 'rescatados' => 0, 'tratados' => 0, 'liberados' => 0],
+        ]);
+    }
+
+    /**
+     * Eficacia de los Tratamientos
+     */
+    private function treatmentEfficiencyReport(Request $request): View
+    {
+        // Calcular eficacia mensual (últimos 30 días)
+        $fechaInicio30Dias = Carbon::now()->subDays(30)->startOfDay();
+        $fechaFin30Dias = Carbon::now()->endOfDay();
+        
+        // Animales en tratamiento (sin release)
+        $animalesEnTratamiento30Dias = AnimalFile::whereDoesntHave('release')
+            ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+            ->count();
+        
+        // Animales estables (estado "Estable" - deben ser liberados)
+        $estableStatusId = AnimalStatus::whereRaw('LOWER(nombre) = ?', ['estable'])->value('id');
+        $animalesEstables30Dias = 0;
+        if ($estableStatusId) {
+            $animalesEstables30Dias = AnimalFile::where('estado_id', $estableStatusId)
+                ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+                ->count();
+        }
+        
+        $eficaciaMensual = $animalesEnTratamiento30Dias > 0 ? round(($animalesEstables30Dias / $animalesEnTratamiento30Dias) * 100, 2) : 0;
+        
+        // Obtener parámetros del filtro
+        $filtro = $request->get('filtro', 'mes');
+        $fechaDesde = $request->get('fecha_desde');
+        $fechaHasta = $request->get('fecha_hasta');
+        
+        // Determinar rango de fechas según el filtro
+        $fechaInicio = null;
+        $fechaFin = Carbon::now()->endOfDay();
+        
+        if ($filtro === 'semana') {
+            $fechaInicio = Carbon::now()->subDays(7)->startOfDay();
+        } elseif ($filtro === 'mes') {
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        } elseif ($filtro === 'rango' && $fechaDesde && $fechaHasta) {
+            $fechaInicio = Carbon::parse($fechaDesde)->startOfDay();
+            $fechaFin = Carbon::parse($fechaHasta)->endOfDay();
+        } else {
+            $filtro = 'mes';
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        }
+        
+        // Generar datos diarios
+        $datosDiarios = [];
+        $fechaActual = Carbon::parse($fechaInicio);
+        
+        while ($fechaActual->lte($fechaFin)) {
+            $fechaInicioDia = $fechaActual->copy()->startOfDay();
+            $fechaFinDia = $fechaActual->copy()->endOfDay();
+            
+            // Animales en tratamiento del día (creados ese día, sin release)
+            $animalesEnTratamientoDia = AnimalFile::whereDoesntHave('release')
+                ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                ->count();
+            
+            // Animales estables del día (deben ser liberados)
+            $animalesEstablesDia = 0;
+            if ($estableStatusId) {
+                $animalesEstablesDia = AnimalFile::where('estado_id', $estableStatusId)
+                    ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                    ->count();
+            }
+            
+            // Solo agregar días que tengan al menos un animal en tratamiento
+            if ($animalesEnTratamientoDia > 0 || $animalesEstablesDia > 0) {
+                // Calcular eficacia diaria
+                $eficaciaDia = $animalesEnTratamientoDia > 0 ? round(($animalesEstablesDia / $animalesEnTratamientoDia) * 100, 2) : 0;
+                
+                // Determinar color según eficacia
+                $color = 'rojo';
+                if ($eficaciaDia > 100) {
+                    $color = 'azul';
+                } elseif ($eficaciaDia == 100) {
+                    $color = 'verde';
+                } elseif ($eficaciaDia > 50) {
+                    $color = 'amarillo';
+                }
+                
+                $datosDiarios[] = [
+                    'fecha' => $fechaActual->copy(),
+                    'en_tratamiento' => $animalesEnTratamientoDia,
+                    'estables' => $animalesEstablesDia,
+                    'eficacia' => $eficaciaDia,
+                    'color' => $color,
+                ];
+            }
+            
+            $fechaActual->addDay();
+        }
+        
+        return view('reports.index', [
+            'tab' => 'management',
+            'management_subtab' => 'treatment',
+            'eficaciaMensual' => $eficaciaMensual,
+            'animalesEnTratamiento30Dias' => $animalesEnTratamiento30Dias,
+            'animalesEstables30Dias' => $animalesEstables30Dias,
+            'datosDiarios' => $datosDiarios,
+            'filtro' => $filtro,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
+            'enPeligro' => [],
+            'rescatados' => [],
+            'tratados' => [],
+            'liberados' => [],
+            'totals' => ['en_peligro' => 0, 'rescatados' => 0, 'tratados' => 0, 'liberados' => 0],
+        ]);
+    }
+
+    /**
+     * Eficacia de la Liberación
+     */
+    private function releaseEfficiencyReport(Request $request): View
+    {
+        // Calcular eficacia mensual (últimos 30 días)
+        $fechaInicio30Dias = Carbon::now()->subDays(30)->startOfDay();
+        $fechaFin30Dias = Carbon::now()->endOfDay();
+        
+        // Animales estables (estado "Estable")
+        $estableStatusId = AnimalStatus::whereRaw('LOWER(nombre) = ?', ['estable'])->value('id');
+        $animalesEstables30Dias = 0;
+        if ($estableStatusId) {
+            $animalesEstables30Dias = AnimalFile::where('estado_id', $estableStatusId)
+                ->whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+                ->count();
+        }
+        
+        // Animales liberados en los últimos 30 días
+        $animalesLiberados30Dias = Release::whereBetween('created_at', [$fechaInicio30Dias, $fechaFin30Dias])
+            ->count();
+        
+        $eficaciaMensual = $animalesEstables30Dias > 0 ? round(($animalesLiberados30Dias / $animalesEstables30Dias) * 100, 2) : 0;
+        
+        // Obtener parámetros del filtro
+        $filtro = $request->get('filtro', 'mes');
+        $fechaDesde = $request->get('fecha_desde');
+        $fechaHasta = $request->get('fecha_hasta');
+        
+        // Determinar rango de fechas según el filtro
+        $fechaInicio = null;
+        $fechaFin = Carbon::now()->endOfDay();
+        
+        if ($filtro === 'semana') {
+            $fechaInicio = Carbon::now()->subDays(7)->startOfDay();
+        } elseif ($filtro === 'mes') {
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        } elseif ($filtro === 'rango' && $fechaDesde && $fechaHasta) {
+            $fechaInicio = Carbon::parse($fechaDesde)->startOfDay();
+            $fechaFin = Carbon::parse($fechaHasta)->endOfDay();
+        } else {
+            $filtro = 'mes';
+            $fechaInicio = Carbon::now()->subDays(30)->startOfDay();
+        }
+        
+        // Generar datos diarios
+        $datosDiarios = [];
+        $fechaActual = Carbon::parse($fechaInicio);
+        
+        while ($fechaActual->lte($fechaFin)) {
+            $fechaInicioDia = $fechaActual->copy()->startOfDay();
+            $fechaFinDia = $fechaActual->copy()->endOfDay();
+            
+            // Animales estables del día
+            $animalesEstablesDia = 0;
+            if ($estableStatusId) {
+                $animalesEstablesDia = AnimalFile::where('estado_id', $estableStatusId)
+                    ->whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                    ->count();
+            }
+            
+            // Animales liberados del día
+            $animalesLiberadosDia = Release::whereBetween('created_at', [$fechaInicioDia, $fechaFinDia])
+                ->count();
+            
+            // Solo agregar días que tengan al menos un animal estable o liberado
+            if ($animalesEstablesDia > 0 || $animalesLiberadosDia > 0) {
+                // Calcular eficacia diaria
+                $eficaciaDia = $animalesEstablesDia > 0 ? round(($animalesLiberadosDia / $animalesEstablesDia) * 100, 2) : 0;
+                
+                // Determinar color según eficacia
+                $color = 'rojo';
+                if ($eficaciaDia > 100) {
+                    $color = 'azul';
+                } elseif ($eficaciaDia == 100) {
+                    $color = 'verde';
+                } elseif ($eficaciaDia > 50) {
+                    $color = 'amarillo';
+                }
+                
+                $datosDiarios[] = [
+                    'fecha' => $fechaActual->copy(),
+                    'estables' => $animalesEstablesDia,
+                    'liberados' => $animalesLiberadosDia,
+                    'eficacia' => $eficaciaDia,
+                    'color' => $color,
+                ];
+            }
+            
+            $fechaActual->addDay();
+        }
+        
+        return view('reports.index', [
+            'tab' => 'management',
+            'management_subtab' => 'release',
+            'eficaciaMensual' => $eficaciaMensual,
+            'animalesEstables30Dias' => $animalesEstables30Dias,
+            'animalesLiberados30Dias' => $animalesLiberados30Dias,
             'datosDiarios' => $datosDiarios,
             'filtro' => $filtro,
             'fechaDesde' => $fechaDesde,
