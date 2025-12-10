@@ -227,7 +227,7 @@
 
                         <div>
                             <div class="d-flex justify-content-between align-items-center mb-0">
-                                <small class="text-muted" style="font-size: 0.7rem;">Listos/En Atención</small>
+                                <small class="text-muted" style="font-size: 0.7rem;">Estables/Animales del Sistema</small>
                                 <span class="badge badge-info" style="font-size: 0.65rem;">{{ $efficiencyReady['percentage'] }}%</span>
                             </div>
                             <div class="progress" style="height: 16px;">

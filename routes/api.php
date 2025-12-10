@@ -53,5 +53,6 @@ Route::name('api.')->group(function () {
     Route::apiResource('fire-predictions', FirePredictionApiController::class)->only(['index']);
     Route::apiResource('animal-conditions', AnimalConditionApiController::class)->only(['index', 'show']);
     Route::apiResource('incident-types', IncidentTypeApiController::class)->only(['index', 'show']);
+    
     Route::get('weather', [WeatherApiController::class, 'index'])->name('weather');
 });
