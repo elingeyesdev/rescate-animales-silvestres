@@ -30,7 +30,7 @@ class ReportsController extends Controller
         
         if ($tab === 'activity') {
             if ($subtab === 'health') {
-                return $this->healthAnimalReport();
+                return $this->healthAnimalReport($request);
             }
             return $this->activityReports();
         } elseif ($tab === 'management') {
@@ -221,10 +221,26 @@ class ReportsController extends Controller
     /**
      * Reporte de Salud Animal Actual
      */
-    private function healthAnimalReport(): View
+    private function healthAnimalReport(Request $request): View
     {
-        // Obtener todos los AnimalFiles que no tienen release (animales en tratamiento)
-        $animalFiles = AnimalFile::whereDoesntHave('release')
+        // Obtener la primera fecha registrada en el sistema (fecha más antigua de creación de hoja de vida)
+        $primeraFecha = AnimalFile::whereDoesntHave('release')
+            ->min('created_at');
+        
+        // Obtener parámetros de fecha del request
+        $fechaDesde = $request->get('fecha_desde');
+        $fechaHasta = $request->get('fecha_hasta');
+        
+        // Establecer valores por defecto si no hay filtros
+        if (!$fechaDesde && $primeraFecha) {
+            $fechaDesde = Carbon::parse($primeraFecha)->format('Y-m-d');
+        }
+        if (!$fechaHasta) {
+            $fechaHasta = Carbon::now()->format('Y-m-d');
+        }
+        
+        // Construir query base
+        $query = AnimalFile::whereDoesntHave('release')
             ->with([
                 'center',
                 'animalStatus',
@@ -239,8 +255,17 @@ class ReportsController extends Controller
                           ->orderBy('created_at', 'desc')
                           ->limit(1);
                 }
-            ])
-            ->get();
+            ]);
+        
+        // Aplicar filtro de fechas (fecha de inicio de tratamiento = created_at de AnimalFile)
+        if ($fechaDesde) {
+            $query->whereDate('created_at', '>=', Carbon::parse($fechaDesde)->startOfDay());
+        }
+        if ($fechaHasta) {
+            $query->whereDate('created_at', '<=', Carbon::parse($fechaHasta)->endOfDay());
+        }
+        
+        $animalFiles = $query->get();
 
         $healthData = [];
         
@@ -308,6 +333,8 @@ class ReportsController extends Controller
             'tab' => 'activity',
             'subtab' => 'health',
             'healthData' => $healthData,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
             'enPeligro' => [],
             'rescatados' => [],
             'tratados' => [],

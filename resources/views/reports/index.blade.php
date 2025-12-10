@@ -283,7 +283,54 @@
                                 <i class="fas fa-heartbeat mr-2"></i>Reporte de Salud Animal Actual
                             </h3>
                         </div>
-                        <div class="card-body p-0">
+                        <div class="card-body py-2">
+                            <!-- Filtro por rango de fechas de inicio de tratamiento -->
+                            <form method="GET" action="{{ route('reportes.index') }}" class="mb-0">
+                                <input type="hidden" name="tab" value="activity">
+                                <input type="hidden" name="subtab" value="health">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="text-muted"><i class="fas fa-info-circle mr-1"></i>Rango de Fechas - Inicio de Tratamiento</span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <label for="fecha_desde" class="form-label mb-0 mr-2">
+                                            <i class="fas fa-calendar-alt mr-1"></i>Desde
+                                        </label>
+                                        <input type="date" 
+                                               class="form-control d-inline-block" 
+                                               style="width: auto;"
+                                               id="fecha_desde" 
+                                               name="fecha_desde" 
+                                               value="{{ $fechaDesde ?? '' }}"
+                                               max="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
+                                    </div>
+                                    <div class="col-auto">
+                                        <label for="fecha_hasta" class="form-label mb-0 mr-2">
+                                            <i class="fas fa-calendar-alt mr-1"></i>Hasta
+                                        </label>
+                                        <input type="date" 
+                                               class="form-control d-inline-block" 
+                                               style="width: auto;"
+                                               id="fecha_hasta" 
+                                               name="fecha_hasta" 
+                                               value="{{ $fechaHasta ?? '' }}"
+                                               max="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
+                                    </div>
+                                    <div class="col-auto">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-filter mr-1"></i>Filtrar
+                                        </button>
+                                        @if(isset($fechaDesde) || isset($fechaHasta))
+                                            <a href="{{ route('reportes.index', ['tab' => 'activity', 'subtab' => 'health']) }}" 
+                                               class="btn btn-secondary ml-2">
+                                                <i class="fas fa-times mr-1"></i>Limpiar
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="card-body p-0 pt-0">
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover mb-0">
                                     <thead class="bg-success text-white">
