@@ -11,8 +11,10 @@ use App\Models\Veterinarian;
 use App\Models\Transfer;
 use App\Models\Release;
 use App\Models\MedicalEvaluation;
+use App\Models\Care;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 
 class DashboardService
 {
@@ -97,6 +99,18 @@ class DashboardService
                 'animalFilesByMonth' => $this->getAnimalFilesByMonth(),
                 'animalsByStatus' => $this->getAnimalsByStatus(),
                 'applicationsByType' => $this->getApplicationsByType(),
+
+                // KPIs de Actividad (presente)
+                'animalsBeingRescued' => $this->getAnimalsBeingRescued(),
+                'animalsBeingTransferred' => $this->getAnimalsBeingTransferred(),
+                'animalsBeingTreated' => $this->getAnimalsBeingTreated(),
+
+                // KPIs de Eficacia
+                'efficiencyAttendedRescued' => $this->getEfficiencyAttendedRescued(),
+                'efficiencyReadyAttended' => $this->getEfficiencyReadyAttended(),
+
+                // KPI de Efectividad
+                'effectivenessReleasedRescued' => $this->getEffectivenessReleasedRescued(),
             ];
         });
     }
@@ -111,23 +125,49 @@ class DashboardService
     {
         return DB::transaction(function () use ($user) {
             if (!$user->person) {
-                return ['myAnimalFiles' => 0];
+                return [
+                    'myAnimalFiles' => 0,
+                    'recentEvaluations' => 0,
+                    'animalsInTreatment' => 0,
+                ];
             }
 
             // Buscar el veterinario asociado a la persona del usuario
             $veterinarian = Veterinarian::where('persona_id', $user->person->id)->first();
             
             if (!$veterinarian) {
-                return ['myAnimalFiles' => 0];
+                return [
+                    'myAnimalFiles' => 0,
+                    'recentEvaluations' => 0,
+                    'animalsInTreatment' => 0,
+                ];
             }
 
             // Contar hojas de animales únicas que tienen evaluaciones médicas de este veterinario
-            $count = \App\Models\MedicalEvaluation::where('veterinario_id', $veterinarian->id)
+            $myAnimalFiles = MedicalEvaluation::where('veterinario_id', $veterinarian->id)
                 ->whereNotNull('animal_file_id')
                 ->distinct('animal_file_id')
                 ->count('animal_file_id');
 
-            return ['myAnimalFiles' => $count];
+            // Evaluaciones médicas recientes (últimos 7 días)
+            $recentEvaluations = MedicalEvaluation::where('veterinario_id', $veterinarian->id)
+                ->where('created_at', '>=', Carbon::now()->subDays(7))
+                ->count();
+
+            // Animales en tratamiento actualmente (con evaluaciones médicas sin release)
+            $animalsInTreatment = MedicalEvaluation::where('veterinario_id', $veterinarian->id)
+                ->whereNotNull('animal_file_id')
+                ->whereHas('animalFile', function($query) {
+                    $query->whereDoesntHave('release');
+                })
+                ->distinct('animal_file_id')
+                ->count('animal_file_id');
+
+            return [
+                'myAnimalFiles' => $myAnimalFiles,
+                'recentEvaluations' => $recentEvaluations,
+                'animalsInTreatment' => $animalsInTreatment,
+            ];
         });
     }
 
@@ -140,8 +180,24 @@ class DashboardService
     private function getRescuerDashboardData($user): array
     {
         return DB::transaction(function () use ($user) {
+            if (!$user->person) {
+                return [
+                    'myTransfers' => 0,
+                    'recentTransfers' => 0,
+                ];
+            }
+
+            // Total de traslados del rescatista
+            $myTransfers = Transfer::where('persona_id', $user->person->id)->count();
+
+            // Traslados recientes (últimos 7 días)
+            $recentTransfers = Transfer::where('persona_id', $user->person->id)
+                ->where('created_at', '>=', Carbon::now()->subDays(7))
+                ->count();
+
             return [
-                'myTransfers' => Transfer::where('persona_id', $user->person->id)->count(),
+                'myTransfers' => $myTransfers,
+                'recentTransfers' => $recentTransfers,
             ];
         });
     }
@@ -429,6 +485,195 @@ class DashboardService
             'Rescatistas' => Rescuer::count(),
             'Veterinarios' => Veterinarian::count(),
             'Cuidadores' => Person::where('es_cuidador', true)->count(),
+        ];
+    }
+
+    /**
+     * KPIs DE ACTIVIDAD (Presente)
+     */
+
+    /**
+     * Cantidad de animales que están siendo rescatados
+     * (AnimalFiles creados en los últimos 7 días sin release)
+     *
+     * @return int
+     */
+    private function getAnimalsBeingRescued(): int
+    {
+        $sevenDaysAgo = Carbon::now()->subDays(7);
+        
+        return AnimalFile::where('created_at', '>=', $sevenDaysAgo)
+            ->whereDoesntHave('release')
+            ->count();
+    }
+
+    /**
+     * Cantidad de animales que están siendo trasladados
+     * (Transfers creados en los últimos 7 días donde el animal no tiene release)
+     *
+     * @return int
+     */
+    private function getAnimalsBeingTransferred(): int
+    {
+        $sevenDaysAgo = Carbon::now()->subDays(7);
+        
+        // Contar transfers recientes donde el animal no tiene release
+        $recentTransfers = Transfer::where('created_at', '>=', $sevenDaysAgo)->get();
+        
+        $count = 0;
+        foreach ($recentTransfers as $transfer) {
+            if ($transfer->animal_id) {
+                // Traslado interno: verificar que el animal no tenga release
+                $animalFileIds = AnimalFile::where('animal_id', $transfer->animal_id)->pluck('id');
+                if ($animalFileIds->isNotEmpty() && !Release::whereIn('animal_file_id', $animalFileIds)->exists()) {
+                    $count++;
+                }
+            } elseif ($transfer->reporte_id) {
+                // Primer traslado: verificar que el reporte no tenga animal con release
+                $report = Report::with('animalFiles.release')->find($transfer->reporte_id);
+                if ($report) {
+                    // Si no hay animalFiles o ninguno tiene release, contar
+                    $hasReleased = $report->animalFiles->contains(function($animalFile) {
+                        return $animalFile->release !== null;
+                    });
+                    if (!$hasReleased) {
+                        $count++;
+                    }
+                }
+            }
+        }
+        
+        return $count;
+    }
+
+    /**
+     * Cantidad de animales que están siendo tratados
+     * (AnimalFiles con MedicalEvaluation o Care en los últimos 7 días sin release)
+     *
+     * @return int
+     */
+    private function getAnimalsBeingTreated(): int
+    {
+        $sevenDaysAgo = Carbon::now()->subDays(7);
+        
+        // Animales con evaluaciones médicas recientes
+        $animalsWithRecentEvaluations = MedicalEvaluation::where('created_at', '>=', $sevenDaysAgo)
+            ->whereNotNull('animal_file_id')
+            ->pluck('animal_file_id')
+            ->unique();
+        
+        // Animales con cuidados recientes
+        $animalsWithRecentCares = Care::where('created_at', '>=', $sevenDaysAgo)
+            ->whereNotNull('hoja_animal_id')
+            ->pluck('hoja_animal_id')
+            ->unique();
+        
+        // Combinar y contar únicos sin release
+        $allAnimalIds = $animalsWithRecentEvaluations->merge($animalsWithRecentCares)->unique();
+        
+        return AnimalFile::whereIn('id', $allAnimalIds)
+            ->whereDoesntHave('release')
+            ->count();
+    }
+
+    /**
+     * KPIs DE EFICACIA
+     */
+
+    /**
+     * Eficacia: Cantidad de animales atendidos / cantidad de animales rescatados
+     * (AnimalFiles con al menos una MedicalEvaluation o Care / Total AnimalFiles sin release)
+     *
+     * @return array ['attended' => int, 'rescued' => int, 'percentage' => float]
+     */
+    private function getEfficiencyAttendedRescued(): array
+    {
+        // Total de animales rescatados (sin release)
+        $totalRescued = AnimalFile::whereDoesntHave('release')->count();
+        
+        // Animales atendidos (con al menos una evaluación médica o cuidado)
+        $attendedAnimalIds = MedicalEvaluation::whereNotNull('animal_file_id')
+            ->pluck('animal_file_id')
+            ->merge(
+                Care::whereNotNull('hoja_animal_id')->pluck('hoja_animal_id')
+            )
+            ->unique();
+        
+        $attended = AnimalFile::whereIn('id', $attendedAnimalIds)
+            ->whereDoesntHave('release')
+            ->count();
+        
+        $percentage = $totalRescued > 0 ? round(($attended / $totalRescued) * 100, 2) : 0;
+        
+        return [
+            'attended' => $attended,
+            'rescued' => $totalRescued,
+            'percentage' => $percentage,
+        ];
+    }
+
+    /**
+     * Eficacia: Cantidad de animales listos para liberar / cantidad de animales siendo atendidos
+     * (AnimalFiles con estado "Estable" o mejor sin release / AnimalFiles sin release)
+     *
+     * @return array ['ready' => int, 'attended' => int, 'percentage' => float]
+     */
+    private function getEfficiencyReadyAttended(): array
+    {
+        // Estados considerados como "listos para liberar" (basado en el código de liberación)
+        // Buscar estados que contengan estas palabras clave (case-insensitive)
+        $readyStatusKeywords = ['estable', 'bueno', 'excelente'];
+        
+        // Obtener IDs de estados listos para liberar usando LIKE para mayor flexibilidad
+        $readyStatusIds = \App\Models\AnimalStatus::where(function($query) use ($readyStatusKeywords) {
+            foreach ($readyStatusKeywords as $keyword) {
+                $query->orWhereRaw('LOWER(nombre) LIKE ?', ['%' . mb_strtolower($keyword) . '%']);
+            }
+        })->pluck('id');
+        
+        // Si no hay estados específicos, usar "Estable" como mínimo
+        if ($readyStatusIds->isEmpty()) {
+            $readyStatusIds = \App\Models\AnimalStatus::whereRaw('LOWER(nombre) LIKE ?', ['%estable%'])->pluck('id');
+        }
+        
+        // Animales listos para liberar (sin release)
+        $ready = AnimalFile::whereIn('estado_id', $readyStatusIds)
+            ->whereDoesntHave('release')
+            ->count();
+        
+        // Total de animales siendo atendidos (sin release)
+        $attended = AnimalFile::whereDoesntHave('release')->count();
+        
+        $percentage = $attended > 0 ? round(($ready / $attended) * 100, 2) : 0;
+        
+        return [
+            'ready' => $ready,
+            'attended' => $attended,
+            'percentage' => $percentage,
+        ];
+    }
+
+    /**
+     * KPIs DE EFECTIVIDAD
+     */
+
+    /**
+     * Efectividad: Cantidad de animales liberados / cantidad de animales rescatados
+     * (Releases / Total AnimalFiles)
+     *
+     * @return array ['released' => int, 'rescued' => int, 'percentage' => float]
+     */
+    private function getEffectivenessReleasedRescued(): array
+    {
+        $released = Release::count();
+        $rescued = AnimalFile::count();
+        
+        $percentage = $rescued > 0 ? round(($released / $rescued) * 100, 2) : 0;
+        
+        return [
+            'released' => $released,
+            'rescued' => $rescued,
+            'percentage' => $percentage,
         ];
     }
 }

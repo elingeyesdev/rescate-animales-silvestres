@@ -167,6 +167,168 @@
             </div>
         </div>
 
+        {{-- KPIs de Actividad, Eficacia y Efectividad --}}
+        <div class="row mt-3">
+            {{-- KPIs de Actividad --}}
+            <div class="col-12">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h3 class="card-title font-weight-bold mb-0">
+                            <i class="fas fa-chart-line mr-2"></i>KPIs de Actividad (Últimos 7 días)
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 col-md-4">
+                                <div class="info-box bg-info">
+                                    <span class="info-box-icon"><i class="fas fa-heartbeat"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Animales siendo Rescatados</span>
+                                        <span class="info-box-number">{{ $animalsBeingRescued ?? 0 }}</span>
+                                        <span class="progress-description text-white">
+                                            <small>En proceso de rescate</small>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <div class="info-box bg-warning">
+                                    <span class="info-box-icon"><i class="fas fa-ambulance"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Animales siendo Trasladados</span>
+                                        <span class="info-box-number">{{ $animalsBeingTransferred ?? 0 }}</span>
+                                        <span class="progress-description text-white">
+                                            <small>En movimiento</small>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <div class="info-box bg-success">
+                                    <span class="info-box-icon"><i class="fas fa-stethoscope"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Animales siendo Tratados</span>
+                                        <span class="info-box-number">{{ $animalsBeingTreated ?? 0 }}</span>
+                                        <span class="progress-description text-white">
+                                            <small>En tratamiento</small>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- KPIs de Eficacia --}}
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-gradient-success text-white">
+                        <h3 class="card-title font-weight-bold mb-0">
+                            <i class="fas fa-check-circle mr-2"></i>Eficacia
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        @php
+                            $efficiencyAttended = $efficiencyAttendedRescued ?? ['attended' => 0, 'rescued' => 0, 'percentage' => 0];
+                            $efficiencyReady = $efficiencyReadyAttended ?? ['ready' => 0, 'attended' => 0, 'percentage' => 0];
+                        @endphp
+                        
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Animales Atendidos / Rescatados</span>
+                                <span class="badge badge-success badge-lg">{{ $efficiencyAttended['percentage'] }}%</span>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar bg-success progress-bar-striped" role="progressbar" 
+                                     style="width: {{ $efficiencyAttended['percentage'] }}%"
+                                     aria-valuenow="{{ $efficiencyAttended['percentage'] }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ $efficiencyAttended['attended'] }} / {{ $efficiencyAttended['rescued'] }}
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                {{ $efficiencyAttended['attended'] }} atendidos de {{ $efficiencyAttended['rescued'] }} rescatados
+                            </small>
+                        </div>
+
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Listos para Liberar / En Atención</span>
+                                <span class="badge badge-info badge-lg">{{ $efficiencyReady['percentage'] }}%</span>
+                            </div>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar bg-info progress-bar-striped" role="progressbar" 
+                                     style="width: {{ $efficiencyReady['percentage'] }}%"
+                                     aria-valuenow="{{ $efficiencyReady['percentage'] }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ $efficiencyReady['ready'] }} / {{ $efficiencyReady['attended'] }}
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                {{ $efficiencyReady['ready'] }} listos de {{ $efficiencyReady['attended'] }} en atención
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- KPI de Efectividad --}}
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-gradient-danger text-white">
+                        <h3 class="card-title font-weight-bold mb-0">
+                            <i class="fas fa-trophy mr-2"></i>Efectividad
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        @php
+                            $effectiveness = $effectivenessReleasedRescued ?? ['released' => 0, 'rescued' => 0, 'percentage' => 0];
+                        @endphp
+                        
+                        <div class="text-center py-4">
+                            <h1 class="display-4 font-weight-bold text-danger mb-3">{{ $effectiveness['percentage'] }}%</h1>
+                            <p class="lead text-muted mb-4">Tasa de Éxito</p>
+                            
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-danger"><i class="fas fa-dove"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Liberados</span>
+                                            <span class="info-box-number">{{ $effectiveness['released'] }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-primary"><i class="fas fa-paw"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Rescatados</span>
+                                            <span class="info-box-number">{{ $effectiveness['rescued'] }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress mt-3" style="height: 30px;">
+                                <div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" 
+                                     style="width: {{ $effectiveness['percentage'] }}%"
+                                     aria-valuenow="{{ $effectiveness['percentage'] }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ $effectiveness['released'] }} / {{ $effectiveness['rescued'] }}
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                Impacto de la eficacia: {{ $effectiveness['released'] }} animales liberados de {{ $effectiveness['rescued'] }} rescatados
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- 2. Acciones Rápidas con Efecto Hover Mejorado --}}
         <div class="card shadow-none bg-transparent border-0 mb-2">
             <div class="card-body py-2 px-0">
@@ -441,6 +603,108 @@
             </div>
         </div>
     </div>
+    @endif
+
+    {{-- =========================================================== --}}
+    {{-- SECCIÓN: KPIs PARA VETERINARIOS --}}
+    {{-- =========================================================== --}}
+    @if(Auth::user()->hasRole('veterinario') && !Auth::user()->hasAnyRole(['admin', 'encargado']))
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-gradient-success text-white">
+                        <h3 class="card-title font-weight-bold mb-0">
+                            <i class="fas fa-user-md mr-2"></i>Mi Actividad como Veterinario
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 col-md-4">
+                                <div class="info-box bg-info">
+                                    <span class="info-box-icon"><i class="fas fa-paw"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Mis Pacientes</span>
+                                        <span class="info-box-number">{{ $myAnimalFiles ?? 0 }}</span>
+                                        <span class="progress-description text-white">
+                                            <small>Animales atendidos</small>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <div class="info-box bg-warning">
+                                    <span class="info-box-icon"><i class="fas fa-clipboard-check"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Evaluaciones Recientes</span>
+                                        <span class="info-box-number">{{ $recentEvaluations ?? 0 }}</span>
+                                        <span class="progress-description text-white">
+                                            <small>Últimos 7 días</small>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <div class="info-box bg-success">
+                                    <span class="info-box-icon"><i class="fas fa-heartbeat"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">En Tratamiento</span>
+                                        <span class="info-box-number">{{ $animalsInTreatment ?? 0 }}</span>
+                                        <span class="progress-description text-white">
+                                            <small>Actualmente</small>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- =========================================================== --}}
+    {{-- SECCIÓN: KPIs PARA RESCATISTAS --}}
+    {{-- =========================================================== --}}
+    @if(Auth::user()->hasRole('rescatista') && !Auth::user()->hasAnyRole(['admin', 'encargado']))
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h3 class="card-title font-weight-bold mb-0">
+                            <i class="fas fa-ambulance mr-2"></i>Mi Actividad como Rescatista
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 col-md-6">
+                                <div class="info-box bg-primary">
+                                    <span class="info-box-icon"><i class="fas fa-exchange-alt"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Total de Traslados</span>
+                                        <span class="info-box-number">{{ $myTransfers ?? 0 }}</span>
+                                        <span class="progress-description text-white">
+                                            <small>Historial completo</small>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="info-box bg-info">
+                                    <span class="info-box-icon"><i class="fas fa-clock"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Traslados Recientes</span>
+                                        <span class="info-box-number">{{ $recentTransfers ?? 0 }}</span>
+                                        <span class="progress-description text-white">
+                                            <small>Últimos 7 días</small>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 
     {{-- =========================================================== --}}
