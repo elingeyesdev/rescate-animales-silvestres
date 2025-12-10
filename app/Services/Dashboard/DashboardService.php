@@ -582,26 +582,35 @@ class DashboardService
 
     /**
      * Eficacia: Cantidad de animales atendidos / cantidad de animales rescatados
-     * (AnimalFiles con al menos una MedicalEvaluation o Care / Total AnimalFiles sin release)
+     * Atendidos = animales que ya tienen hoja de vida, primer traslado o algo más aparte del hallazgo aprobado
+     * Rescatados = hallazgos aprobados (reports aprobados)
      *
      * @return array ['attended' => int, 'rescued' => int, 'percentage' => float]
      */
     private function getEfficiencyAttendedRescued(): array
     {
-        // Total de animales rescatados (sin release)
-        $totalRescued = AnimalFile::whereDoesntHave('release')->count();
+        // Total de hallazgos aprobados (rescatados)
+        $totalRescued = Report::where('aprobado', true)->count();
         
-        // Animales atendidos (con al menos una evaluación médica o cuidado)
-        $attendedAnimalIds = MedicalEvaluation::whereNotNull('animal_file_id')
-            ->pluck('animal_file_id')
-            ->merge(
-                Care::whereNotNull('hoja_animal_id')->pluck('hoja_animal_id')
-            )
-            ->unique();
+        // Animales atendidos = aquellos que tienen:
+        // 1. Hoja de vida (AnimalFile) O
+        // 2. Primer traslado (Transfer con primer_traslado=true) O
+        // 3. Cualquier otra actividad más allá del hallazgo aprobado
         
-        $attended = AnimalFile::whereIn('id', $attendedAnimalIds)
-            ->whereDoesntHave('release')
-            ->count();
+        // Contar reportes aprobados que tienen al menos una de estas actividades:
+        $reportsWithAnimalFiles = Report::where('aprobado', true)
+            ->whereHas('animalFiles')
+            ->pluck('id');
+        
+        $reportsWithFirstTransfer = Report::where('aprobado', true)
+            ->whereHas('transfers', function($query) {
+                $query->where('primer_traslado', true);
+            })
+            ->pluck('id');
+        
+        // Combinar reportes que tienen al menos una actividad
+        $attendedReportIds = $reportsWithAnimalFiles->merge($reportsWithFirstTransfer)->unique();
+        $attended = $attendedReportIds->count();
         
         $percentage = $totalRescued > 0 ? round(($attended / $totalRescued) * 100, 2) : 0;
         
@@ -614,35 +623,31 @@ class DashboardService
 
     /**
      * Eficacia: Cantidad de animales listos para liberar / cantidad de animales siendo atendidos
-     * (AnimalFiles con estado "Estable" o mejor sin release / AnimalFiles sin release)
+     * Listos = animales con estado "Estable"
+     * En Atención = cualquier otro animal que ya está en el sistema (ya rescatado y actualmente siendo tratado)
      *
      * @return array ['ready' => int, 'attended' => int, 'percentage' => float]
      */
     private function getEfficiencyReadyAttended(): array
     {
-        // Estados considerados como "listos para liberar" (basado en el código de liberación)
-        // Buscar estados que contengan estas palabras clave (case-insensitive)
-        $readyStatusKeywords = ['estable', 'bueno', 'excelente'];
+        // Obtener ID del estado "Estable"
+        $estableStatusId = \App\Models\AnimalStatus::whereRaw('LOWER(nombre) = ?', ['estable'])->value('id');
         
-        // Obtener IDs de estados listos para liberar usando LIKE para mayor flexibilidad
-        $readyStatusIds = \App\Models\AnimalStatus::where(function($query) use ($readyStatusKeywords) {
-            foreach ($readyStatusKeywords as $keyword) {
-                $query->orWhereRaw('LOWER(nombre) LIKE ?', ['%' . mb_strtolower($keyword) . '%']);
-            }
-        })->pluck('id');
-        
-        // Si no hay estados específicos, usar "Estable" como mínimo
-        if ($readyStatusIds->isEmpty()) {
-            $readyStatusIds = \App\Models\AnimalStatus::whereRaw('LOWER(nombre) LIKE ?', ['%estable%'])->pluck('id');
+        // Si no existe "Estable", buscar por LIKE
+        if (!$estableStatusId) {
+            $estableStatusId = \App\Models\AnimalStatus::whereRaw('LOWER(nombre) LIKE ?', ['%estable%'])->value('id');
         }
         
-        // Animales listos para liberar (sin release)
-        $ready = AnimalFile::whereIn('estado_id', $readyStatusIds)
-            ->whereDoesntHave('release')
-            ->count();
-        
-        // Total de animales siendo atendidos (sin release)
+        // Animales en atención = todos los animales en el sistema (sin release)
         $attended = AnimalFile::whereDoesntHave('release')->count();
+        
+        // Animales listos (con estado "Estable" y sin release)
+        $ready = 0;
+        if ($estableStatusId) {
+            $ready = AnimalFile::where('estado_id', $estableStatusId)
+                ->whereDoesntHave('release')
+                ->count();
+        }
         
         $percentage = $attended > 0 ? round(($ready / $attended) * 100, 2) : 0;
         

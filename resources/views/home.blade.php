@@ -180,25 +180,19 @@
                     <div class="card-body p-2">
                         <div class="row no-gutters">
                             <div class="col-4 text-center border-right">
-                                <div class="p-2">
-                                    <i class="fas fa-heartbeat text-info mb-1" style="font-size: 1.5rem;"></i>
-                                    <div class="h4 mb-0">{{ $animalsBeingRescued ?? 0 }}</div>
-                                    <small class="text-muted d-block" style="font-size: 0.7rem;">Rescatados</small>
-                                </div>
+                                <i class="fas fa-heartbeat text-info" style="font-size: 1.1rem;"></i>
+                                <div class="h5 mb-0" style="font-size: 1.3rem;">{{ $animalsBeingRescued ?? 0 }}</div>
+                                <small class="text-muted" style="font-size: 0.65rem;">Rescatados</small>
                             </div>
                             <div class="col-4 text-center border-right">
-                                <div class="p-2">
-                                    <i class="fas fa-ambulance text-warning mb-1" style="font-size: 1.5rem;"></i>
-                                    <div class="h4 mb-0">{{ $animalsBeingTransferred ?? 0 }}</div>
-                                    <small class="text-muted d-block" style="font-size: 0.7rem;">Trasladados</small>
-                                </div>
+                                <i class="fas fa-ambulance text-warning" style="font-size: 1.1rem;"></i>
+                                <div class="h5 mb-0" style="font-size: 1.3rem;">{{ $animalsBeingTransferred ?? 0 }}</div>
+                                <small class="text-muted" style="font-size: 0.65rem;">Trasladados</small>
                             </div>
                             <div class="col-4 text-center">
-                                <div class="p-2">
-                                    <i class="fas fa-stethoscope text-success mb-1" style="font-size: 1.5rem;"></i>
-                                    <div class="h4 mb-0">{{ $animalsBeingTreated ?? 0 }}</div>
-                                    <small class="text-muted d-block" style="font-size: 0.7rem;">Tratados</small>
-                                </div>
+                                <i class="fas fa-stethoscope text-success" style="font-size: 1.1rem;"></i>
+                                <div class="h5 mb-0" style="font-size: 1.3rem;">{{ $animalsBeingTreated ?? 0 }}</div>
+                                <small class="text-muted" style="font-size: 0.65rem;">Tratados</small>
                             </div>
                         </div>
                     </div>
@@ -219,26 +213,26 @@
                             $efficiencyReady = $efficiencyReadyAttended ?? ['ready' => 0, 'attended' => 0, 'percentage' => 0];
                         @endphp
                         
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <small class="text-muted" style="font-size: 0.75rem;">Atendidos/Rescatados</small>
-                                <span class="badge badge-success" style="font-size: 0.7rem;">{{ $efficiencyAttended['percentage'] }}%</span>
+                        <div class="mb-1">
+                            <div class="d-flex justify-content-between align-items-center mb-0">
+                                <small class="text-muted" style="font-size: 0.7rem;">Atendidos/Rescatados</small>
+                                <span class="badge badge-success" style="font-size: 0.65rem;">{{ $efficiencyAttended['percentage'] }}%</span>
                             </div>
-                            <div class="progress" style="height: 18px;">
+                            <div class="progress" style="height: 16px;">
                                 <div class="progress-bar bg-success" style="width: {{ $efficiencyAttended['percentage'] }}%">
-                                    <small style="font-size: 0.7rem;">{{ $efficiencyAttended['attended'] }}/{{ $efficiencyAttended['rescued'] }}</small>
+                                    <small style="font-size: 0.65rem;">{{ $efficiencyAttended['attended'] }}/{{ $efficiencyAttended['rescued'] }}</small>
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <small class="text-muted" style="font-size: 0.75rem;">Listos/En Atención</small>
-                                <span class="badge badge-info" style="font-size: 0.7rem;">{{ $efficiencyReady['percentage'] }}%</span>
+                            <div class="d-flex justify-content-between align-items-center mb-0">
+                                <small class="text-muted" style="font-size: 0.7rem;">Listos/En Atención</small>
+                                <span class="badge badge-info" style="font-size: 0.65rem;">{{ $efficiencyReady['percentage'] }}%</span>
                             </div>
-                            <div class="progress" style="height: 18px;">
+                            <div class="progress" style="height: 16px;">
                                 <div class="progress-bar bg-info" style="width: {{ $efficiencyReady['percentage'] }}%">
-                                    <small style="font-size: 0.7rem;">{{ $efficiencyReady['ready'] }}/{{ $efficiencyReady['attended'] }}</small>
+                                    <small style="font-size: 0.65rem;">{{ $efficiencyReady['ready'] }}/{{ $efficiencyReady['attended'] }}</small>
                                 </div>
                             </div>
                         </div>
@@ -260,29 +254,29 @@
                         @endphp
                         
                         <div class="text-center">
-                            <h2 class="mb-1 text-danger" style="font-size: 2rem;">{{ $effectiveness['percentage'] }}%</h2>
-                            <small class="text-muted d-block mb-2" style="font-size: 0.7rem;">Tasa de Éxito</small>
+                            <h3 class="mb-0 text-danger" style="font-size: 1.5rem;">{{ $effectiveness['percentage'] }}%</h3>
+                            <small class="text-muted d-block mb-1" style="font-size: 0.65rem;">Tasa de Éxito</small>
                             
-                            <div class="row no-gutters mb-2">
+                            <div class="row no-gutters mb-1">
                                 <div class="col-6 pr-1">
                                     <div class="bg-light rounded p-1 text-center">
-                                        <i class="fas fa-dove text-danger"></i>
-                                        <div class="h5 mb-0">{{ $effectiveness['released'] }}</div>
-                                        <small style="font-size: 0.65rem;">Liberados</small>
+                                        <i class="fas fa-dove text-danger" style="font-size: 0.9rem;"></i>
+                                        <div class="h6 mb-0" style="font-size: 1rem;">{{ $effectiveness['released'] }}</div>
+                                        <small style="font-size: 0.6rem;">Liberados</small>
                                     </div>
                                 </div>
                                 <div class="col-6 pl-1">
                                     <div class="bg-light rounded p-1 text-center">
-                                        <i class="fas fa-paw text-primary"></i>
-                                        <div class="h5 mb-0">{{ $effectiveness['rescued'] }}</div>
-                                        <small style="font-size: 0.65rem;">Rescatados</small>
+                                        <i class="fas fa-paw text-primary" style="font-size: 0.9rem;"></i>
+                                        <div class="h6 mb-0" style="font-size: 1rem;">{{ $effectiveness['rescued'] }}</div>
+                                        <small style="font-size: 0.6rem;">Rescatados</small>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="progress" style="height: 20px;">
+                            <div class="progress" style="height: 18px;">
                                 <div class="progress-bar bg-danger" style="width: {{ $effectiveness['percentage'] }}%">
-                                    <small style="font-size: 0.7rem;">{{ $effectiveness['released'] }}/{{ $effectiveness['rescued'] }}</small>
+                                    <small style="font-size: 0.65rem;">{{ $effectiveness['released'] }}/{{ $effectiveness['rescued'] }}</small>
                                 </div>
                             </div>
                         </div>
