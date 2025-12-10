@@ -314,6 +314,12 @@ return [
             'icon' => 'fas fa-fw fa-home',
         ],
         [
+            'text' => 'Reportes',
+            'url' => 'reportes',
+            'icon' => 'fas fa-fw fa-chart-bar',
+            'can'  => 'admin|encargado',
+        ],
+        [
             'text' => 'Mi Perfil',
             'url' => 'profile',
             'icon' => 'fas fa-fw fa-user-circle',
@@ -391,6 +397,7 @@ return [
             'url' => 'releases',
             'icon' => 'fas fa-fw fa-unlock',
         ],
+        
         ['header' => 'ADMINISTRACION', 'can' => 'admin|encargado'],
         [
             'text' => 'Personas',
@@ -684,3 +691,4 @@ return [
     'livewire' => false,
 ];
  
+

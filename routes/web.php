@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AnimalHistoryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContactMessageController;
+use App\Http\Controllers\ReportsController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -105,3 +106,4 @@ Route::resource('animal-feeding-records', AnimalFeedingTransactionalController::
 Route::resource('medical-evaluation-transactions', AnimalMedicalEvaluationTransactionalController::class)->middleware('auth');
 Route::resource('animal-care-records', AnimalCareTransactionalController::class)->middleware('auth');
 Route::resource('animal-histories', AnimalHistoryController::class)->only(['index','show'])->middleware('auth');
+Route::get('reportes', [ReportsController::class, 'index'])->name('reportes.index')->middleware('auth');
