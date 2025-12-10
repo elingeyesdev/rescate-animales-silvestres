@@ -84,4 +84,12 @@ class AnimalFile extends Model
         return $this->hasOne(\App\Models\Release::class, 'animal_file_id', 'id');
     }
     
+    /**
+     * Evaluaciones médicas asociadas a esta hoja de vida
+     */
+    public function medicalEvaluations()
+    {
+        return $this->hasMany(\App\Models\MedicalEvaluation::class, 'animal_file_id', 'id');
+    }
+    
 }

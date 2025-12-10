@@ -7,6 +7,7 @@ use App\Models\Transfer;
 use App\Models\AnimalFile;
 use App\Models\Center;
 use App\Models\Release;
+use App\Models\MedicalEvaluation;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
@@ -25,8 +26,12 @@ class ReportsController extends Controller
     public function index(Request $request): View
     {
         $tab = $request->get('tab', 'activity');
+        $subtab = $request->get('subtab', 'states');
         
         if ($tab === 'activity') {
+            if ($subtab === 'health') {
+                return $this->healthAnimalReport();
+            }
             return $this->activityReports();
         } elseif ($tab === 'management') {
             return $this->managementReports();
@@ -180,6 +185,7 @@ class ReportsController extends Controller
         
         return view('reports.index', [
             'tab' => 'activity',
+            'subtab' => 'states',
             'enPeligro' => $enPeligro,
             'rescatados' => $rescatados,
             'tratados' => $tratados,
@@ -210,6 +216,104 @@ class ReportsController extends Controller
         } else {
             return 'Menos de un minuto';
         }
+    }
+
+    /**
+     * Reporte de Salud Animal Actual
+     */
+    private function healthAnimalReport(): View
+    {
+        // Obtener todos los AnimalFiles que no tienen release (animales en tratamiento)
+        $animalFiles = AnimalFile::whereDoesntHave('release')
+            ->with([
+                'center',
+                'animalStatus',
+                'animal' => function($query) {
+                    $query->with(['report' => function($q) {
+                        $q->with('condicionInicial');
+                    }]);
+                },
+                'medicalEvaluations' => function($query) {
+                    $query->with('treatmentType')
+                          ->orderBy('fecha', 'desc')
+                          ->orderBy('created_at', 'desc')
+                          ->limit(1);
+                }
+            ])
+            ->get();
+
+        $healthData = [];
+        
+        foreach ($animalFiles as $animalFile) {
+            $animal = $animalFile->animal;
+            $report = $animal?->report;
+            
+            // Nombre del animal
+            $nombreAnimal = $animal?->nombre ?? 'Sin nombre';
+            
+            // Nombre del centro
+            $nombreCentro = $animalFile->center?->nombre ?? 'Sin centro asignado';
+            
+            // Diagnóstico inicial (descripción con la que se creó la hoja de vida del animal)
+            $diagnosticoInicial = $animal?->descripcion ?? 'Sin diagnóstico inicial';
+            
+            // Fecha de creación de la hoja de vida
+            $fechaCreacionHoja = $animalFile->created_at;
+            
+            // Última intervención médica
+            $ultimaIntervencion = null;
+            $fechaUltimaEvaluacion = null;
+            $ultimaEvaluacion = $animalFile->medicalEvaluations->first();
+            if ($ultimaEvaluacion) {
+                $fechaIntervencion = $ultimaEvaluacion->fecha ?? $ultimaEvaluacion->created_at;
+                if ($fechaIntervencion) {
+                    $fechaIntervencion = Carbon::parse($fechaIntervencion);
+                    $fechaUltimaEvaluacion = $fechaIntervencion;
+                }
+                $tipoTratamiento = $ultimaEvaluacion->treatmentType?->nombre ?? 'Sin tipo';
+                $descripcion = $ultimaEvaluacion->descripcion ?? '';
+                $diagnostico = $ultimaEvaluacion->diagnostico ?? '';
+                
+                $ultimaIntervencion = [
+                    'fecha' => $fechaIntervencion,
+                    'tipo' => $tipoTratamiento,
+                    'descripcion' => $descripcion,
+                    'diagnostico' => $diagnostico,
+                ];
+            }
+            
+            // Estado actual
+            $estadoActual = $animalFile->animalStatus?->nombre ?? 'Sin estado';
+            
+            $healthData[] = [
+                'centro' => $nombreCentro,
+                'nombre_animal' => $nombreAnimal,
+                'diagnostico_inicial' => $diagnosticoInicial,
+                'fecha_creacion_hoja' => $fechaCreacionHoja,
+                'fecha_ultima_evaluacion' => $fechaUltimaEvaluacion,
+                'ultima_intervencion' => $ultimaIntervencion,
+                'estado_actual' => $estadoActual,
+            ];
+        }
+        
+        // Ordenar por centro y luego por nombre del animal
+        usort($healthData, function($a, $b) {
+            if ($a['centro'] !== $b['centro']) {
+                return strcmp($a['centro'], $b['centro']);
+            }
+            return strcmp($a['nombre_animal'], $b['nombre_animal']);
+        });
+        
+        return view('reports.index', [
+            'tab' => 'activity',
+            'subtab' => 'health',
+            'healthData' => $healthData,
+            'enPeligro' => [],
+            'rescatados' => [],
+            'tratados' => [],
+            'liberados' => [],
+            'totals' => ['en_peligro' => 0, 'rescatados' => 0, 'tratados' => 0, 'liberados' => 0],
+        ]);
     }
 
     /**

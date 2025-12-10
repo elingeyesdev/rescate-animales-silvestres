@@ -15,22 +15,16 @@
         <li class="nav-item" role="presentation">
             <a class="nav-link {{ $tab === 'activity' ? 'active' : '' }}" 
                id="activity-tab" 
-               data-toggle="tab" 
-               href="#activity" 
-               role="tab" 
-               aria-controls="activity" 
-               aria-selected="{{ $tab === 'activity' ? 'true' : 'false' }}">
+               href="{{ route('reportes.index', ['tab' => 'activity']) }}"
+               role="tab">
                 <i class="fas fa-chart-line mr-2"></i>Reportes de Actividad
             </a>
         </li>
         <li class="nav-item" role="presentation">
             <a class="nav-link {{ $tab === 'management' ? 'active' : '' }}" 
                id="management-tab" 
-               data-toggle="tab" 
-               href="#management" 
-               role="tab" 
-               aria-controls="management" 
-               aria-selected="{{ $tab === 'management' ? 'true' : 'false' }}">
+               href="{{ route('reportes.index', ['tab' => 'management']) }}"
+               role="tab">
                 <i class="fas fa-cog mr-2"></i>Reportes de Gestión
             </a>
         </li>
@@ -43,6 +37,34 @@
              id="activity" 
              role="tabpanel" 
              aria-labelledby="activity-tab">
+            
+            <!-- Subpestañas dentro de Reportes de Actividad -->
+            <ul class="nav nav-pills mt-3" id="activitySubTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link {{ (!isset($subtab) || $subtab === 'states') ? 'active' : '' }}" 
+                       id="states-subtab" 
+                       href="{{ route('reportes.index', ['tab' => 'activity', 'subtab' => 'states']) }}"
+                       role="tab">
+                        <i class="fas fa-map-marked-alt mr-2"></i>Actividad por Estados
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link {{ (isset($subtab) && $subtab === 'health') ? 'active' : '' }}" 
+                       id="health-subtab" 
+                       href="{{ route('reportes.index', ['tab' => 'activity', 'subtab' => 'health']) }}"
+                       role="tab">
+                        <i class="fas fa-heartbeat mr-2"></i>Salud Animal Actual
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Contenido de las subpestañas -->
+            <div class="tab-content mt-3" id="activitySubTabContent">
+                <!-- Subpestaña: Actividad por Estados -->
+                <div class="tab-pane fade {{ (!isset($subtab) || $subtab === 'states') ? 'show active' : '' }}" 
+                     id="states-report" 
+                     role="tabpanel" 
+                     aria-labelledby="states-subtab">
             
             <div class="card mt-3">
                 <div class="card-header bg-primary text-white">
@@ -246,6 +268,98 @@
                 </div>
             </div>
             @endif
+                </div>
+                <!-- Fin Subpestaña: Actividad por Estados -->
+
+                <!-- Subpestaña: Salud Animal Actual -->
+                <div class="tab-pane fade {{ (isset($subtab) && $subtab === 'health') ? 'show active' : '' }}" 
+                     id="health-report" 
+                     role="tabpanel" 
+                     aria-labelledby="health-subtab">
+                    
+                    <div class="card mt-3">
+                        <div class="card-header bg-success text-white">
+                            <h3 class="card-title mb-0">
+                                <i class="fas fa-heartbeat mr-2"></i>Reporte de Salud Animal Actual
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover mb-0">
+                                    <thead class="bg-success text-white">
+                                        <tr>
+                                            <th style="width: 15%;">Centro</th>
+                                            <th style="width: 12%;">Nombre del Animal</th>
+                                            <th style="width: 18%;">Diagnóstico Inicial</th>
+                                            <th style="width: 12%;">Fecha Inicial</th>
+                                            <th style="width: 12%;">Fecha Última Evaluación</th>
+                                            <th style="width: 21%;">Última Intervención Médica</th>
+                                            <th style="width: 10%;">Estado Actual</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if(isset($healthData) && !empty($healthData))
+                                            @foreach($healthData as $data)
+                                                <tr>
+                                                    <td>
+                                                        <span class="badge badge-info">
+                                                            <i class="fas fa-building mr-1"></i>{{ $data['centro'] }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ $data['nombre_animal'] }}</td>
+                                                    <td>{{ $data['diagnostico_inicial'] }}</td>
+                                                    <td>
+                                                        @if($data['fecha_creacion_hoja'])
+                                                            {{ $data['fecha_creacion_hoja']->format('d/m/Y') }}
+                                                        @else
+                                                            <span class="text-muted">-</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if($data['fecha_ultima_evaluacion'])
+                                                            {{ $data['fecha_ultima_evaluacion']->format('d/m/Y') }}
+                                                        @else
+                                                            <span class="text-muted">-</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if($data['ultima_intervencion'])
+                                                            
+                                                            @if($data['ultima_intervencion']['diagnostico'])
+                                                                <div class="mb-1">
+                                                                    {{ $data['ultima_intervencion']['diagnostico'] }}
+                                                                </div>
+                                                            @endif
+                                                            @if($data['ultima_intervencion']['descripcion'])
+                                                                <div>
+                                                                    <small class="text-muted">{{ Str::limit($data['ultima_intervencion']['descripcion'], 50) }}</small>
+                                                                </div>
+                                                            @endif
+                                                        @else
+                                                            <span class="text-muted">Sin intervenciones registradas</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge badge-secondary">{{ $data['estado_actual'] }}</span>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        @else
+                                            <tr>
+                                                <td colspan="7" class="text-center text-muted py-4">
+                                                    No hay animales en tratamiento actualmente
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fin Subpestaña: Salud Animal Actual -->
+            </div>
+            <!-- Fin Contenido de las subpestañas -->
         </div>
 
         <!-- Pestaña: Reportes de Gestión -->
@@ -270,18 +384,3 @@
     </div>
 </div>
 @stop
-
-@section('js')
-<script>
-    // Manejar cambio de pestañas y actualizar URL (Bootstrap 4)
-    $(document).ready(function() {
-        $('#reportsTabs a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-            const tabId = $(e.target).attr('href').substring(1);
-            const url = new URL(window.location);
-            url.searchParams.set('tab', tabId);
-            window.history.pushState({}, '', url);
-        });
-    });
-</script>
-@stop
-
