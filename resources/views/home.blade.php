@@ -10,6 +10,9 @@
             <a href="{{ route('dashboard.export-pdf') }}" class="btn btn-danger btn-sm mr-2" target="_blank">
                 <i class="fas fa-file-pdf mr-1"></i> Exportar PDF
             </a>
+            <a href="{{ route('dashboard.export-csv') }}" class="btn btn-success btn-sm mr-2" target="_blank">
+                <i class="fas fa-file-csv mr-1"></i> Exportar CSV
+            </a>
             @endif
             <small class="text-muted"><i class="fas fa-calendar-alt mr-1"></i> {{ date('d/m/Y') }}</small>
         </div>
