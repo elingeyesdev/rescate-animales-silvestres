@@ -62,6 +62,7 @@ Route::post('/reporte-rapido', function () {
 })->name('reporte-rapido.store');
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->middleware('auth')->name('home');
+Route::get('/dashboard/export-pdf', [App\Http\Controllers\HomeController::class, 'exportPdf'])->middleware('auth')->name('dashboard.export-pdf');
 Route::get('animal-histories/{animal_history}/pdf', [AnimalHistoryController::class, 'pdf'])->name('animal-histories.pdf')->middleware('auth');
 Route::prefix('reports')->name('reports.')->group(function () {
     Route::put('{report}/approve', [ReportController::class, 'approve'])->name('approve')->middleware('auth');

@@ -6,6 +6,9 @@ use App\Services\Dashboard\DashboardService;
 use App\Services\Fire\FocosCalorService;
 use App\Models\Species;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Response;
+use Carbon\Carbon;
 
 class HomeController extends Controller
 {
@@ -125,5 +128,30 @@ class HomeController extends Controller
             'releases' => $releases,
             'species' => $species,
         ];
+    }
+
+    /**
+     * Exporta el dashboard completo a PDF
+     */
+    public function exportPdf(): Response
+    {
+        $data = $this->dashboardService->getDashboardData();
+        
+        // Si es admin o encargado, incluir datos del mapa de campo
+        if (auth()->user()->hasAnyRole(['admin', 'encargado'])) {
+            $data = array_merge($data, $this->getMapaCampoData());
+        }
+        
+        // Añadir fecha de generación
+        $data['fechaGeneracion'] = Carbon::now()->format('d/m/Y H:i:s');
+        $data['usuario'] = auth()->user();
+        
+        // Generar PDF
+        $pdf = Pdf::loadView('dashboard.pdf', $data);
+        
+        // Nombre del archivo
+        $fileName = 'dashboard_' . date('d_m_Y_H_i_s') . '.pdf';
+        
+        return $pdf->download($fileName);
     }
 }

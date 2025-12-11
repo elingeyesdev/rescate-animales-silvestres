@@ -5,7 +5,14 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="text-dark">Panel de Control</h1>
-        <small class="text-muted"><i class="fas fa-calendar-alt mr-1"></i> {{ date('d/m/Y') }}</small>
+        <div class="d-flex align-items-center">
+            @if(Auth::user()->hasAnyRole(['admin', 'encargado']))
+            <a href="{{ route('dashboard.export-pdf') }}" class="btn btn-danger btn-sm mr-2" target="_blank">
+                <i class="fas fa-file-pdf mr-1"></i> Exportar PDF
+            </a>
+            @endif
+            <small class="text-muted"><i class="fas fa-calendar-alt mr-1"></i> {{ date('d/m/Y') }}</small>
+        </div>
     </div>
 @stop
 
@@ -394,19 +401,19 @@
                             <h3 class="mb-0 text-danger" style="font-size: 1.5rem;">{{ $effectiveness['percentage'] }}%</h3>
                             <small class="text-muted d-block mb-1" style="font-size: 0.65rem;">Tasa de Éxito</small>
                             
-                            <div class="row no-gutters mb-1">
+                            <div class="row no-gutters mb-0">
                                 <div class="col-6 pr-1">
                                     <div class="bg-light rounded p-1 text-center">
                                         <i class="fas fa-dove text-danger" style="font-size: 0.9rem;"></i>
                                         <div class="h6 mb-0" style="font-size: 1rem;">{{ $effectiveness['released'] }}</div>
-                                        <small style="font-size: 0.6rem;">Liberados</small>
+                                        <small style="font-size: 0.75rem;">Liberados</small>
                                     </div>
                                 </div>
                                 <div class="col-6 pl-1">
                                     <div class="bg-light rounded p-1 text-center">
                                         <i class="fas fa-paw text-primary" style="font-size: 0.9rem;"></i>
                                         <div class="h6 mb-0" style="font-size: 1rem;">{{ $effectiveness['rescued'] }}</div>
-                                        <small style="font-size: 0.6rem;">Rescatados</small>
+                                        <small style="font-size: 0.75rem;">Rescatados</small>
                                     </div>
                                 </div>
                             </div>
@@ -748,7 +755,7 @@
                                                 <span id="weatherWindDir">--</span>
                                             </div>
                                         </div>
-                                        <div style="padding: 6px; background-color: #f8f9fa; border-radius: 4px;">
+                                        <div style="padding: 6px; background-color: #f8f9fa; border-radius: 4px;" hidden>
                                             <div style="color: #6c757d; margin-bottom: 2px; font-size: 9px;">
                                                 <i class="fas fa-cloud-rain"></i> Precip.
                                             </div>
@@ -757,7 +764,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div style="padding: 6px; background-color: #e7f3ff; border-radius: 4px; font-size: 9px; color: #0066cc; margin-bottom: 6px;">
+                                    <div style="padding: 6px; background-color: #e7f3ff; border-radius: 4px; font-size: 9px; color: #0066cc; margin-bottom: 6px;" hidden>
                                         <i class="fas fa-map-marker-alt"></i> 
                                         <span id="weatherCoords">--</span>
                                     </div>
