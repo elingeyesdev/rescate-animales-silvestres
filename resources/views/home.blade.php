@@ -185,78 +185,105 @@
     {{-- =========================================================== --}}
     @if(Auth::user()->hasAnyRole(['admin', 'encargado']))
         
-        {{-- 1. Tarjetas de Estadísticas Principales (KPIs) --}}
-        <div class="row">
-            {{-- Hallazgos Pendientes --}}
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box shadow-sm mb-3 h-100">
-                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-search-location"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text text-muted">Hallazgos Pendientes</span>
-                        <span class="info-box-number display-6">{{ $pendingReportsCount ?? 0 }}</span>
+        {{-- Sistema de Pestañas para Dashboard --}}
+        <div class="card card-primary card-outline">
+            <div class="card-header p-0 pt-1">
+                <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="resumen-tab" data-toggle="tab" href="#resumen" role="tab" aria-controls="resumen" aria-selected="true">
+                            <i class="fas fa-chart-line mr-2"></i>Resumen
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="analisis-tab" data-toggle="tab" href="#analisis" role="tab" aria-controls="analisis" aria-selected="false">
+                            <i class="fas fa-chart-bar mr-2"></i>Análisis
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="mapa-tab" data-toggle="tab" href="#mapa" role="tab" aria-controls="mapa" aria-selected="false">
+                            <i class="fas fa-map-marked-alt mr-2"></i>Mapa de Campo
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="dashboardTabsContent">
+                    
+                    {{-- PESTAÑA 1: RESUMEN --}}
+                    <div class="tab-pane fade show active" id="resumen" role="tabpanel" aria-labelledby="resumen-tab">
                         
-                        @php 
-                            $total = $totalReports ?? 0; 
-                            $pending = $pendingReportsCount ?? 0; 
-                            $pct = $total > 0 ? intval(($pending / $total) * 100) : 0; 
-                        @endphp
-                        <div class="progress progress-sm mt-2">
-                            <div class="progress-bar bg-info" style="width: {{ $pct }}%"></div>
+                        {{-- 1. Tarjetas de Estadísticas Principales (KPIs) --}}
+                        <div class="row">
+                            {{-- Hallazgos Pendientes --}}
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <div class="info-box shadow-sm mb-3 h-100">
+                                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-search-location"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text text-muted">Hallazgos Pendientes</span>
+                                        <span class="info-box-number display-6">{{ $pendingReportsCount ?? 0 }}</span>
+                                        
+                                        @php 
+                                            $total = $totalReports ?? 0; 
+                                            $pending = $pendingReportsCount ?? 0; 
+                                            $pct = $total > 0 ? intval(($pending / $total) * 100) : 0; 
+                                        @endphp
+                                        <div class="progress progress-sm mt-2">
+                                            <div class="progress-bar bg-info" style="width: {{ $pct }}%"></div>
+                                        </div>
+                                        <span class="progress-description text-xs text-muted">
+                                            {{ $pct }}% del total reportado
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Solicitudes de Personal --}}
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <div class="info-box shadow-sm mb-3 h-100">
+                                    <span class="info-box-icon bg-warning elevation-1 text-white"><i class="fas fa-users-cog"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text text-muted">Solicitudes Pendientes</span>
+                                        <span class="info-box-number">
+                                            {{ ($pendingRescuersCount ?? 0) + ($pendingVeterinariansCount ?? 0) + ($pendingCaregiversCount ?? 0) }}
+                                        </span>
+                                        <a href="{{ route('people.index') }}" class="text-xs text-warning font-weight-bold mt-2 d-block">
+                                            Revisar solicitudes <i class="fas fa-arrow-right ml-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Total Animales --}}
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <div class="info-box shadow-sm mb-3 h-100">
+                                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-paw"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text text-muted">Animales en Sistema</span>
+                                        <span class="info-box-number">{{ $totalAnimals ?? 0 }}</span>
+                                        <a href="{{ route('animal-files.index') }}" class="text-xs text-success font-weight-bold mt-2 d-block">
+                                            Ver animales <i class="fas fa-arrow-right ml-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Mensajes --}}
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <div class="info-box shadow-sm mb-3 h-100">
+                                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-envelope-open-text"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text text-muted">Mensajes Nuevos</span>
+                                        <span class="info-box-number">{{ $unreadMessagesCount ?? 0 }}</span>
+                                        <span class="progress-description text-xs text-muted">
+                                            Bandeja de entrada
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <span class="progress-description text-xs text-muted">
-                            {{ $pct }}% del total reportado
-                        </span>
-                    </div>
-                </div>
-            </div>
 
-            {{-- Solicitudes de Personal --}}
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box shadow-sm mb-3 h-100">
-                    <span class="info-box-icon bg-warning elevation-1 text-white"><i class="fas fa-users-cog"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text text-muted">Solicitudes Pendientes</span>
-                        <span class="info-box-number">
-                            {{ ($pendingRescuersCount ?? 0) + ($pendingVeterinariansCount ?? 0) + ($pendingCaregiversCount ?? 0) }}
-                        </span>
-                        <a href="{{ route('people.index') }}" class="text-xs text-warning font-weight-bold mt-2 d-block">
-                            Revisar solicitudes <i class="fas fa-arrow-right ml-1"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Total Animales --}}
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box shadow-sm mb-3 h-100">
-                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-paw"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text text-muted">Animales en Sistema</span>
-                        <span class="info-box-number">{{ $totalAnimals ?? 0 }}</span>
-                        <a href="{{ route('animal-files.index') }}" class="text-xs text-success font-weight-bold mt-2 d-block">
-                            Ver animales <i class="fas fa-arrow-right ml-1"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Mensajes --}}
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box shadow-sm mb-3 h-100">
-                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-envelope-open-text"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text text-muted">Mensajes Nuevos</span>
-                        <span class="info-box-number">{{ $unreadMessagesCount ?? 0 }}</span>
-                        <span class="progress-description text-xs text-muted">
-                            Bandeja de entrada
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- KPIs Compactos: Actividad, Eficacia y Efectividad --}}
-        <div class="row mt-2">
+                        {{-- KPIs: Actividad, Eficacia y Efectividad --}}
+                        <div class="row mt-2">
             {{-- KPIs de Actividad --}}
             <div class="col-12 col-lg-4 mb-2">
                 <div class="card shadow-sm mb-0 h-100">
@@ -299,28 +326,50 @@
                         @php
                             $efficiencyAttended = $efficiencyAttendedRescued ?? ['attended' => 0, 'rescued' => 0, 'percentage' => 0];
                             $efficiencyReady = $efficiencyReadyAttended ?? ['ready' => 0, 'attended' => 0, 'percentage' => 0];
+                            $effectiveness = $effectivenessReleasedRescued ?? ['released' => 0, 'rescued' => 0, 'percentage' => 0];
                         @endphp
                         
-                        <div class="mb-1">
+                        {{-- Eficacia de Rescate --}}
+                        <div class="mb-2">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <small class="text-muted" style="font-size: 0.8rem;">Atendidos/Rescatados</small>
-                                <span class="badge badge-success" style="font-size: 0.8rem;">{{ $efficiencyAttended['percentage'] }}%</span>
+                                <small class="text-muted" style="font-size: 0.7rem;">
+                                    <i class="fas fa-heartbeat text-danger" style="font-size: 0.7rem;"></i> Eficacia de Rescate
+                                </small>
+                                <span class="badge badge-success" style="font-size: 0.75rem;">{{ $efficiencyAttended['percentage'] }}%</span>
                             </div>
-                            <div class="progress" style="height: 16px;">
+                            <div class="progress" style="height: 14px;">
                                 <div class="progress-bar bg-success" style="width: {{ $efficiencyAttended['percentage'] }}%">
-                                    <small style="font-size: 0.65rem;">{{ $efficiencyAttended['attended'] }}/{{ $efficiencyAttended['rescued'] }}</small>
+                                    <small style="font-size: 0.6rem;">{{ $efficiencyAttended['attended'] }}/{{ $efficiencyAttended['rescued'] }}</small>
                                 </div>
                             </div>
                         </div>
 
+                        {{-- Eficacia de Tratamiento --}}
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted" style="font-size: 0.7rem;">
+                                    <i class="fas fa-stethoscope text-info" style="font-size: 0.7rem;"></i> Eficacia de Tratamiento
+                                </small>
+                                <span class="badge badge-info" style="font-size: 0.75rem;">{{ $efficiencyReady['percentage'] }}%</span>
+                            </div>
+                            <div class="progress" style="height: 14px;">
+                                <div class="progress-bar bg-info" style="width: {{ $efficiencyReady['percentage'] }}%">
+                                    <small style="font-size: 0.6rem;">{{ $efficiencyReady['ready'] }}/{{ $efficiencyReady['attended'] }}</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Eficacia de Liberación --}}
                         <div>
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <small class="text-muted" style="font-size: 0.8rem;">Estables/Animales del Sistema</small>
-                                <span class="badge badge-info" style="font-size: 0.8rem;">{{ $efficiencyReady['percentage'] }}%</span>
+                                <small class="text-muted" style="font-size: 0.7rem;">
+                                    <i class="fas fa-dove text-warning" style="font-size: 0.7rem;"></i> Eficacia de Liberación
+                                </small>
+                                <span class="badge badge-warning" style="font-size: 0.75rem;">{{ $effectiveness['percentage'] }}%</span>
                             </div>
-                            <div class="progress" style="height: 16px;">
-                                <div class="progress-bar bg-info" style="width: {{ $efficiencyReady['percentage'] }}%">
-                                    <small style="font-size: 0.65rem;">{{ $efficiencyReady['ready'] }}/{{ $efficiencyReady['attended'] }}</small>
+                            <div class="progress" style="height: 14px;">
+                                <div class="progress-bar bg-warning" style="width: {{ $effectiveness['percentage'] }}%">
+                                    <small style="font-size: 0.6rem;">{{ $effectiveness['released'] }}/{{ $effectiveness['rescued'] }}</small>
                                 </div>
                             </div>
                         </div>
@@ -372,266 +421,208 @@
                 </div>
             </div>
         </div>
-
-        {{-- 3. Sección de Gráficos (Altura Igualada) --}}
-        @if(isset($reportsByMonth) || isset($animalsByStatus))
-        <div class="row align-items-stretch">
-            
-            {{-- Gráfico Principal: Comparativa Operativa --}}
-            @if(isset($reportsByMonth))
-            <div class="@if(isset($animalsByStatus)) col-lg-7 @else col-lg-12 @endif d-flex">
-                <div class="card card-outline card-purple shadow-sm w-100 no-export-when-collapsed">
-                    <div class="card-header border-0">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap">
-                            <h3 class="card-title font-weight-bold text-dark mb-0">
-                                <i class="fas fa-chart-bar mr-2 text-purple"></i> Comparativa Operativa
-                            </h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Colapsar">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        {{-- Controles de Filtro --}}
-                        <div class="mt-2 pt-2 border-top">
-                            <div class="row align-items-center">
-                                <div class="col-md-4 mb-2 mb-md-0">
-                                    <label class="small font-weight-bold text-muted mb-1">Período:</label>
-                                    <select id="filterPeriodCompare" class="form-control form-control-sm">
-                                        <option value="all">Todo el período</option>
-                                        <option value="week">Última semana</option>
-                                        <option value="month">Último mes</option>
-                                        <option value="3months">Últimos 3 meses</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-8">
-                                    <label class="small font-weight-bold text-muted mb-1">Mostrar:</label>
-                                    <div class="d-flex flex-wrap">
-                                        <div class="form-check form-check-inline mr-3 mb-1">
-                                            <input class="form-check-input series-toggle" type="checkbox" id="toggleHallazgos" data-series="hallazgos" checked>
-                                            <label class="form-check-label small" for="toggleHallazgos">
-                                                <span class="badge badge-danger">●</span> Hallazgos
-                                            </label>
+                    </div>
+                    
+                    {{-- PESTAÑA 2: ANÁLISIS --}}
+                    <div class="tab-pane fade" id="analisis" role="tabpanel" aria-labelledby="analisis-tab">
+                        
+                        {{-- Sección de Gráficos Compactos --}}
+                        <div class="row">
+                            {{-- Gráfico 1: Comparativa Operativa --}}
+                            @if(isset($reportsByMonth))
+                            <div class="col-lg-6 mb-3">
+                                <div class="card card-outline card-purple shadow-sm h-100 no-export-when-collapsed">
+                                    <div class="card-header border-0 py-2">
+                                        <h4 class="card-title font-weight-bold text-dark mb-1" style="font-size: 1rem;">
+                                            <i class="fas fa-chart-bar mr-2 text-purple"></i> Comparativa Operativa
+                                        </h4>
+                                        <div class="row align-items-center">
+                                            <div class="col-auto pr-2">
+                                                <label class="small font-weight-bold text-muted mb-0" style="font-size: 0.7rem;">Período:</label>
+                                                <select id="filterPeriodCompare" class="form-control form-control-sm" style="font-size: 0.7rem; padding: 0.15rem 0.3rem; width: auto; min-width: 120px;">
+                                                    <option value="all">Todo el período</option>
+                                                    <option value="week">Última semana</option>
+                                                    <option value="month">Último mes</option>
+                                                    <option value="3months">Últimos 3 meses</option>
+                                                </select>
+                                            </div>
+                                            <div class="col">
+                                                <label class="small font-weight-bold text-muted mb-0 mr-2" style="font-size: 0.7rem;">Mostrar:</label>
+                                                <div class="d-inline-flex flex-wrap align-items-center">
+                                                    <div class="form-check form-check-inline mb-0 mr-2" style="line-height: 1;">
+                                                        <input class="form-check-input series-toggle" type="checkbox" id="toggleHallazgos" data-series="hallazgos" checked style="margin-top: 0.1rem;">
+                                                        <label class="form-check-label mb-0" for="toggleHallazgos" style="font-size: 0.65rem;">Hallazgos</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline mb-0 mr-2" style="line-height: 1;">
+                                                        <input class="form-check-input series-toggle" type="checkbox" id="toggleTraslados" data-series="traslados" checked style="margin-top: 0.1rem;">
+                                                        <label class="form-check-label mb-0" for="toggleTraslados" style="font-size: 0.65rem;">Traslados</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline mb-0 mr-2" style="line-height: 1;">
+                                                        <input class="form-check-input series-toggle" type="checkbox" id="toggleLiberaciones" data-series="liberaciones" checked style="margin-top: 0.1rem;">
+                                                        <label class="form-check-label mb-0" for="toggleLiberaciones" style="font-size: 0.65rem;">Liberaciones</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline mb-0" style="line-height: 1;">
+                                                        <input class="form-check-input series-toggle" type="checkbox" id="toggleHojas" data-series="hojas" checked style="margin-top: 0.1rem;">
+                                                        <label class="form-check-label mb-0" for="toggleHojas" style="font-size: 0.65rem;">Hojas</label>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="form-check form-check-inline mr-3 mb-1">
-                                            <input class="form-check-input series-toggle" type="checkbox" id="toggleTraslados" data-series="traslados" checked>
-                                            <label class="form-check-label small" for="toggleTraslados">
-                                                <span class="badge badge-primary">●</span> Traslados
-                                            </label>
-                                        </div>
-                                        <div class="form-check form-check-inline mr-3 mb-1">
-                                            <input class="form-check-input series-toggle" type="checkbox" id="toggleLiberaciones" data-series="liberaciones" checked>
-                                            <label class="form-check-label small" for="toggleLiberaciones">
-                                                <span class="badge badge-success">●</span> Liberaciones
-                                            </label>
-                                        </div>
-                                        <div class="form-check form-check-inline mb-1">
-                                            <input class="form-check-input series-toggle" type="checkbox" id="toggleHojas" data-series="hojas" checked>
-                                            <label class="form-check-label small" for="toggleHojas">
-                                                <span class="badge badge-purple">●</span> Hojas de vida
-                                            </label>
-                                        </div>
+                                    </div>
+                                    <div class="card-body py-2">
+                                        <canvas id="operationsCompareChart" style="max-height: 220px; height: 220px !important;"></canvas>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="card-body d-flex justify-content-center align-items-center">
-                        <div style="width: 100%;">
-                            <canvas id="operationsCompareChart" style="min-height: 320px; height: 320px; max-height: 320px; max-width: 100%;"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
+                            @endif
 
-            {{-- Gráfico Secundario: Estado de Animales --}}
-            @if(isset($animalsByStatus))
-            <div class="col-lg-5 d-flex">
-                <div class="card card-outline card-info shadow-sm w-100 no-export-when-collapsed">
-                    <div class="card-header border-0">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap">
-                            <h3 class="card-title font-weight-bold text-dark mb-0">
-                                <i class="fas fa-chart-pie mr-2 text-info"></i> Estado Actual
-                            </h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Colapsar">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        {{-- Controles de Filtro --}}
-                        <div class="mt-2 pt-2 border-top">
-                            <div class="row align-items-center">
-                                <div class="col-12 mb-2">
-                                    <label class="small font-weight-bold text-muted mb-1">Período:</label>
-                                    <select id="filterPeriodStatus" class="form-control form-control-sm">
-                                        <option value="all">Todo el período</option>
-                                        <option value="week">Última semana</option>
-                                        <option value="month">Último mes</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="small font-weight-bold text-muted mb-1">Mostrar estados:</label>
-                                    <div id="statusCheckboxes" class="d-flex flex-wrap">
-                                        @if(isset($animalsByStatus))
-                                            @foreach($animalsByStatus as $status => $count)
-                                                <div class="form-check form-check-inline mr-3 mb-1">
-                                                    <input class="form-check-input status-toggle" type="checkbox" id="toggleStatus{{ $loop->index }}" data-status="{{ $status }}" checked>
-                                                    <label class="form-check-label small" for="toggleStatus{{ $loop->index }}">
-                                                        {{ $status }} ({{ $count }})
-                                                    </label>
+                            {{-- Gráfico 2: Estado de Animales --}}
+                            @if(isset($animalsByStatus))
+                            <div class="col-lg-6 mb-3">
+                                <div class="card card-outline card-info shadow-sm h-100 no-export-when-collapsed">
+                                    <div class="card-header border-0 py-2">
+                                        <h4 class="card-title font-weight-bold text-dark mb-1" style="font-size: 1rem;">
+                                            <i class="fas fa-chart-pie mr-2 text-info"></i> Estado Actual
+                                        </h4>
+                                        <div class="row align-items-center">
+                                            <div class="col-auto pr-2">
+                                                <label class="small font-weight-bold text-muted mb-0" style="font-size: 0.7rem;">Período:</label>
+                                                <select id="filterPeriodStatus" class="form-control form-control-sm" style="font-size: 0.7rem; padding: 0.15rem 0.3rem; width: auto; min-width: 120px;">
+                                                    <option value="all">Todo el período</option>
+                                                    <option value="week">Última semana</option>
+                                                    <option value="month">Último mes</option>
+                                                </select>
+                                            </div>
+                                            <div class="col">
+                                                <label class="small font-weight-bold text-muted mb-0 mr-2" style="font-size: 0.7rem;">Estados:</label>
+                                                <div id="statusCheckboxes" class="d-inline-flex flex-wrap align-items-center">
+                                                    @if(isset($animalsByStatus))
+                                                        @foreach($animalsByStatus as $status => $count)
+                                                            <div class="form-check form-check-inline mb-0 mr-2" style="line-height: 1;">
+                                                                <input class="form-check-input status-toggle" type="checkbox" id="toggleStatus{{ $loop->index }}" data-status="{{ $status }}" checked style="margin-top: 0.1rem;">
+                                                                <label class="form-check-label mb-0" for="toggleStatus{{ $loop->index }}" style="font-size: 0.65rem;">
+                                                                    {{ $status }} ({{ $count }})
+                                                                </label>
+                                                            </div>
+                                                        @endforeach
+                                                    @endif
                                                 </div>
-                                            @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body py-2">
+                                        <canvas id="animalsStatusChart" style="max-height: 220px; height: 220px !important;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                        
+                        {{-- Segunda Fila: Solicitudes y Top 5 --}}
+                        <div class="row">
+                            {{-- Gráfico 3: Solicitudes de Voluntariado --}}
+                            @if(isset($applicationsByType))
+                            <div class="col-lg-6 mb-3">
+                                <div class="card card-outline card-secondary shadow-sm h-100 no-export-when-collapsed">
+                                    <div class="card-header border-0 py-2">
+                                        <h4 class="card-title font-weight-bold mb-0" style="font-size: 1rem;">
+                                            <i class="fas fa-user-plus mr-2 text-secondary"></i> Solicitudes de Voluntariado
+                                        </h4>
+                                    </div>
+                                    <div class="card-body py-2">
+                                        <canvas id="applicationsChart" style="max-height: 200px; height: 200px !important;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- Widget: Top 5 Voluntarios Más Activos --}}
+                            <div class="col-lg-6 mb-3">
+                                <div class="card card-outline card-warning shadow-sm h-100 no-export-when-collapsed">
+                                    <div class="card-header border-0 py-2">
+                                        <h4 class="card-title font-weight-bold mb-0" style="font-size: 1rem;">
+                                            <i class="fas fa-trophy mr-2 text-warning"></i> Top 5 Voluntarios Más Activos
+                                        </h4>
+                                    </div>
+                                    <div class="card-body py-2" style="max-height: 250px; overflow-y: auto;">
+                                        @php $topVolunteers = $topVolunteers ?? []; @endphp
+                                        @if(count($topVolunteers) > 0)
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="width: 40px;">#</th>
+                                                            <th>Voluntario</th>
+                                                            <th class="text-center">Total</th>
+                                                            <th class="text-right">Desglose</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($topVolunteers as $index => $volunteer)
+                                                            <tr>
+                                                                <td>
+                                                                    @if($index === 0)
+                                                                        <span class="badge badge-warning">🥇</span>
+                                                                    @elseif($index === 1)
+                                                                        <span class="badge badge-secondary">🥈</span>
+                                                                    @elseif($index === 2)
+                                                                        <span class="badge badge-info">🥉</span>
+                                                                    @else
+                                                                        <strong>{{ $index + 1 }}</strong>
+                                                                    @endif
+                                                                </td>
+                                                                <td>
+                                                                    <div>
+                                                                        <strong>{{ $volunteer['nombre'] }}</strong>
+                                                                        <br>
+                                                                        <small class="text-muted">{{ $volunteer['email'] }}</small>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <span class="badge badge-primary" style="font-size: 1rem;">{{ $volunteer['total'] }}</span>
+                                                                </td>
+                                                                <td class="text-right">
+                                                                    <small class="text-muted">
+                                                                        @if($volunteer['reports'] > 0)
+                                                                            <span class="badge badge-info">{{ $volunteer['reports'] }} R</span>
+                                                                        @endif
+                                                                        @if($volunteer['transfers'] > 0)
+                                                                            <span class="badge badge-success">{{ $volunteer['transfers'] }} T</span>
+                                                                        @endif
+                                                                        @if($volunteer['evaluations'] > 0)
+                                                                            <span class="badge badge-warning">{{ $volunteer['evaluations'] }} E</span>
+                                                                        @endif
+                                                                    </small>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @else
+                                            <div class="text-center py-4 text-muted">
+                                                <i class="fas fa-users fa-2x mb-2"></i>
+                                                <p>No hay datos de voluntarios disponibles</p>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="card-body d-flex align-items-center justify-content-center">
-                        <div style="width: 100%;">
-                             <canvas id="animalsStatusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white p-0">
-                        <ul class="nav nav-pills flex-column">
-                            <li class="nav-item border-bottom">
-                                <a href="#" class="nav-link text-muted py-2">
-                                    Total Registrados <span class="float-right badge bg-primary">{{ $totalAnimals ?? 0 }}</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            @endif
-        </div>
-        @endif
-        
-        {{-- Gráfico Terciario: Solicitudes (Multicolor y Horizontal) --}}
-        @if(isset($applicationsByType))
-        <div class="row mt-3">
-             <div class="col-md-12">
+                    
+                    {{-- PESTAÑA 3: MAPA DE CAMPO --}}
+                    <div class="tab-pane fade" id="mapa" role="tabpanel" aria-labelledby="mapa-tab">
+                        {{-- Mapa de Campo Completo (Ancho Completo) --}}
+                        @if(isset($reports) && isset($releases))
+                        <div class="row">
+                            <div class="col-12">
                 <div class="card shadow-sm no-export-when-collapsed">
-                    <div class="card-header border-0">
-                        <h3 class="card-title font-weight-bold">
-                            <i class="fas fa-user-plus mr-2 text-secondary"></i> Solicitudes de Voluntariado
-                        </h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Colapsar">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="applicationsChart" height="100"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        {{-- Widget: Top 5 Voluntarios Más Activos --}}
-        <div class="row mt-3">
-            <div class="col-lg-6">
-                <div class="card shadow-sm no-export-when-collapsed">
-                    <div class="card-header border-0">
-                        <h3 class="card-title font-weight-bold">
-                            <i class="fas fa-trophy mr-2 text-warning"></i> Top 5 Voluntarios Más Activos
-                        </h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Colapsar">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        @php $topVolunteers = $topVolunteers ?? []; @endphp
-                        @if(count($topVolunteers) > 0)
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 40px;">#</th>
-                                            <th>Voluntario</th>
-                                            <th class="text-center">Total</th>
-                                            <th class="text-right">Desglose</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($topVolunteers as $index => $volunteer)
-                                            <tr>
-                                                <td>
-                                                    @if($index === 0)
-                                                        <span class="badge badge-warning">🥇</span>
-                                                    @elseif($index === 1)
-                                                        <span class="badge badge-secondary">🥈</span>
-                                                    @elseif($index === 2)
-                                                        <span class="badge badge-info">🥉</span>
-                                                    @else
-                                                        <strong>{{ $index + 1 }}</strong>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <div>
-                                                        <strong>{{ $volunteer['nombre'] }}</strong>
-                                                        <br>
-                                                        <small class="text-muted">{{ $volunteer['email'] }}</small>
-                                                    </div>
-                                                </td>
-                                                <td class="text-center">
-                                                    <span class="badge badge-primary" style="font-size: 1rem;">{{ $volunteer['total'] }}</span>
-                                                </td>
-                                                <td class="text-right">
-                                                    <small class="text-muted">
-                                                        @if($volunteer['reports'] > 0)
-                                                            <span class="badge badge-info">{{ $volunteer['reports'] }} R</span>
-                                                        @endif
-                                                        @if($volunteer['transfers'] > 0)
-                                                            <span class="badge badge-success">{{ $volunteer['transfers'] }} T</span>
-                                                        @endif
-                                                        @if($volunteer['evaluations'] > 0)
-                                                            <span class="badge badge-warning">{{ $volunteer['evaluations'] }} E</span>
-                                                        @endif
-                                                    </small>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <div class="text-center py-4 text-muted">
-                                <i class="fas fa-users fa-2x mb-2"></i>
-                                <p>No hay datos de voluntarios disponibles</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Mapa de Campo Completo (Ancho Completo) --}}
-        @if(Auth::user()->hasAnyRole(['admin', 'encargado']) && isset($reports) && isset($releases))
-        <div class="row mt-3">
-            <div class="col-12">
-                <div class="card shadow-sm no-export-when-collapsed">
-                    <div class="card-header border-0">
-                        <h3 class="card-title font-weight-bold">
-                            <i class="fas fa-map-marked-alt mr-2 text-primary"></i> Mapa de Campo
-                        </h3>
-                        <div class="card-tools">
-                            
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Colapsar">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body bg-white">
+                    
+                    <div class="card-body bg-white" style="padding-top: 0.75rem;">
                         <!-- Leyenda de urgencia fuera del mapa -->
                         <div class="mb-3">
-                            <div class="mb-2">
+                            <div class="mb-1">
                                 <strong><i class="fas fa-exclamation-triangle"></i> Hallazgos por Urgencia:</strong>
                             </div>
                             <div class="d-flex align-items-center">
@@ -648,8 +639,8 @@
                         </div>
 
                         <!-- Contenedor del mapa con posición relativa para controles flotantes -->
-                        <div style="position: relative; width: 100%; min-height: 600px;">
-                            <div id="mapaCampo" style="height: 600px; width: 100%; border-radius: 6px; border: 1px solid #dee2e6; background-color: #f0f0f0;"></div>
+                        <div style="position: relative; width: 100%; min-height: 500px;">
+                            <div id="mapaCampo" style="height: 500px; width: 100%; border-radius: 6px; border: 1px solid #dee2e6; background-color: #f0f0f0;"></div>
                             
                             <!-- Controles flotantes dentro del mapa -->
                             <div class="map-controls" style="position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; padding: 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); max-width: 280px;">
@@ -816,92 +807,10 @@
                     </div>
                 </div>
             </div>
-        </div>
-        @endif
-
-        {{-- 4. Bandeja de Mensajes --}}
-        <div class="row mt-3" id="mensajes">
-            <div class="col-lg-12">
-                <div class="card card-outline card-danger shadow-sm no-export-when-collapsed">
-                    <div class="card-header">
-                        <h3 class="card-title font-weight-bold">
-                            <i class="fas fa-inbox mr-2"></i> Mensajes Recientes
-                        </h3>
-                        <div class="card-tools">
-                            @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
-                                <span class="badge badge-danger mr-2">{{ $unreadMessagesCount }} nuevos</span>
-                            @endif
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Colapsar">
-                                <i class="fas fa-minus"></i>
-                            </button>
                         </div>
-                    </div>
-                    <div class="card-body p-0">
-                        @if(isset($unreadMessages) && $unreadMessages->count() > 0)
-                            <div class="table-responsive">
-                                <table class="table table-hover table-striped align-middle mb-0">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th style="width: 20%">Usuario</th>
-                                            <th style="width: 15%">Motivo</th>
-                                            <th>Mensaje</th>
-                                            <th style="width: 15%">Fecha</th>
-                                            <th style="width: 10%" class="text-right">Acción</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($unreadMessages as $message)
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="bg-gray-light rounded-circle d-flex justify-content-center align-items-center mr-2" style="width:35px; height:35px;">
-                                                            <i class="fas fa-user text-muted"></i>
-                                                        </div>
-                                                        <div>
-                                                            <div class="font-weight-bold">{{ $message->user->person->nombre ?? 'Usuario' }}</div>
-                                                            <small class="text-muted">{{ $message->user->email }}</small>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    @php
-                                                        $motivos = \App\Models\ContactMessage::getMotivos();
-                                                        $motivoLabel = $motivos[$message->motivo] ?? $message->motivo;
-                                                        $badgeColor = 'secondary';
-                                                        if($message->motivo == 'emergencia') $badgeColor = 'danger';
-                                                        if($message->motivo == 'consulta') $badgeColor = 'info';
-                                                        if($message->motivo == 'adopcion') $badgeColor = 'success';
-                                                    @endphp
-                                                    <span class="badge badge-{{ $badgeColor }}">{{ $motivoLabel }}</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 text-sm text-muted text-truncate" style="max-width: 400px;">
-                                                        {{ Str::limit($message->mensaje, 100) }}
-                                                    </p>
-                                                </td>
-                                                <td class="text-muted text-sm">
-                                                    <i class="far fa-clock mr-1"></i> {{ $message->created_at->diffForHumans() }}
-                                                </td>
-                                                <td class="text-right">
-                                                    <form action="{{ route('contact-messages.update', $message->id) }}" method="POST">
-                                                        @csrf @method('PUT')
-                                                        <button type="submit" class="btn btn-xs btn-outline-success" title="Marcar como leído">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <div class="text-center py-5">
-                                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" alt="Clean" style="width: 64px; opacity: 0.5;">
-                                <p class="text-muted mt-3">¡Todo limpio! No hay mensajes nuevos.</p>
-                            </div>
                         @endif
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -2212,8 +2121,42 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
             }
+            
+            // Reinicializar mapa cuando se muestra la pestaña del mapa
+            const mapaTab = document.getElementById('mapa-tab');
+            if (mapaTab) {
+                mapaTab.addEventListener('shown.bs.tab', function() {
+                    setTimeout(function() {
+                        if (!map) {
+                            initMap();
+                        } else {
+                            // Invalidar tamaño del mapa cuando se muestra la pestaña
+                            setTimeout(function() {
+                                if (map) {
+                                    map.invalidateSize();
+                                }
+                            }, 100);
+                        }
+                    }, 100);
+                });
+            }
         });
     })();
+    
+    // Reinicializar gráficos cuando se cambia de pestaña
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('#dashboardTabs a[data-toggle="tab"]');
+        tabs.forEach(function(tab) {
+            tab.addEventListener('shown.bs.tab', function(e) {
+                // Forzar actualización de gráficos cuando se muestra una pestaña
+                if (typeof Chart !== 'undefined') {
+                    Chart.helpers.each(Chart.instances, function(instance) {
+                        instance.resize();
+                    });
+                }
+            });
+        });
+    });
     @endif
 });
 </script>
