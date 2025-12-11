@@ -65,7 +65,7 @@ class OpenMeteoService
             // Obtener humedad y precipitación del primer elemento de hourly (hora actual)
             // OpenMeteo devuelve los datos hourly empezando desde la hora actual, así que usamos el índice 0
             $humidity = null;
-            $precipitation = 0;
+            $precipitation = null;
             
             // Log de la estructura completa para debugging
             Log::debug('OpenMeteoService: Estructura de respuesta', [
@@ -73,28 +73,49 @@ class OpenMeteoService
                 'hourly_keys' => isset($data['hourly']) ? array_keys($data['hourly']) : [],
             ]);
             
-            if (isset($data['hourly'])) {
+            if (isset($data['hourly']) && is_array($data['hourly'])) {
                 // OpenMeteo devuelve los datos hourly como arrays indexados
                 // El primer elemento (índice 0) corresponde a la hora actual
                 $currentIndex = 0;
                 
-                // Verificar si los datos existen en la respuesta
+                // Verificar si los datos existen en la respuesta para humedad
                 if (isset($data['hourly']['relativehumidity_2m']) && 
                     is_array($data['hourly']['relativehumidity_2m']) &&
-                    isset($data['hourly']['relativehumidity_2m'][$currentIndex]) &&
-                    $data['hourly']['relativehumidity_2m'][$currentIndex] !== null) {
-                    $humidity = (int) $data['hourly']['relativehumidity_2m'][$currentIndex];
+                    count($data['hourly']['relativehumidity_2m']) > $currentIndex &&
+                    array_key_exists($currentIndex, $data['hourly']['relativehumidity_2m'])) {
+                    $humidityValue = $data['hourly']['relativehumidity_2m'][$currentIndex];
+                    if ($humidityValue !== null) {
+                        $humidity = (int) $humidityValue;
+                    }
                 }
                 
+                // Verificar si los datos existen en la respuesta para precipitación
+                // La precipitación puede ser 0 (sin lluvia) o un valor positivo, ambos son válidos
                 if (isset($data['hourly']['precipitation']) && 
                     is_array($data['hourly']['precipitation']) &&
-                    isset($data['hourly']['precipitation'][$currentIndex]) &&
-                    $data['hourly']['precipitation'][$currentIndex] !== null) {
-                    $precipitation = (float) $data['hourly']['precipitation'][$currentIndex];
+                    count($data['hourly']['precipitation']) > $currentIndex &&
+                    array_key_exists($currentIndex, $data['hourly']['precipitation'])) {
+                    $precipitationValue = $data['hourly']['precipitation'][$currentIndex];
+                    // Aceptar 0 como valor válido (sin precipitación)
+                    if ($precipitationValue !== null) {
+                        $precipitation = (float) $precipitationValue;
+                    }
                 }
                 
+                // Log detallado para debugging
+                Log::debug('OpenMeteoService: Datos de precipitación', [
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'has_precipitation_key' => isset($data['hourly']['precipitation']),
+                    'precipitation_is_array' => isset($data['hourly']['precipitation']) && is_array($data['hourly']['precipitation']),
+                    'precipitation_count' => isset($data['hourly']['precipitation']) && is_array($data['hourly']['precipitation']) ? count($data['hourly']['precipitation']) : 0,
+                    'precipitation_index_0' => isset($data['hourly']['precipitation'][0]) ? $data['hourly']['precipitation'][0] : 'not_set',
+                    'precipitation_value' => $precipitation,
+                    'precipitation_type' => isset($data['hourly']['precipitation']) ? gettype($data['hourly']['precipitation']) : 'not_set',
+                ]);
+                
                 // Log para debugging si no se encuentran los datos
-                if ($humidity === null && $precipitation === 0) {
+                if ($humidity === null && $precipitation === null) {
                     Log::warning('OpenMeteoService: No se encontraron datos de humedad/precipitación', [
                         'latitude' => $latitude,
                         'longitude' => $longitude,
@@ -116,13 +137,14 @@ class OpenMeteoService
             }
 
             // Formatear respuesta según el formato requerido
+            // La precipitación puede ser 0 (sin lluvia) o un valor positivo, ambos son válidos
             return [
                 'temperature' => round((float) ($currentWeather['temperature'] ?? 0), 1),
                 'humidity' => $humidity ?? 0,
                 'windSpeed' => round((float) ($currentWeather['windspeed'] ?? 0), 1),
                 'windDirection' => (int) ($currentWeather['winddirection'] ?? 0),
                 'weatherCode' => (int) ($currentWeather['weathercode'] ?? 0),
-                'precipitation' => round($precipitation, 1),
+                'precipitation' => $precipitation !== null ? round($precipitation, 1) : 0,
             ];
 
         } catch (\Exception $e) {
