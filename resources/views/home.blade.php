@@ -889,6 +889,22 @@
         </div>
 
         <div class="col-md-3 col-sm-6 col-12 d-flex">
+            @if(Auth::user()->hasRole('cuidador') && !Auth::user()->hasAnyRole(['admin', 'encargado']))
+            <div class="card card-outline card-primary shadow-sm mb-3 w-100">
+                <div class="card-body">
+                     <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="font-weight-bold text-primary">{{ $totalAnimals ?? 0 }}</h3>
+                            <p class="text-muted mb-0">Animales</p>
+                        </div>
+                        <i class="fas fa-paw fa-2x text-primary opacity-50"></i>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-center p-1">
+                     <a href="{{ route('animal-histories.index') }}" class="text-primary small">Ver historial</a>
+                </div>
+            </div>
+            @else
             <div class="card card-outline card-primary shadow-sm mb-3 w-100">
                 <div class="card-body">
                      <div class="d-flex justify-content-between">
@@ -905,6 +921,7 @@
                 </div>
                 @endif
             </div>
+            @endif
         </div>
     </div>
     @endif
@@ -986,7 +1003,7 @@
                     <div class="card-body text-center py-5">
                         <i class="fas fa-paw fa-2x text-dark mb-3" style="width: 80px;"></i>
                         <h2 class="display-4 font-weight-bold text-dark">Hola, {{ Auth::user()->person->nombre ?? 'Usuario' }}</h2>
-                        <p class="lead text-muted">Bienvenido al Sistema de Rescate y Gestión de Fauna.</p>
+                        <p class="lead text-muted">Bienvenido al Sistema de Rescate de Animales.</p>
                         
                         <div class="d-flex justify-content-center mt-4">
                             @if(Auth::user()->hasRole('veterinario'))
