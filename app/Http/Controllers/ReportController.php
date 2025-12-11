@@ -456,12 +456,12 @@ class ReportController extends Controller
                     'direccion' => $release->direccion,
                     'detalle' => $release->detalle,
                     'fecha' => $release->created_at ? $release->created_at->format('d/m/Y') : null,
-                    'especie_id' => $animalFile->especie_id ?? null,
-                    'especie' => $animalFile->species ? [
+                    'especie_id' => $animalFile ? ($animalFile->especie_id ?? null) : null,
+                    'especie' => $animalFile && $animalFile->species ? [
                         'id' => $animalFile->species->id,
                         'nombre' => $animalFile->species->nombre,
                     ] : null,
-                    'animal' => $animalFile->animal ? [
+                    'animal' => $animalFile && $animalFile->animal ? [
                         'id' => $animalFile->animal->id,
                         'nombre' => $animalFile->animal->nombre,
                     ] : null,

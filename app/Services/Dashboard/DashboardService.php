@@ -99,6 +99,12 @@ class DashboardService
                 'animalFilesByMonth' => $this->getAnimalFilesByMonth(),
                 'animalsByStatus' => $this->getAnimalsByStatus(),
                 'applicationsByType' => $this->getApplicationsByType(),
+                
+                // Datos detallados para filtrado por fecha
+                'reportsDetailed' => $this->getReportsDetailed(),
+                'transfersDetailed' => $this->getTransfersDetailed(),
+                'releasesDetailed' => $this->getReleasesDetailed(),
+                'animalFilesDetailed' => $this->getAnimalFilesDetailed(),
 
                 // KPIs de Actividad (presente)
                 'animalsBeingRescued' => $this->getAnimalsBeingRescued(),
@@ -489,6 +495,74 @@ class DashboardService
             'Veterinarios' => Veterinarian::count(),
             'Cuidadores' => Person::where('es_cuidador', true)->count(),
         ];
+    }
+
+    /**
+     * Obtiene reportes con fechas detalladas para filtrado
+     *
+     * @return array
+     */
+    private function getReportsDetailed(): array
+    {
+        return Report::select('created_at')
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->orderBy('created_at')
+            ->get()
+            ->map(function ($report) {
+                return $report->created_at->format('Y-m-d');
+            })
+            ->toArray();
+    }
+
+    /**
+     * Obtiene traslados con fechas detalladas para filtrado
+     *
+     * @return array
+     */
+    private function getTransfersDetailed(): array
+    {
+        return Transfer::select('created_at')
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->orderBy('created_at')
+            ->get()
+            ->map(function ($transfer) {
+                return $transfer->created_at->format('Y-m-d');
+            })
+            ->toArray();
+    }
+
+    /**
+     * Obtiene liberaciones con fechas detalladas para filtrado
+     *
+     * @return array
+     */
+    private function getReleasesDetailed(): array
+    {
+        return Release::select('created_at')
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->orderBy('created_at')
+            ->get()
+            ->map(function ($release) {
+                return $release->created_at->format('Y-m-d');
+            })
+            ->toArray();
+    }
+
+    /**
+     * Obtiene hojas de animales con fechas detalladas para filtrado
+     *
+     * @return array
+     */
+    private function getAnimalFilesDetailed(): array
+    {
+        return AnimalFile::select('created_at')
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->orderBy('created_at')
+            ->get()
+            ->map(function ($animalFile) {
+                return $animalFile->created_at->format('Y-m-d');
+            })
+            ->toArray();
     }
 
     /**
