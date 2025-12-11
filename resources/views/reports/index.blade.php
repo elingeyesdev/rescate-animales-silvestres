@@ -492,7 +492,7 @@
                     ['nombre' => 'Fecha', 'campo' => 'fecha'],
                     ['nombre' => 'Cantidad de Hallazgos', 'campo' => 'hallazgos'],
                     ['nombre' => 'Cantidad de Traslados', 'campo' => 'traslados'],
-                    ['nombre' => 'Eficacia Diaria (%)', 'campo' => 'eficacia'],
+                    ['nombre' => 'Eficacia Diaria', 'campo' => 'eficacia'],
                     ['nombre' => 'Estado', 'campo' => 'color']
                 ]
             ])
@@ -523,7 +523,7 @@
                             ['nombre' => 'Fecha', 'campo' => 'fecha'],
                             ['nombre' => 'Cantidad de Traslados', 'campo' => 'traslados'],
                             ['nombre' => 'Cantidad de Eval. Médicas Iniciales', 'campo' => 'evaluaciones'],
-                            ['nombre' => 'Eficacia Diaria (%)', 'campo' => 'eficacia'],
+                            ['nombre' => 'Eficacia Diaria', 'campo' => 'eficacia'],
                             ['nombre' => 'Estado', 'campo' => 'color']
                         ]
                     ])
@@ -554,7 +554,7 @@
                             ['nombre' => 'Fecha', 'campo' => 'fecha'],
                             ['nombre' => 'Animales en Tratamiento', 'campo' => 'en_tratamiento'],
                             ['nombre' => 'Animales Estables', 'campo' => 'estables'],
-                            ['nombre' => 'Eficacia Diaria (%)', 'campo' => 'eficacia'],
+                            ['nombre' => 'Eficacia Diaria', 'campo' => 'eficacia'],
                             ['nombre' => 'Estado', 'campo' => 'color']
                         ]
                     ])
@@ -584,7 +584,7 @@
                             ['nombre' => 'Fecha', 'campo' => 'fecha'],
                             ['nombre' => 'Animales Estables', 'campo' => 'estables'],
                             ['nombre' => 'Animales Liberados', 'campo' => 'liberados'],
-                            ['nombre' => 'Eficacia Diaria (%)', 'campo' => 'eficacia'],
+                            ['nombre' => 'Eficacia Diaria', 'campo' => 'eficacia'],
                             ['nombre' => 'Estado', 'campo' => 'color']
                         ]
                     ])

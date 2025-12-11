@@ -1902,7 +1902,7 @@ class ReportsController extends Controller
             $filtro,
             $fechaDesde,
             $fechaHasta,
-            ['Fecha', 'Cantidad de Hallazgos', 'Cantidad de Traslados', 'Eficacia Diaria (%)', 'Estado'],
+            ['Fecha', 'Cantidad de Hallazgos', 'Cantidad de Traslados', 'Eficacia Diaria', 'Estado'],
             $datosDiarios,
             'reporte_eficacia_rescate_' . date('d_m_Y') . '.csv',
             function($dato) {
@@ -2007,7 +2007,7 @@ class ReportsController extends Controller
             $filtro,
             $fechaDesde,
             $fechaHasta,
-            ['Fecha', 'Animales en Tratamiento', 'Animales Estables', 'Eficacia Diaria (%)', 'Estado'],
+            ['Fecha', 'Animales en Tratamiento', 'Animales Estables', 'Eficacia Diaria', 'Estado'],
             $datosDiarios,
             'reporte_eficacia_tratamiento_' . date('d_m_Y') . '.csv',
             function($dato) {
@@ -2108,7 +2108,7 @@ class ReportsController extends Controller
             $filtro,
             $fechaDesde,
             $fechaHasta,
-            ['Fecha', 'Animales Estables', 'Animales Liberados', 'Eficacia Diaria (%)', 'Estado'],
+            ['Fecha', 'Animales Estables', 'Animales Liberados', 'Eficacia Diaria', 'Estado'],
             $datosDiarios,
             'reporte_eficacia_liberacion_' . date('d_m_Y') . '.csv',
             function($dato) {

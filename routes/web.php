@@ -36,7 +36,7 @@ use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\ReportsController;
 
 Route::get('/', function () {
-    if (Auth::check()) {
+if (Auth::check()) {
         return redirect('home');
     }
     return redirect('landing');
@@ -52,15 +52,6 @@ Route::get('/refresh-csrf', function () {
 })->middleware('web');
 
 Route::get('/landing', [App\Http\Controllers\LandingController::class, 'index'])->name('landing');
-
-Route::get('/reporte-rapido', function () {
-    return view('quick-report');
-})->name('reporte-rapido');
-
-Route::post('/reporte-rapido', function () {
-    return back();
-})->name('reporte-rapido.store');
-
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->middleware('auth')->name('home');
 Route::get('/dashboard/export-pdf', [App\Http\Controllers\HomeController::class, 'exportPdf'])->middleware('auth')->name('dashboard.export-pdf');
 Route::get('animal-histories/{animal_history}/pdf', [AnimalHistoryController::class, 'pdf'])->name('animal-histories.pdf')->middleware('auth');
@@ -73,31 +64,31 @@ Route::prefix('reports')->name('reports.')->group(function () {
 
 Route::resource('profile', ProfileController::class)->only(['index', 'update'])->middleware('auth');
 Route::resource('contact-messages', ContactMessageController::class)->only(['store', 'update'])->middleware('auth');
-Route::resource('centers', CenterController::class);
+Route::resource('centers', CenterController::class)->middleware('auth');
 Route::resource('animals', AnimalController::class)->middleware('auth');
-Route::resource('animal-profiles', AnimalProfileController::class);
-Route::resource('dispositions', DispositionController::class);
-Route::resource('health-records', HealthRecordController::class);
-Route::resource('reports', ReportController::class);
-Route::resource('animal-statuses', AnimalStatusController::class);
-Route::resource('care-types', CareTypeController::class);
-Route::resource('cares', CareController::class);
-Route::resource('animal-files', AnimalFileController::class);
+Route::resource('animal-profiles', AnimalProfileController::class)->middleware('auth');
+Route::resource('dispositions', DispositionController::class)->middleware('auth');
+Route::resource('health-records', HealthRecordController::class)->middleware('auth');
+Route::resource('reports', ReportController::class)->middleware('auth');
+Route::resource('animal-statuses', AnimalStatusController::class)->middleware('auth');
+Route::resource('care-types', CareTypeController::class)->middleware('auth');
+Route::resource('cares', CareController::class)->middleware('auth');
+Route::resource('animal-files', AnimalFileController::class)->middleware('auth');
 Route::resource('people', PersonController::class);
 Route::post('people/{person}/convert-to-encargado', [PersonController::class, 'convertToEncargado'])->name('people.convert-to-encargado')->middleware('auth');
-Route::resource('species', SpeciesController::class);
-Route::resource('releases', ReleaseController::class);
+Route::resource('species', SpeciesController::class)->middleware('auth');
+Route::resource('releases', ReleaseController::class)->middleware('auth');
 Route::put('rescuers/{rescuer}/approve', [RescuerController::class, 'approve'])->name('rescuers.approve')->middleware('auth');
-Route::resource('rescuers', RescuerController::class);
+Route::resource('rescuers', RescuerController::class)->middleware('auth');
 Route::put('veterinarians/{veterinarian}/approve', [VeterinarianController::class, 'approve'])->name('veterinarians.approve')->middleware('auth');
-Route::resource('veterinarians', VeterinarianController::class);
-Route::resource('medical-evaluations', MedicalEvaluationController::class);
-Route::resource('treatment-types', TreatmentTypeController::class);
-Route::resource('transfers', TransferController::class);
-Route::resource('care-feedings', CareFeedingController::class);
-Route::resource('feeding-types', FeedingTypeController::class);
-Route::resource('feeding-frequencies', FeedingFrequencyController::class);
-Route::resource('feeding-portions', FeedingPortionController::class);
+Route::resource('veterinarians', VeterinarianController::class)->middleware('auth');
+Route::resource('medical-evaluations', MedicalEvaluationController::class)->middleware('auth');
+Route::resource('treatment-types', TreatmentTypeController::class)->middleware('auth');
+Route::resource('transfers', TransferController::class)->middleware('auth');
+Route::resource('care-feedings', CareFeedingController::class)->middleware('auth');
+Route::resource('feeding-types', FeedingTypeController::class)->middleware('auth');
+Route::resource('feeding-frequencies', FeedingFrequencyController::class)->middleware('auth');
+Route::resource('feeding-portions', FeedingPortionController::class)->middleware('auth');
 Route::resource('incident-types', IncidentTypeController::class)->middleware('auth');
 Route::resource('animal-conditions', AnimalConditionController::class)->middleware('auth');
 

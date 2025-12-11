@@ -5,33 +5,77 @@
     <title>Reporte de Salud Animal Actual</title>
     <style>
         @page {
-            margin: 1.5cm;
+            margin: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif;
+            font-family: Arial;
             font-size: 9pt;
             color: #333;
             line-height: 1.4;
+            background: #f5f5f5;
+        }
+        
+        * {
+            font-family: Helvetica !important;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
+        /* Banner profesional */
+        .banner {
+            background: #1e3c72;
+            color: white;
+            padding: 15px 30px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .header h1 {
-            font-size: 18pt;
-            margin: 0;
-            color: #2c3e50;
+        .banner-content {
+            display: table;
+            width: 100%;
         }
 
-        .header .meta {
-            font-size: 8pt;
-            color: #666;
-            margin-top: 5px;
+        .banner-left {
+            display: table-cell;
+            vertical-align: middle;
+            width: 70%;
+        }
+
+        .banner-right {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+            width: 30%;
+        }
+
+        .banner h1 {
+            font-size: 20pt;
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .banner .subtitle {
+            font-size: 9pt;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .banner .date {
+            font-size: 9pt;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        /* Contenedor principal */
+        .container {
+            padding: 0 30px 20px 30px;
         }
 
         .filter-info {
@@ -95,12 +139,20 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Reporte de Salud Animal Actual</h1>
-        <div class="meta">
-            Generado el: {{ $fechaGeneracion }}
+    <!-- Banner Profesional -->
+    <div class="banner">
+        <div class="banner-content">
+            <div class="banner-left">
+                <h1>Reporte de Salud Animal Actual</h1>
+                <div class="subtitle">Sistema de Rescate de Animales</div>
+            </div>
+            <div class="banner-right">
+                <div class="date">{{ $fechaGeneracion }}</div>
+            </div>
         </div>
     </div>
+
+    <div class="container">
 
     @if($fechaDesde || $fechaHasta)
     <div class="filter-info">
@@ -120,12 +172,12 @@
         <thead>
             <tr>
                 <th style="width: 15%;">Centro</th>
-                <th style="width: 12%;">Nombre del Animal</th>
-                <th style="width: 18%;">Diagnóstico Inicial</th>
+                <th style="width: 10%;">Nombre del Animal</th>
+                <th style="width: 15%;">Diagnóstico Inicial</th>
                 <th style="width: 12%;">Fecha Inicial</th>
                 <th style="width: 12%;">Fecha Última Evaluación</th>
                 <th style="width: 21%;">Última Intervención Médica</th>
-                <th style="width: 10%;">Estado Actual</th>
+                <th style="width: 15%;">Estado Actual</th>
             </tr>
         </thead>
         <tbody>
@@ -138,9 +190,8 @@
                 <td>{{ $data['fecha_ultima_evaluacion'] ? $data['fecha_ultima_evaluacion']->format('d/m/Y') : '-' }}</td>
                 <td>
                     @if($data['ultima_intervencion'])
-                        <strong>Tipo:</strong> {{ $data['ultima_intervencion']['tipo'] }}<br>
                         @if($data['ultima_intervencion']['diagnostico'])
-                            <strong>Diagnóstico:</strong> {{ $data['ultima_intervencion']['diagnostico'] }}<br>
+                            {{ $data['ultima_intervencion']['diagnostico'] }}<br>
                         @endif
                         @if($data['ultima_intervencion']['descripcion'])
                             {{ mb_substr($data['ultima_intervencion']['descripcion'], 0, 50) }}{{ mb_strlen($data['ultima_intervencion']['descripcion']) > 50 ? '...' : '' }}
@@ -161,7 +212,8 @@
     @endif
 
     <div class="footer">
-        Sistema de Rescate Animal
+        Generado el {{ $fechaGeneracion }} | Sistema de Rescate de Animales
+    </div>
     </div>
 </body>
 </html>

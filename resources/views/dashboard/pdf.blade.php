@@ -15,11 +15,15 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: Helvetica;
             font-size: 9pt;
             color: #333;
             line-height: 1.4;
             background: #f5f5f5;
+        }
+        
+        * {
+            font-family: Helvetica !important;
         }
 
         /* Banner profesional */
