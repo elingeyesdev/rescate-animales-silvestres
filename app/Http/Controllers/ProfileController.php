@@ -7,6 +7,7 @@ use App\Models\Rescuer;
 use App\Models\Veterinarian;
 use App\Models\Center;
 use App\Models\User;
+use App\Models\ContactMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -50,7 +51,15 @@ class ProfileController extends Controller
         // Obtener centros para el mapa (solo si es_cuidador es true o está marcando el checkbox)
         $centers = Center::orderBy('nombre')->get(['id', 'nombre', 'latitud', 'longitud']);
 
-        return view('profile.index', compact('user', 'person', 'rescuer', 'veterinarian', 'centers'));
+        // Si es admin o encargado, obtener los mensajes de contacto
+        $contactMessages = null;
+        if ($user->hasAnyRole(['admin', 'encargado'])) {
+            $contactMessages = ContactMessage::with('user.person', 'leidoPor')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        return view('profile.index', compact('user', 'person', 'rescuer', 'veterinarian', 'centers', 'contactMessages'));
     }
 
     /**

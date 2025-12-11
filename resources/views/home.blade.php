@@ -279,16 +279,18 @@
 
                             {{-- Mensajes --}}
                             <div class="col-12 col-sm-6 col-md-3">
-                                <div class="info-box shadow-sm mb-3 h-100">
-                                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-envelope-open-text"></i></span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text text-muted">Mensajes Nuevos</span>
-                                        <span class="info-box-number">{{ $unreadMessagesCount ?? 0 }}</span>
-                                        <span class="progress-description text-xs text-muted">
-                                            Bandeja de entrada
-                                        </span>
+                                <a href="{{ route('profile.index') }}#contactar" class="text-decoration-none">
+                                    <div class="info-box shadow-sm mb-3 h-100">
+                                        <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-envelope-open-text"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text text-muted">Mensajes Nuevos</span>
+                                            <span class="info-box-number">{{ $unreadMessagesCount ?? 0 }}</span>
+                                            <span class="progress-description text-xs text-muted">
+                                                Bandeja de entrada
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
+                                </a>
                             </div>
                         </div>
 

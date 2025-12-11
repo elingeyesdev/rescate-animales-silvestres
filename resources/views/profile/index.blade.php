@@ -634,57 +634,181 @@
 
                             {{-- TAB CONTACTAR ADMINISTRACIÓN --}}
                             <div class="tab-pane" id="contactar">
-                                <h4 class="mb-3">Contactar a administración</h4>
-                                <p class="text-muted mb-4">
-                                    Si tienes alguna consulta, problema o necesitas comunicarte directamente con un administrador o encargado, puedes enviar un mensaje aquí.
-                                </p>
-                                
-                                <form action="{{ route('contact-messages.store') }}" method="POST">
-                                    @csrf
-                                    <div class="form-group">
-                                        <label for="motivo">Motivo del contacto <span class="text-danger">*</span></label>
-                                        <select name="motivo" id="motivo" class="form-control @error('motivo') is-invalid @enderror" required>
-                                            <option value="">Selecciona un motivo</option>
-                                            @foreach(\App\Models\ContactMessage::getMotivos() as $key => $label)
-                                                <option value="{{ $key }}" {{ old('motivo') === $key ? 'selected' : '' }}>
-                                                    {{ $label }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('motivo')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                        @enderror
-                                    </div>
+                                @if(Auth::user()->hasAnyRole(['admin', 'encargado']))
+                                    {{-- Vista para admin/encargado: mostrar mensajes recibidos --}}
+                                    <h4 class="mb-3">Mensajes de contacto</h4>
+                                    <p class="text-muted mb-4">
+                                        Aquí puedes ver todos los mensajes que los usuarios han enviado a la administración.
+                                    </p>
+                                    
+                                    @if($contactMessages && $contactMessages->count() > 0)
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Fecha</th>
+                                                        <th>Usuario</th>
+                                                        <th>Motivo</th>
+                                                        <th>Mensaje</th>
+                                                        <th>Estado</th>
+                                                        <th>Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($contactMessages as $message)
+                                                        <tr class="{{ !$message->leido ? 'table-warning' : '' }}">
+                                                            <td>
+                                                                <small>{{ $message->created_at->format('d/m/Y H:i') }}</small>
+                                                            </td>
+                                                            <td>
+                                                                <strong>{{ $message->user->person->nombre ?? $message->user->email }}</strong><br>
+                                                                <small class="text-muted">{{ $message->user->email }}</small>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge badge-info">
+                                                                    {{ \App\Models\ContactMessage::getMotivos()[$message->motivo] ?? $message->motivo }}
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <div style="max-width: 300px; word-wrap: break-word;">
+                                                                    {{ \Illuminate\Support\Str::limit($message->mensaje, 100) }}
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                @if($message->leido)
+                                                                    <span class="badge badge-success">Leído</span><br>
+                                                                    <small class="text-muted">
+                                                                        Por: {{ $message->leidoPor->person->nombre ?? $message->leidoPor->email }}<br>
+                                                                        {{ $message->leido_at->format('d/m/Y H:i') }}
+                                                                    </small>
+                                                                @else
+                                                                    <span class="badge badge-warning">No leído</span>
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                <button type="button" 
+                                                                        class="btn btn-sm btn-info" 
+                                                                        data-toggle="modal" 
+                                                                        data-target="#messageModal{{ $message->id }}">
+                                                                    <i class="fas fa-eye"></i> Ver
+                                                                </button>
+                                                                @if(!$message->leido)
+                                                                    <form action="{{ route('contact-messages.update', $message->id) }}" method="POST" class="d-inline">
+                                                                        @csrf
+                                                                        @method('PUT')
+                                                                        <button type="submit" class="btn btn-sm btn-success">
+                                                                            <i class="fas fa-check"></i> Marcar leído
+                                                                        </button>
+                                                                    </form>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                        
+                                                        {{-- Modal para ver mensaje completo --}}
+                                                        <div class="modal fade" id="messageModal{{ $message->id }}" tabindex="-1" role="dialog">
+                                                            <div class="modal-dialog modal-lg" role="document">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title">Mensaje de {{ $message->user->person->nombre ?? $message->user->email }}</h5>
+                                                                        <button type="button" class="close" data-dismiss="modal">
+                                                                            <span>&times;</span>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <p><strong>Fecha:</strong> {{ $message->created_at->format('d/m/Y H:i') }}</p>
+                                                                        <p><strong>Motivo:</strong> {{ \App\Models\ContactMessage::getMotivos()[$message->motivo] ?? $message->motivo }}</p>
+                                                                        <p><strong>Usuario:</strong> {{ $message->user->person->nombre ?? $message->user->email }} ({{ $message->user->email }})</p>
+                                                                        <hr>
+                                                                        <p><strong>Mensaje:</strong></p>
+                                                                        <p class="border rounded p-3 bg-light">{{ $message->mensaje }}</p>
+                                                                        @if($message->leido)
+                                                                            <hr>
+                                                                            <p class="text-muted">
+                                                                                <small>
+                                                                                    Leído por: {{ $message->leidoPor->person->nombre ?? $message->leidoPor->email }}<br>
+                                                                                    Fecha: {{ $message->leido_at->format('d/m/Y H:i') }}
+                                                                                </small>
+                                                                            </p>
+                                                                        @endif
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        @if(!$message->leido)
+                                                                            <form action="{{ route('contact-messages.update', $message->id) }}" method="POST" class="d-inline">
+                                                                                @csrf
+                                                                                @method('PUT')
+                                                                                <button type="submit" class="btn btn-success">
+                                                                                    <i class="fas fa-check"></i> Marcar como leído
+                                                                                </button>
+                                                                            </form>
+                                                                        @endif
+                                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @else
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i> No hay mensajes de contacto.
+                                        </div>
+                                    @endif
+                                @else
+                                    {{-- Vista para usuarios normales: formulario de contacto --}}
+                                    <h4 class="mb-3">Contactar a administración</h4>
+                                    <p class="text-muted mb-4">
+                                        Si tienes alguna consulta, problema o necesitas comunicarte directamente con un administrador o encargado, puedes enviar un mensaje aquí.
+                                    </p>
+                                    
+                                    <form action="{{ route('contact-messages.store') }}" method="POST">
+                                        @csrf
+                                        <div class="form-group">
+                                            <label for="motivo">Motivo del contacto <span class="text-danger">*</span></label>
+                                            <select name="motivo" id="motivo" class="form-control @error('motivo') is-invalid @enderror" required>
+                                                <option value="">Selecciona un motivo</option>
+                                                @foreach(\App\Models\ContactMessage::getMotivos() as $key => $label)
+                                                    <option value="{{ $key }}" {{ old('motivo') === $key ? 'selected' : '' }}>
+                                                        {{ $label }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('motivo')
+                                                <span class="invalid-feedback" role="alert">
+                                                    <strong>{{ $message }}</strong>
+                                                </span>
+                                            @enderror
+                                        </div>
 
-                                    <div class="form-group">
-                                        <label for="mensaje">Mensaje <span class="text-danger">*</span></label>
-                                        <textarea 
-                                            name="mensaje" 
-                                            id="mensaje" 
-                                            class="form-control @error('mensaje') is-invalid @enderror" 
-                                            rows="6" 
-                                            placeholder="Escribe tu mensaje aquí (mínimo 10 caracteres, máximo 1000 caracteres)..."
-                                            required
-                                            minlength="10"
-                                            maxlength="1000">{{ old('mensaje') }}</textarea>
-                                        <small class="form-text text-muted">
-                                            Mínimo 10 caracteres, máximo 1000 caracteres.
-                                        </small>
-                                        @error('mensaje')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                        @enderror
-                                    </div>
+                                        <div class="form-group">
+                                            <label for="mensaje">Mensaje <span class="text-danger">*</span></label>
+                                            <textarea 
+                                                name="mensaje" 
+                                                id="mensaje" 
+                                                class="form-control @error('mensaje') is-invalid @enderror" 
+                                                rows="6" 
+                                                placeholder="Escribe tu mensaje aquí (mínimo 10 caracteres, máximo 1000 caracteres)..."
+                                                required
+                                                minlength="10"
+                                                maxlength="1000">{{ old('mensaje') }}</textarea>
+                                            <small class="form-text text-muted">
+                                                Mínimo 10 caracteres, máximo 1000 caracteres.
+                                            </small>
+                                            @error('mensaje')
+                                                <span class="invalid-feedback" role="alert">
+                                                    <strong>{{ $message }}</strong>
+                                                </span>
+                                            @enderror
+                                        </div>
 
-                                    <div class="form-group">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-paper-plane"></i> Enviar mensaje
-                                        </button>
-                                    </div>
-                                </form>
+                                        <div class="form-group">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-paper-plane"></i> Enviar mensaje
+                                            </button>
+                                        </div>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -780,6 +904,14 @@
 
             setupCvPreview('cv_rescatista', 'cv_rescatista_preview', 'cv_rescatista_preview_container');
             setupCvPreview('cv_veterinario', 'cv_veterinario_preview', 'cv_veterinario_preview_container');
+
+            // Activar pestaña si hay hash en la URL
+            if (window.location.hash === '#contactar') {
+                const contactTab = document.querySelector('a[href="#contactar"]');
+                if (contactTab) {
+                    contactTab.click();
+                }
+            }
 
             // Mostrar/ocultar mapa de centros cuando se marca/desmarca el checkbox de cuidador
             const compromisoCheckbox = document.getElementById('compromiso_cuidador');
