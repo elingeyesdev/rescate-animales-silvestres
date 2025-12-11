@@ -111,9 +111,20 @@ class UserTrackingService
      */
     public function logUserRegistration(User $user, ?array $metadata = null): UserTracking
     {
+        $user->load('person');
+        $personName = $user->person?->nombre ?? 'N/A';
+        
+        $description = "Usuario registrado: {$user->email}";
+        if ($user->person) {
+            $description .= " - Nombre: {$personName}";
+            if ($user->person->ci) {
+                $description .= " - CI: {$user->person->ci}";
+            }
+        }
+
         return $this->log(
             actionType: 'registro',
-            actionDescription: "Usuario registrado: {$user->email}",
+            actionDescription: $description,
             userId: $user->id,
             newValues: [
                 'user_id' => $user->id,
@@ -373,6 +384,19 @@ class UserTrackingService
 
         $animalName = $animal?->nombre ?? 'Animal sin nombre';
         $description = "Evaluación médica realizada a: {$animalName}";
+        
+        // Agregar diagnóstico si está disponible
+        if ($medicalEvaluation->diagnostico) {
+            $diagnostico = strlen($medicalEvaluation->diagnostico) > 50 
+                ? substr($medicalEvaluation->diagnostico, 0, 50) . '...' 
+                : $medicalEvaluation->diagnostico;
+            $description .= " - Diagnóstico: {$diagnostico}";
+        }
+        
+        // Agregar fecha si está disponible
+        if ($medicalEvaluation->fecha) {
+            $description .= " - Fecha: {$medicalEvaluation->fecha->format('d/m/Y')}";
+        }
 
         return $this->log(
             actionType: 'evaluacion_medica',
@@ -419,6 +443,11 @@ class UserTrackingService
         $description = $approved 
             ? "Reporte aprobado: N°{$report->id}"
             : "Reporte rechazado: N°{$report->id}";
+        
+        // Agregar ubicación si está disponible
+        if ($report->direccion) {
+            $description .= " - {$report->direccion}";
+        }
 
         return $this->log(
             actionType: $action,
@@ -449,12 +478,32 @@ class UserTrackingService
         Model $application,
         ?int $userId = null
     ): UserTracking {
+        // Cargar relaciones necesarias según el tipo
+        if (method_exists($application, 'person')) {
+            $application->load('person');
+        }
+        
+        $personName = $application->person?->nombre ?? 'N/A';
+        
         $description = match($applicationType) {
-            'veterinarian' => "Solicitud de veterinario creada",
-            'rescuer' => "Solicitud de rescatista creada",
-            'caregiver' => "Solicitud de cuidador creada",
-            default => "Solicitud creada",
+            'veterinarian' => "Solicitud de veterinario creada por: {$personName}",
+            'rescuer' => "Solicitud de rescatista creada por: {$personName}",
+            'caregiver' => "Solicitud de cuidador creada por: {$personName}",
+            default => "Solicitud creada por: {$personName}",
         };
+        
+        // Agregar detalles específicos según el tipo
+        if ($applicationType === 'veterinarian' && isset($application->especialidad)) {
+            $description .= " - Especialidad: {$application->especialidad}";
+        }
+        
+        if ($applicationType === 'caregiver' && method_exists($application, 'cuidadorCenter') && $application->cuidadorCenter) {
+            $application->load('cuidadorCenter');
+            $centerName = $application->cuidadorCenter?->nombre ?? '';
+            if ($centerName) {
+                $description .= " - Centro: {$centerName}";
+            }
+        }
 
         return $this->log(
             actionType: 'solicitud',
@@ -465,9 +514,14 @@ class UserTrackingService
             newValues: [
                 'application_type' => $applicationType,
                 'application_id' => $application->id,
+                'persona_id' => $application->persona_id ?? $application->id ?? null,
             ],
             metadata: [
                 'application_type' => $applicationType,
+                'person' => $application->person ? [
+                    'id' => $application->person->id,
+                    'nombre' => $application->person->nombre,
+                ] : null,
             ],
             performedBy: Auth::id()
         );
@@ -484,8 +538,32 @@ class UserTrackingService
         $user = $report->person?->user ?? ($userId ? User::find($userId) : null);
 
         $description = "Registro de hallazgo creado: N°{$report->id}";
+        
+        // Agregar ubicación
         if ($report->direccion) {
             $description .= " - {$report->direccion}";
+        }
+        
+        // Agregar tipo de incidente si está disponible
+        if ($report->incidentType?->nombre) {
+            $description .= " - Tipo: {$report->incidentType->nombre}";
+        }
+        
+        // Agregar condición inicial si está disponible
+        if ($report->condicionInicial?->nombre) {
+            $description .= " - Condición: {$report->condicionInicial->nombre}";
+        }
+        
+        // Agregar urgencia si está disponible
+        if ($report->urgencia) {
+            $urgenciaLabels = [
+                'baja' => 'Baja',
+                'media' => 'Media',
+                'alta' => 'Alta',
+                'critica' => 'Crítica',
+            ];
+            $urgenciaLabel = $urgenciaLabels[$report->urgencia] ?? ucfirst($report->urgencia);
+            $description .= " - Urgencia: {$urgenciaLabel}";
         }
 
         return $this->log(
@@ -530,6 +608,19 @@ class UserTrackingService
         if ($transfer->center) {
             $description .= " hacia: {$transfer->center->nombre}";
         }
+        
+        // Agregar información del animal si está disponible
+        if ($transfer->animal_id) {
+            $description .= " - Animal ID: {$transfer->animal_id}";
+        }
+        
+        // Agregar fecha si está disponible
+        if (isset($transfer->fecha) && $transfer->fecha) {
+            $fecha = $transfer->fecha instanceof \Carbon\Carbon 
+                ? $transfer->fecha->format('d/m/Y') 
+                : $transfer->fecha;
+            $description .= " - Fecha: {$fecha}";
+        }
 
         return $this->log(
             actionType: 'traslado',
@@ -570,6 +661,19 @@ class UserTrackingService
         $animalName = $animal?->nombre ?? 'Animal sin nombre';
         $careTypeName = $care->careType?->nombre ?? 'Cuidado';
         $description = "Cuidado '{$careTypeName}' registrado para: {$animalName}";
+        
+        // Agregar fecha si está disponible
+        if ($care->fecha) {
+            $description .= " - Fecha: {$care->fecha->format('d/m/Y')}";
+        }
+        
+        // Agregar descripción breve si está disponible
+        if ($care->descripcion) {
+            $descripcion = strlen($care->descripcion) > 40 
+                ? substr($care->descripcion, 0, 40) . '...' 
+                : $care->descripcion;
+            $description .= " - {$descripcion}";
+        }
 
         return $this->log(
             actionType: 'cuidado',
@@ -610,6 +714,22 @@ class UserTrackingService
 
         $animalName = $animal?->nombre ?? 'Animal sin nombre';
         $description = "Alimentación registrada para: {$animalName}";
+        
+        // Cargar relaciones de tipo de alimentación, frecuencia y porción si existen
+        if (method_exists($careFeeding, 'feedingType') && $careFeeding->feedingType) {
+            $careFeeding->load('feedingType');
+            $description .= " - Tipo: {$careFeeding->feedingType->nombre}";
+        }
+        
+        if (method_exists($careFeeding, 'feedingFrequency') && $careFeeding->feedingFrequency) {
+            $careFeeding->load('feedingFrequency');
+            $description .= " - Frecuencia: {$careFeeding->feedingFrequency->nombre}";
+        }
+        
+        if (method_exists($careFeeding, 'feedingPortion') && $careFeeding->feedingPortion) {
+            $careFeeding->load('feedingPortion');
+            $description .= " - Porción: {$careFeeding->feedingPortion->nombre}";
+        }
 
         return $this->log(
             actionType: 'alimentacion',
@@ -691,7 +811,45 @@ class UserTrackingService
         $person->load('user');
         $user = $person->user;
 
+        // Si no se proporcionan newValues, obtenerlos del modelo actual
+        if ($newValues === null) {
+            $newValues = [
+                'nombre' => $person->nombre,
+                'ci' => $person->ci,
+                'telefono' => $person->telefono,
+                'es_cuidador' => $person->es_cuidador,
+                'foto_path' => $person->foto_path,
+                'cuidador_center_id' => $person->cuidador_center_id,
+            ];
+        }
+
+        // Detectar qué campos cambiaron
+        $changedFields = $this->detectChangedFields($oldValues, $newValues);
+        
+        // Generar descripción detallada
         $description = "Perfil actualizado: {$person->nombre}";
+        if (!empty($changedFields)) {
+            $fieldLabels = [
+                'nombre' => 'nombre',
+                'ci' => 'CI',
+                'telefono' => 'teléfono',
+                'es_cuidador' => 'estado de cuidador',
+                'foto_path' => 'foto de perfil',
+                'cuidador_center_id' => 'centro de cuidador',
+            ];
+            
+            $changedLabels = [];
+            foreach ($changedFields as $field) {
+                $changedLabels[] = $fieldLabels[$field] ?? $field;
+            }
+            
+            if (count($changedLabels) === 1) {
+                $description .= " - Se actualizó: " . $changedLabels[0];
+            } else {
+                $lastField = array_pop($changedLabels);
+                $description .= " - Se actualizaron: " . implode(', ', $changedLabels) . " y " . $lastField;
+            }
+        }
 
         return $this->log(
             actionType: 'actualizacion_perfil',
@@ -700,20 +858,56 @@ class UserTrackingService
             relatedModelType: 'Person',
             relatedModelId: $person->id,
             oldValues: $oldValues,
-            newValues: $newValues ?? [
-                'persona_id' => $person->id,
-                'nombre' => $person->nombre,
-                'ci' => $person->ci,
-                'telefono' => $person->telefono,
-            ],
+            newValues: $newValues,
             metadata: [
                 'person' => [
                     'id' => $person->id,
                     'nombre' => $person->nombre,
                 ],
+                'changed_fields' => $changedFields,
             ],
             performedBy: Auth::id()
         );
+    }
+
+    /**
+     * Detectar campos que cambiaron entre valores antiguos y nuevos
+     */
+    private function detectChangedFields(?array $oldValues, ?array $newValues): array
+    {
+        if ($oldValues === null || $newValues === null) {
+            return [];
+        }
+
+        $changedFields = [];
+        
+        foreach ($newValues as $key => $newValue) {
+            $oldValue = $oldValues[$key] ?? null;
+            
+            // Normalizar valores para comparación
+            // Manejar booleanos
+            if (is_bool($oldValue) || is_bool($newValue)) {
+                $oldValueNormalized = (bool)$oldValue;
+                $newValueNormalized = (bool)$newValue;
+            }
+            // Manejar números
+            elseif (is_numeric($oldValue) || is_numeric($newValue)) {
+                $oldValueNormalized = $oldValue !== null ? (float)$oldValue : null;
+                $newValueNormalized = $newValue !== null ? (float)$newValue : null;
+            }
+            // Manejar strings y null
+            else {
+                $oldValueNormalized = $oldValue === null ? '' : (string)$oldValue;
+                $newValueNormalized = $newValue === null ? '' : (string)$newValue;
+            }
+            
+            // Comparar valores normalizados
+            if ($oldValueNormalized !== $newValueNormalized) {
+                $changedFields[] = $key;
+            }
+        }
+
+        return $changedFields;
     }
 
     /**

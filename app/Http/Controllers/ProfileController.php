@@ -103,12 +103,14 @@ class ProfileController extends Controller
             $person = new Person();
             $person->usuario_id = $user->id;
         } else {
-            // Guardar valores antiguos para tracking
+            // Guardar valores antiguos para tracking (incluyendo todos los campos relevantes)
             $oldPersonData = [
                 'nombre' => $person->nombre,
                 'ci' => $person->ci,
                 'telefono' => $person->telefono,
                 'es_cuidador' => $person->es_cuidador,
+                'foto_path' => $person->foto_path,
+                'cuidador_center_id' => $person->cuidador_center_id,
             ];
         }
 
@@ -155,19 +157,22 @@ class ProfileController extends Controller
         }
 
         // Guardar foto si viene adjunta
+        $oldFotoPath = $person->foto_path;
         if ($request->hasFile('foto')) {
             $path = $request->file('foto')->store('personas', 'public');
             $person->foto_path = $path;
         }
         $person->save();
 
-        // Registrar tracking de actualización de perfil
+        // Registrar tracking de actualización de perfil (incluyendo todos los campos relevantes)
         try {
             $newPersonData = [
                 'nombre' => $person->nombre,
                 'ci' => $person->ci,
                 'telefono' => $person->telefono,
                 'es_cuidador' => $person->es_cuidador,
+                'foto_path' => $person->foto_path,
+                'cuidador_center_id' => $person->cuidador_center_id,
             ];
             app(UserTrackingService::class)->logProfileUpdate($person, $oldPersonData, $newPersonData);
         } catch (\Exception $e) {
