@@ -44,6 +44,10 @@ return [
         'api_base' => env('NASA_FIRMS_API_BASE', 'https://firms.modaps.eosdis.nasa.gov/api/area/csv'),
     ],
 
+    'hotspots_integration' => [
+        'api_url' => env('HOTSPOTS_INTEGRATION_API_URL', ''),
+    ],
+
     'open_meteo' => [
         'api_url' => env('OPEN_METEO_API_URL', 'https://api.open-meteo.com/v1/forecast'),
     ],

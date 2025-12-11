@@ -277,7 +277,7 @@
             // Agregar marcadores de animales liberados
             addReleaseMarkers();
             
-            // Agregar marcadores de focos de calor (desde BD, no API)
+            // Agregar marcadores de focos de calor (intenta primero API de integración, luego FIRMS desde BD)
             addFocosCalorMarkers();
 
             // Toggle de reportes/hallazgos
@@ -341,6 +341,26 @@
                 console.log('[Clima] Obteniendo datos meteorológicos para:', lat, lng);
                 getWeatherData(lat, lng);
             });
+
+            // Ajustar vista para mostrar todos los marcadores visibles después de agregar todos
+            setTimeout(function() {
+                const allVisibleMarkers = [
+                    ...markers.filter(m => {
+                        if (!showReports) return false;
+                        if (reportStatusFilter === 'all') return true;
+                        if (reportStatusFilter === 'with_file' && m.report.tiene_hoja_vida) return true;
+                        if (reportStatusFilter === 'without_file' && !m.report.tiene_hoja_vida) return true;
+                        return false;
+                    }).map(m => m.marker),
+                    ...releaseMarkers.filter(m => showReleases && (!selectedSpeciesId || m.release.especie_id == selectedSpeciesId)).map(m => m.marker),
+                    ...focosCalorMarkers.filter(() => showFocosCalor)
+                ];
+                
+                if (allVisibleMarkers.length > 0) {
+                    const group = new L.featureGroup(allVisibleMarkers);
+                    map.fitBounds(group.getBounds().pad(0.1));
+                }
+            }, 500);
         }
 
         /**
@@ -850,23 +870,6 @@
                         loadFirePrediction(report.incendio_id);
                     }
                 });
-            }
-
-            // Ajustar vista para mostrar todos los marcadores visibles
-            const allVisibleMarkers = [
-                ...markers.filter(m => {
-                    if (!showReports) return false;
-                    if (reportStatusFilter === 'all') return true;
-                    if (reportStatusFilter === 'with_file' && m.report.tiene_hoja_vida) return true;
-                    if (reportStatusFilter === 'without_file' && !m.report.tiene_hoja_vida) return true;
-                    return false;
-                }).map(m => m.marker),
-                ...releaseMarkers.filter(m => showReleases && (!selectedSpeciesId || m.release.especie_id == selectedSpeciesId)).map(m => m.marker)
-            ];
-            
-            if (allVisibleMarkers.length > 0) {
-                const group = new L.featureGroup(allVisibleMarkers);
-                map.fitBounds(group.getBounds().pad(0.1));
             }
         }
 

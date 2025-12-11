@@ -61,6 +61,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('claim', [ReportController::class, 'claim'])->name('claim');
     Route::post('claim', [ReportController::class, 'claimStore'])->name('claim.store');
     Route::get('mapa-campo', [ReportController::class, 'mapaCampo'])->name('mapa-campo')->middleware(['auth', 'role:admin|encargado']);
+    Route::get('external-fire-reports', [ReportController::class, 'getExternalFireReportsApi'])->name('external-fire-reports.api')->middleware(['auth', 'role:admin|encargado']);
+    Route::get('external-fire-report/{externalId}', [ReportController::class, 'getExternalFireReportDetails'])->name('external-fire-report.details')->middleware(['auth', 'role:admin|encargado']);
 });
 
 Route::resource('profile', ProfileController::class)->only(['index', 'update'])->middleware('auth');

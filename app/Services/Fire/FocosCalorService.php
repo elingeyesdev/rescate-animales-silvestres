@@ -6,6 +6,7 @@ use App\Models\FocosCalor;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 /**
  * Servicio para consultar focos de calor desde la base de datos local
@@ -41,6 +42,143 @@ class FocosCalorService
             ->orderBy('acq_date', 'desc')
             ->orderBy('acq_time', 'desc')
             ->get();
+    }
+
+    /**
+     * Obtener focos de calor intentando primero desde la API de integración,
+     * si falla, usar datos de FIRMS desde la BD
+     * 
+     * @param int $days Número de días hacia atrás
+     * @return Collection
+     */
+    public function getRecentHotspotsWithFallback(int $days = 2): Collection
+    {
+        try {
+            // Intentar primero obtener desde la API de integración
+            $integrationData = $this->fetchFromIntegrationApi();
+            
+            if ($integrationData !== null && !empty($integrationData) && is_array($integrationData)) {
+                // Convertir los datos de la API a formato Collection de modelos FocosCalor
+                $collection = $this->convertIntegrationDataToCollection($integrationData);
+                if ($collection->isNotEmpty()) {
+                    return $collection;
+                }
+            }
+        } catch (\Exception $e) {
+            // Si hay cualquier error, continuar con el fallback
+        }
+        
+        // Si falla, usar datos de FIRMS desde la BD
+        return $this->getRecentHotspots($days);
+    }
+
+    /**
+     * Intentar obtener datos del endpoint de integración (2 intentos)
+     */
+    private function fetchFromIntegrationApi(): ?array
+    {
+        $apiUrl = config('services.hotspots_integration.api_url');
+        
+        if (empty($apiUrl)) {
+            return null;
+        }
+
+        $maxAttempts = 2;
+        
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            try {
+                $response = Http::timeout(10)->get($apiUrl);
+                
+                if ($response->successful()) {
+                    $data = $response->json();
+                    
+                    if (isset($data['success']) && $data['success'] === true && isset($data['data']) && is_array($data['data'])) {
+                        return $data['data'];
+                    }
+                }
+            } catch (\Exception $e) {
+                // Silenciar errores, solo intentar de nuevo
+            }
+            
+            // Esperar un poco antes del siguiente intento (excepto en el último)
+            if ($attempt < $maxAttempts) {
+                usleep(500000); // 0.5 segundos
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Convertir datos de la API de integración a Collection de modelos FocosCalor
+     */
+    private function convertIntegrationDataToCollection(array $hotspots): Collection
+    {
+        $collection = collect();
+        
+        foreach ($hotspots as $hotspot) {
+            if (!isset($hotspot['latitude']) || !isset($hotspot['longitude'])) {
+                continue;
+            }
+
+            // Convertir fecha de DD/MM/YYYY a formato Carbon
+            $dateStr = $hotspot['date'] ?? null;
+            if ($dateStr) {
+                $dateParts = explode('/', $dateStr);
+                if (count($dateParts) === 3) {
+                    $acqDate = Carbon::createFromDate($dateParts[2], $dateParts[1], $dateParts[0]);
+                } else {
+                    $acqDate = Carbon::parse($dateStr);
+                }
+            } else {
+                $acqDate = Carbon::today();
+            }
+
+            // Convertir tiempo de "412" a "04:12:00"
+            $timeStr = $hotspot['time'] ?? '0000';
+            $timeStr = str_pad($timeStr, 4, '0', STR_PAD_LEFT);
+            $formattedTime = substr($timeStr, 0, 2) . ':' . substr($timeStr, 2, 2) . ':00';
+
+            // Handle confidence
+            $confidence = $hotspot['confidence'] ?? null;
+            if (!is_numeric($confidence)) {
+                $confidenceMap = ['l' => 0, 'n' => 50, 'h' => 100];
+                $confidence = $confidenceMap[strtolower($confidence)] ?? 50;
+            } else {
+                $confidence = (int) $confidence;
+            }
+
+            // Mapear brightness
+            $brightness = isset($hotspot['brightness']) ? (float) $hotspot['brightness'] : null;
+            $satellite = $hotspot['satellite'] ?? '';
+            
+            $brightTi4 = null;
+            $brightTi5 = null;
+            if (stripos($satellite, 'VIIRS') !== false || stripos($satellite, 'N21') !== false || stripos($satellite, 'SNPP') !== false) {
+                $brightTi4 = $brightness;
+            } else {
+                $brightTi5 = $brightness;
+            }
+
+            // Crear modelo temporal (no guardado en BD)
+            $focoCalor = new FocosCalor();
+            $focoCalor->latitude = (float) $hotspot['latitude'];
+            $focoCalor->longitude = (float) $hotspot['longitude'];
+            $focoCalor->confidence = $confidence;
+            $focoCalor->acq_date = $acqDate;
+            $focoCalor->acq_time = $formattedTime;
+            $focoCalor->bright_ti4 = $brightTi4;
+            $focoCalor->bright_ti5 = $brightTi5;
+            $focoCalor->frp = isset($hotspot['frp']) ? (float) $hotspot['frp'] : null;
+            
+            // Asignar un ID temporal único para evitar conflictos
+            $focoCalor->id = 'integration_' . md5($hotspot['latitude'] . $hotspot['longitude'] . $dateStr . $timeStr);
+            $focoCalor->exists = false; // Marcar como no persistido
+            
+            $collection->push($focoCalor);
+        }
+        
+        return $collection;
     }
 
     /**
@@ -140,17 +278,33 @@ class FocosCalorService
 
         // Formatear directamente sin caché (el procesamiento es rápido)
         return $hotspots->map(function ($hotspot) {
-            return [
-                'id' => $hotspot->id,
-                'lat' => (float) $hotspot->latitude,
-                'lng' => (float) $hotspot->longitude,
-                'confidence' => $hotspot->confidence,
-                'date' => $hotspot->acq_date->format('d/m/Y'),
-                'time' => $hotspot->acq_time,
-                'frp' => $hotspot->frp,
-                'brightness' => $hotspot->bright_ti4 ?? $hotspot->bright_ti5,
-            ];
-        })->toArray();
+            try {
+                // Manejar tanto modelos de BD como modelos temporales
+                $acqDate = $hotspot->acq_date;
+                if ($acqDate instanceof Carbon) {
+                    $dateFormatted = $acqDate->format('d/m/Y');
+                } elseif (is_string($acqDate)) {
+                    $dateFormatted = Carbon::parse($acqDate)->format('d/m/Y');
+                } else {
+                    $dateFormatted = Carbon::now()->format('d/m/Y');
+                }
+                
+                return [
+                    'id' => $hotspot->id ?? null,
+                    'lat' => (float) ($hotspot->latitude ?? 0),
+                    'lng' => (float) ($hotspot->longitude ?? 0),
+                    'confidence' => $hotspot->confidence ?? 0,
+                    'date' => $dateFormatted,
+                    'time' => $hotspot->acq_time ?? '00:00:00',
+                    'frp' => $hotspot->frp ?? null,
+                    'brightness' => $hotspot->bright_ti4 ?? $hotspot->bright_ti5 ?? null,
+                ];
+            } catch (\Exception $e) {
+                // Si hay error formateando un hotspot, omitirlo
+                \Log::warning('Error formateando hotspot: ' . $e->getMessage());
+                return null;
+            }
+        })->filter()->toArray(); // Filtrar nulls
     }
 
     /**

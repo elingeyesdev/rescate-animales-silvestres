@@ -30,9 +30,12 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+// Ruta pública para reports (sin autenticación)
+Route::post('/reports', [ReportApiController::class, 'store'])->name('api.reports.public');
+
 Route::name('api.')->group(function () {
     Route::apiResource('login', AuthApiController::class)->only(['store']);
-    Route::apiResource('reports', ReportApiController::class);
+    Route::apiResource('reports', ReportApiController::class)->except(['store']);
     Route::apiResource('animals', AnimalApiController::class)->only(['index', 'show']);
     Route::apiResource('animal-files', AnimalFileApiController::class)->only(['index', 'show', 'store']);
     Route::apiResource('animal-cares', AnimalCareApiController::class)->only(['index', 'show', 'store']);

@@ -434,9 +434,8 @@ class ReportController extends Controller
             ],
         ]);
 
-        // Obtener focos de calor reales desde la BD (en lugar de llamar a la API)
-        // Esto es mucho más eficiente y no excede los límites de la API
-        $focosCalor = $this->focosCalorService->getRecentHotspots(2);
+        // Obtener focos de calor (intenta primero desde API de integración, luego FIRMS)
+        $focosCalor = $this->focosCalorService->getRecentHotspotsWithFallback(2);
         $focosCalorFormatted = $this->focosCalorService->formatForMap($focosCalor);
 
         // No obtener animales regulares, solo los liberados (que vienen en releases)

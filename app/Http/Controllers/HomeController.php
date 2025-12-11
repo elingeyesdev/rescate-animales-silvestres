@@ -87,8 +87,8 @@ class HomeController extends Controller
             ],
         ]);
 
-        // Obtener focos de calor
-        $focosCalor = $this->focosCalorService->getRecentHotspots(2);
+        // Obtener focos de calor (intenta primero desde API de integración, luego FIRMS)
+        $focosCalor = $this->focosCalorService->getRecentHotspotsWithFallback(2);
         $focosCalorFormatted = $this->focosCalorService->formatForMap($focosCalor);
 
         // Obtener liberaciones
