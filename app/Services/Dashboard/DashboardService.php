@@ -111,6 +111,9 @@ class DashboardService
 
                 // KPI de Efectividad
                 'effectivenessReleasedRescued' => $this->getEffectivenessReleasedRescued(),
+
+                // Top 5 voluntarios más activos
+                'topVolunteers' => $this->getTopVolunteers(5),
             ];
         });
     }
@@ -680,6 +683,93 @@ class DashboardService
             'rescued' => $rescued,
             'percentage' => $percentage,
         ];
+    }
+
+    /**
+     * Obtiene el Top N de voluntarios más activos
+     * Excluye admin, encargado y actualizaciones de perfiles
+     * Cuenta: reportes, traslados, evaluaciones médicas
+     * 
+     * @param int $limit
+     * @return array
+     */
+    private function getTopVolunteers(int $limit = 5): array
+    {
+        // Obtener IDs de usuarios admin y encargado para excluirlos
+        $adminUserIds = \App\Models\User::whereHas('roles', function($query) {
+            $query->whereIn('name', ['admin', 'encargado']);
+        })->pluck('id')->toArray();
+
+        // Obtener IDs de personas asociadas a admin/encargado
+        $adminPersonIds = Person::whereIn('usuario_id', $adminUserIds)->pluck('id')->toArray();
+
+        // Si no hay admin/encargado, usar array vacío
+        $adminPersonIdsClause = empty($adminPersonIds) ? '0' : implode(',', $adminPersonIds);
+        $adminUserIdsClause = empty($adminUserIds) ? '0' : implode(',', $adminUserIds);
+
+        // Contar contribuciones por persona usando agregación SQL
+        // Usar subconsulta para evitar problema con HAVING en PostgreSQL
+        $contributions = DB::select("
+            SELECT 
+                person_id,
+                nombre,
+                user_id,
+                email,
+                total,
+                reports,
+                transfers,
+                evaluations
+            FROM (
+                SELECT 
+                    p.id as person_id,
+                    p.nombre,
+                    p.usuario_id as user_id,
+                    COALESCE(u.email, '') as email,
+                    (COALESCE(r.reports_count, 0) + COALESCE(t.transfers_count, 0) + COALESCE(e.evaluations_count, 0)) as total,
+                    COALESCE(r.reports_count, 0) as reports,
+                    COALESCE(t.transfers_count, 0) as transfers,
+                    COALESCE(e.evaluations_count, 0) as evaluations
+                FROM people p
+                LEFT JOIN users u ON p.usuario_id = u.id
+                LEFT JOIN (
+                    SELECT persona_id, COUNT(*) as reports_count 
+                    FROM reports 
+                    WHERE persona_id NOT IN ({$adminPersonIdsClause})
+                    GROUP BY persona_id
+                ) r ON p.id = r.persona_id
+                LEFT JOIN (
+                    SELECT persona_id, COUNT(*) as transfers_count 
+                    FROM transfers 
+                    WHERE persona_id NOT IN ({$adminPersonIdsClause})
+                    GROUP BY persona_id
+                ) t ON p.id = t.persona_id
+                LEFT JOIN (
+                    SELECT v.persona_id, COUNT(*) as evaluations_count 
+                    FROM medical_evaluations me
+                    INNER JOIN veterinarians v ON me.veterinario_id = v.id 
+                    WHERE v.persona_id NOT IN ({$adminPersonIdsClause})
+                    GROUP BY v.persona_id
+                ) e ON p.id = e.persona_id
+                WHERE p.usuario_id NOT IN ({$adminUserIdsClause})
+                AND p.usuario_id IS NOT NULL
+            ) as contributions
+            WHERE total > 0
+            ORDER BY total DESC
+            LIMIT ?
+        ", [$limit]);
+
+        return array_map(function($item) {
+            return [
+                'user_id' => $item->user_id,
+                'person_id' => $item->person_id,
+                'nombre' => $item->nombre ?? 'Sin nombre',
+                'email' => $item->email ?? '',
+                'total' => (int)$item->total,
+                'reports' => (int)$item->reports,
+                'transfers' => (int)$item->transfers,
+                'evaluations' => (int)$item->evaluations,
+            ];
+        }, $contributions);
     }
 }
 
