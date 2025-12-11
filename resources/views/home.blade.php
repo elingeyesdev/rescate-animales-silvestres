@@ -551,7 +551,7 @@
                                                 <table class="table table-sm table-hover">
                                                     <thead>
                                                         <tr>
-                                                            <th style="width: 40px;">#</th>
+                                                            <th style="width: 40px;">N°</th>
                                                             <th>Voluntario</th>
                                                             <th class="text-center">Total</th>
                                                             <th class="text-right">Desglose</th>
@@ -584,13 +584,13 @@
                                                                 <td class="text-right">
                                                                     <small class="text-muted">
                                                                         @if($volunteer['reports'] > 0)
-                                                                            <span class="badge badge-info">{{ $volunteer['reports'] }} R</span>
+                                                                            <span class="badge badge-info">{{ $volunteer['reports'] }} Hallazgos</span>
                                                                         @endif
                                                                         @if($volunteer['transfers'] > 0)
-                                                                            <span class="badge badge-success">{{ $volunteer['transfers'] }} T</span>
+                                                                            <span class="badge badge-success">{{ $volunteer['transfers'] }} Traslados</span>
                                                                         @endif
                                                                         @if($volunteer['evaluations'] > 0)
-                                                                            <span class="badge badge-warning">{{ $volunteer['evaluations'] }} E</span>
+                                                                            <span class="badge badge-warning">{{ $volunteer['evaluations'] }} Evaluaciones</span>
                                                                         @endif
                                                                     </small>
                                                                 </td>
