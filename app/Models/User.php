@@ -67,6 +67,14 @@ class User extends Authenticatable
         return $this->person->nombre ?? $this->attributes['email'] ?? '';
     }
 
+    public function adminlte_image()
+    {
+        if ($this->person && $this->person->foto_path) {
+            return asset('storage/' . $this->person->foto_path);
+        }
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
+    }
+
     /**
      * URL del perfil de usuario para el menú de AdminLTE.
      */

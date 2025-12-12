@@ -133,7 +133,7 @@ return [
     |
     */
  
-    'usermenu_enabled' => true,
+    'usermenu_enabled' => false,
     // Mostramos un header dentro del dropdown del usuario (ahí se verá nombre + roles)
     'usermenu_header' => true,
     'usermenu_header_class' => 'bg-primary',
