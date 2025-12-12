@@ -1,59 +1,167 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de Rescate Animal Integrado
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Descripción del Proyecto
 
-## About Laravel
+El Sistema de Rescate Animal Integrado es una plataforma de software diseñada para optimizar y digitalizar la gestión operativa de organizaciones dedicadas al bienestar animal. Esta solución permite la administración centralizada de expedientes médicos, seguimiento de rescates, control de inventario veterinario y gestión de procesos de adopción.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+El objetivo principal es proporcionar una herramienta robusta y escalable que facilite la toma de decisiones basada en datos, garantizando la trazabilidad de cada animal desde su ingreso hasta su adopción final.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tecnologías Utilizadas
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+El sistema ha sido desarrollado utilizando un stack tecnológico moderno y robusto:
 
-## Learning Laravel
+*   **Framework Backend**: Laravel 11 (PHP 8.2+)
+*   **Base de Datos**: PostgreSQL 16
+*   **Frontend**: Blade Templating Engine con AdminLTE 3 (Bootstrap 4)
+*   **Contenedorización**: Docker & Docker Compose
+*   **Gestión de Dependencias**: Composer (PHP) y NPM (Node.js)
+*   **Control de Acceso**: Laravel Sanctum y Spatie Permission
+*   **Compilación de Assets**: Vite
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Requisitos del Sistema
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Antes de iniciar la instalación, asegúrese de cumplir con los siguientes requisitos según el entorno de despliegue seleccionado:
 
-## Laravel Sponsors
+### Entorno con Docker (Recomendado)
+*   Docker Engine 20.10+
+*   Docker Compose V2+
+*   Git
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Entorno Local (Manual)
+*   PHP >= 8.2
+*   Composer >= 2.0
+*   Node.js >= 18.0
+*   PostgreSQL >= 14
+*   Extensiones de PHP requeridas: BCMath, Ctype, Fileinfo, JSON, Mbstring, OpenSSL, PDO, Tokenizer, XML.
 
-### Premium Partners
+## Guía de Instalación y Configuración
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Opción 1: Despliegue en Contenedores (Docker)
 
-## Contributing
+Este método garantiza que todas las dependencias y servicios se ejecuten en un entorno aislado y preconfigurado.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1.  **Clonación del Repositorio**
+    Descargue el código fuente en su directorio de trabajo:
+    ```bash
+    git clone https://github.com/tu-usuario/rescate-integrado.git
+    cd rescate-integrado
+    ```
 
-## Code of Conduct
+2.  **Configuración de Variables de Entorno**
+    Copie el archivo de configuración de ejemplo. Las credenciales predeterminadas están optimizadas para el entorno Docker.
+    ```bash
+    cp .env.example .env
+    ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+3.  **Inicio de Servicios**
+    Ejecute el siguiente comando para construir las imágenes e iniciar los contenedores en segundo plano:
+    ```bash
+    docker compose up -d --build
+    ```
 
-## Security Vulnerabilities
+4.  **Instalación de Dependencias y Configuración Inicial**
+    Una vez que los contenedores estén activos, ejecute los siguientes comandos para finalizar la configuración:
+    ```bash
+    # Instalar dependencias de backend
+    docker compose exec app composer install
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+    # Generar clave de encriptación de la aplicación
+    docker compose exec app php artisan key:generate
 
-## License
+    # Ejecutar migraciones de base de datos y cargar datos de prueba
+    docker compose exec app php artisan migrate --seed
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+    # Instalar y compilar dependencias de frontend
+    docker compose exec app npm install
+    docker compose exec app npm run build
+    ```
+
+5.  **Acceso al Sistema**
+    La aplicación estará disponible en: `http://localhost:8000`
+
+### Opción 2: Instalación Manual en Servidor Local
+
+1.  **Instalación de Dependencias PHP**
+    ```bash
+    composer install
+    ```
+
+2.  **Configuración de Base de Datos**
+    Cree una base de datos PostgreSQL vacía y configure el archivo `.env` con sus credenciales locales:
+    ```ini
+    DB_CONNECTION=pgsql
+    DB_HOST=127.0.0.1
+    DB_PORT=5432
+    DB_DATABASE=nombre_de_su_base_datos
+    DB_USERNAME=su_usuario
+    DB_PASSWORD=su_contraseña
+    ```
+
+3.  **Inicialización del Proyecto**
+    ```bash
+    php artisan key:generate
+    php artisan migrate --seed
+    ```
+
+4.  **Compilación de Assets**
+    ```bash
+    npm install
+    npm run build
+    ```
+
+5.  **Ejecución del Servidor de Desarrollo**
+    ```bash
+    php artisan serve
+    ```
+
+## Arquitectura y Módulos
+
+El sistema se divide en módulos funcionales interconectados:
+
+### 1. Gestión de Expedientes
+Permite el registro detallado de cada animal, incluyendo fotografías, características físicas, historial de comportamiento y ubicación actual (refugio o casa cuna).
+
+### 2. Módulo Veterinario
+Control integral de la salud del animal. Incluye:
+*   Registro de vacunas y desparasitaciones.
+*   Historial de consultas médicas y cirugías.
+*   Seguimiento de tratamientos activos.
+
+### 3. Operaciones de Rescate
+Gestión de reportes ciudadanos, asignación de unidades de rescate y documentación del estado inicial del animal al momento del ingreso.
+
+### 4. Gestión de Adopciones
+Flujo de trabajo para el procesamiento de solicitudes de adopción, evaluación de candidatos y seguimiento post-adopción.
+
+## Control de Acceso y Roles
+
+El sistema implementa un estricto control de acceso basado en roles (RBAC). A continuación se detallan las credenciales predeterminadas para el entorno de desarrollo:
+
+| Rol | Correo Electrónico | Contraseña Predeterminada | Nivel de Acceso |
+| :--- | :--- | :--- | :--- |
+| **Administrador** | `rescateanimales25@gmail.com` | `rescate123` | Acceso total al sistema y configuración. |
+| **Veterinario** | (Creación manual requerida) | - | Acceso a expedientes médicos y tratamientos. |
+| **Rescatista** | (Creación manual requerida) | - | Acceso a módulo de reportes y traslados. |
+
+*Nota: Se recomienda cambiar estas credenciales inmediatamente después del despliegue en un entorno de producción.*
+
+## Solución de Problemas Frecuentes
+
+### Error: "Vite manifest not found"
+Este error indica que los archivos estáticos (CSS/JS) no han sido compilados.
+**Solución:** Ejecute `npm run build` en su entorno (local o dentro del contenedor).
+
+### Error de Conexión a Base de Datos (SQLSTATE[08006])
+Generalmente ocurre cuando el puerto 5432 ya está en uso por otra instancia de PostgreSQL en el sistema anfitrión.
+**Solución:** Detenga el servicio local de PostgreSQL o modifique el puerto externo en el archivo `docker-compose.yml`.
+
+### Permisos de Escritura
+Si la aplicación reporta errores al escribir logs o guardar imágenes.
+**Solución:** Otorgue permisos a las carpetas de almacenamiento:
+```bash
+chmod -R 775 storage bootstrap/cache
+```
+
+## Licencia
+
+Este proyecto es software de código abierto licenciado bajo la [Licencia MIT](https://opensource.org/licenses/MIT).
