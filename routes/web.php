@@ -72,7 +72,11 @@ Route::resource('animals', AnimalController::class)->middleware('auth');
 Route::resource('animal-profiles', AnimalProfileController::class)->middleware('auth');
 Route::resource('dispositions', DispositionController::class)->middleware('auth');
 Route::resource('health-records', HealthRecordController::class)->middleware('auth');
-Route::resource('reports', ReportController::class)->middleware('auth');
+// Rutas de reports: create y store sin autenticación (para registro rápido desde landing)
+Route::get('reports/create', [ReportController::class, 'create'])->name('reports.create');
+Route::post('reports', [ReportController::class, 'store'])->name('reports.store');
+// Resto de rutas de reports con autenticación
+Route::resource('reports', ReportController::class)->except(['create', 'store'])->middleware('auth');
 Route::resource('animal-statuses', AnimalStatusController::class)->middleware('auth');
 Route::resource('care-types', CareTypeController::class)->middleware('auth');
 Route::resource('cares', CareController::class)->middleware('auth');

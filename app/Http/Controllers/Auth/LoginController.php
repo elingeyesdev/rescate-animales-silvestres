@@ -77,19 +77,36 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-        $reportId = session('pending_report_id') ?? $request->session()->get('pending_report_id');
+        // Obtener el reporte pendiente de la sesión
+        $reportId = $request->session()->get('pending_report_id');
         
         if ($reportId) {
             $report = Report::find($reportId);
-            if ($report && !$report->persona_id) {
+            
+            // Solo asociar si el reporte existe y no tiene persona_id asignado
+            if ($report && is_null($report->persona_id)) {
+                // Obtener el persona_id del usuario autenticado
                 $personId = Person::where('usuario_id', $user->id)->value('id');
+                
                 if ($personId) {
+                    // Asociar el reporte al usuario
                     $report->persona_id = $personId;
                     $report->save();
-                    session()->forget('pending_report_id');
+                    
+                    // Limpiar la sesión
+                    $request->session()->forget('pending_report_id');
+                    
+                    // Redirigir al perfil con mensaje de éxito
                     return redirect()->route('profile.index')
                         ->with('success', '¡Bienvenido! Tu hallazgo ha sido asociado a tu cuenta. Puedes verlo en tu perfil.');
+                } else {
+                    // Si el usuario no tiene persona asociada, limpiar la sesión y continuar
+                    $request->session()->forget('pending_report_id');
+                    \Log::warning("Usuario {$user->id} no tiene persona asociada, no se pudo asociar reporte {$reportId}");
                 }
+            } else {
+                // Si el reporte ya tiene persona_id o no existe, limpiar la sesión
+                $request->session()->forget('pending_report_id');
             }
         }
 

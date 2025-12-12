@@ -239,7 +239,8 @@ class ReportController extends Controller
 
             // Si el usuario NO está autenticado, guardar el reporte en sesión y preguntar si quiere conservarlo
             if (!$isAuthenticated) {
-                session(['pending_report_id' => $report->id]);
+                // Guardar el ID del reporte en la sesión para asociarlo después del login
+                $request->session()->put('pending_report_id', $report->id);
                 return Redirect::route('reports.claim')
                     ->with('success', 'El hallazgo se registró correctamente. ¿Deseas conservar este reporte como tuyo?');
             }

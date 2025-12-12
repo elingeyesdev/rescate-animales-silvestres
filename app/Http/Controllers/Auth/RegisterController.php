@@ -142,12 +142,18 @@ class RegisterController extends Controller
     protected function registered(Request $request, $user)
     {
         // Guardar el reporte pendiente en sesión antes de hacer logout
-        $reportId = session('pending_report_id');
+        // Esto es importante porque el logout puede limpiar la sesión
+        $reportId = $request->session()->get('pending_report_id');
+        
+        // Hacer logout del usuario recién registrado
+        $this->guard()->logout();
+        
+        // Restaurar el pending_report_id en la sesión después del logout
+        // La sesión web se mantiene aunque el usuario se desautentique
         if ($reportId) {
             $request->session()->put('pending_report_id', $reportId);
         }
         
-        $this->guard()->logout();
         return redirect('/login')
             ->with('info', 'Registro exitoso. Por favor inicia sesión para asociar tu reporte.');
     }
