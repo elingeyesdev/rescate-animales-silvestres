@@ -26,5 +26,8 @@ php artisan migrate --force || true
 echo "🌱 Ejecutando Seeder..."
 php artisan db:seed --force || true
 
+echo "Creando symlink de storage..."
+php artisan storage:link || true  
+
 echo "🚀 Iniciando PHP-FPM..."
 exec php-fpm
