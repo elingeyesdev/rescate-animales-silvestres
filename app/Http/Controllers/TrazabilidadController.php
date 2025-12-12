@@ -120,7 +120,7 @@ class TrazabilidadController extends Controller
         });
 
         return response()->json([
-            'exito' => true,
+            'success' => true,
             'ci_voluntario' => $ci,
             'total_acciones' => $trackings->count(),
             'acciones' => $trackings,
