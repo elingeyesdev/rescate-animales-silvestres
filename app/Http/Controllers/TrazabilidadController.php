@@ -6,6 +6,10 @@ use App\Models\UserTracking;
 use App\Models\User;
 use App\Models\Report;
 use App\Models\Release;
+use App\Models\AnimalFile;
+use App\Models\Species;
+use App\Models\AnimalStatus;
+use App\Services\History\AnimalHistoryTimelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -473,6 +477,179 @@ class TrazabilidadController extends Controller
     private function compareStringsIgnoreCaseAndAccents(string $str1, string $str2): bool
     {
         return $this->normalizeStringForSearch($str1) === $this->normalizeStringForSearch($str2);
+    }
+
+    /**
+     * Obtener historial de animales por especie
+     * 
+     * @param string $especie Nombre de la especie
+     * @return JsonResponse
+     */
+    public function porEspecie(string $especie): JsonResponse
+    {
+        $especie = urldecode($especie);
+        
+        // Buscar la especie (insensible a mayúsculas, minúsculas y tildes)
+        $species = Species::all()->first(function ($s) use ($especie) {
+            return $this->compareStringsIgnoreCaseAndAccents($s->nombre, $especie);
+        });
+        
+        if (!$species) {
+            return response()->json([
+                'success' => false,
+                'mensaje' => 'Especie no encontrada',
+                'query' => $especie,
+                'data' => [],
+                'totales' => ['total' => 0],
+            ], 404);
+        }
+        
+        // Buscar todos los animal_files de esta especie
+        $animalFiles = AnimalFile::where('especie_id', $species->id)
+            ->with([
+                'animal.report',
+                'species',
+                'animalStatus',
+                'release',
+                'center'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        $timelineService = app(AnimalHistoryTimelineService::class);
+        
+        $animales = $animalFiles->map(function ($animalFile) use ($timelineService) {
+            $historial = $timelineService->buildForAnimalFile($animalFile->id);
+            $ruta = $timelineService->buildLocationRoute($animalFile->id);
+            
+            return [
+                'id' => $animalFile->id,
+                'animal' => $animalFile->animal ? [
+                    'id' => $animalFile->animal->id,
+                    'nombre' => $animalFile->animal->nombre,
+                    'sexo' => $animalFile->animal->sexo,
+                    'descripcion' => $animalFile->animal->descripcion,
+                ] : null,
+                'especie' => $animalFile->species ? [
+                    'id' => $animalFile->species->id,
+                    'nombre' => $animalFile->species->nombre,
+                ] : null,
+                'estado' => $animalFile->animalStatus ? [
+                    'id' => $animalFile->animalStatus->id,
+                    'nombre' => $animalFile->animalStatus->nombre,
+                ] : null,
+                'centro' => $animalFile->center ? [
+                    'id' => $animalFile->center->id,
+                    'nombre' => $animalFile->center->nombre,
+                ] : null,
+                'liberado' => $animalFile->release ? [
+                    'id' => $animalFile->release->id,
+                    'fecha' => $animalFile->release->created_at ? $animalFile->release->created_at->format('Y-m-d\TH:i:s.000000\Z') : null,
+                    'direccion' => $animalFile->release->direccion,
+                    'latitud' => $animalFile->release->latitud,
+                    'longitud' => $animalFile->release->longitud,
+                    'aprobada' => $animalFile->release->aprobada,
+                ] : null,
+                'reporte' => $animalFile->animal && $animalFile->animal->report ? [
+                    'id' => $animalFile->animal->report->id,
+                    'fecha' => $animalFile->animal->report->created_at ? $animalFile->animal->report->created_at->format('Y-m-d\TH:i:s.000000\Z') : null,
+                    'direccion' => $animalFile->animal->report->direccion,
+                ] : null,
+                'historial' => $historial,
+                'ruta' => $ruta,
+                'fecha_creacion' => $animalFile->created_at ? $animalFile->created_at->format('Y-m-d\TH:i:s.000000\Z') : null,
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'tipo' => 'especie',
+            'query' => $especie,
+            'especie' => [
+                'id' => $species->id,
+                'nombre' => $species->nombre,
+            ],
+            'data' => $animales,
+            'totales' => [
+                'total' => $animales->count(),
+            ],
+        ]);
+    }
+
+    /**
+     * Obtener historial de animales liberados
+     * 
+     * @return JsonResponse
+     */
+    public function porLiberados(): JsonResponse
+    {
+        // Buscar solo animales liberados (con release aprobada)
+        $animalFiles = AnimalFile::whereHas('release', function ($q) {
+                $q->where('aprobada', true);
+            })
+            ->with([
+                'animal.report',
+                'species',
+                'animalStatus',
+                'release',
+                'center'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        $timelineService = app(AnimalHistoryTimelineService::class);
+        
+        $animales = $animalFiles->map(function ($animalFile) use ($timelineService) {
+            $historial = $timelineService->buildForAnimalFile($animalFile->id);
+            $ruta = $timelineService->buildLocationRoute($animalFile->id);
+            
+            return [
+                'id' => $animalFile->id,
+                'animal' => $animalFile->animal ? [
+                    'id' => $animalFile->animal->id,
+                    'nombre' => $animalFile->animal->nombre,
+                    'sexo' => $animalFile->animal->sexo,
+                    'descripcion' => $animalFile->animal->descripcion,
+                ] : null,
+                'especie' => $animalFile->species ? [
+                    'id' => $animalFile->species->id,
+                    'nombre' => $animalFile->species->nombre,
+                ] : null,
+                'estado' => $animalFile->animalStatus ? [
+                    'id' => $animalFile->animalStatus->id,
+                    'nombre' => $animalFile->animalStatus->nombre,
+                ] : null,
+                'centro' => $animalFile->center ? [
+                    'id' => $animalFile->center->id,
+                    'nombre' => $animalFile->center->nombre,
+                ] : null,
+                'liberado' => $animalFile->release ? [
+                    'id' => $animalFile->release->id,
+                    'fecha' => $animalFile->release->created_at ? $animalFile->release->created_at->format('Y-m-d\TH:i:s.000000\Z') : null,
+                    'direccion' => $animalFile->release->direccion,
+                    'latitud' => $animalFile->release->latitud,
+                    'longitud' => $animalFile->release->longitud,
+                    'aprobada' => $animalFile->release->aprobada,
+                ] : null,
+                'reporte' => $animalFile->animal && $animalFile->animal->report ? [
+                    'id' => $animalFile->animal->report->id,
+                    'fecha' => $animalFile->animal->report->created_at ? $animalFile->animal->report->created_at->format('Y-m-d\TH:i:s.000000\Z') : null,
+                    'direccion' => $animalFile->animal->report->direccion,
+                ] : null,
+                'historial' => $historial,
+                'ruta' => $ruta,
+                'fecha_creacion' => $animalFile->created_at ? $animalFile->created_at->format('Y-m-d\TH:i:s.000000\Z') : null,
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'tipo' => 'liberados',
+            'data' => $animales,
+            'totales' => [
+                'total' => $animales->count(),
+            ],
+        ]);
     }
 }
 

@@ -64,3 +64,5 @@ Route::name('api.')->group(function () {
 // Rutas de trazabilidad (fuera del grupo api. para mantener la estructura del PDF)
 Route::get('/trazabilidad/voluntario/{ci}', [TrazabilidadController::class, 'porVoluntario']);
 Route::get('/trazabilidad/provincia/{provincia}', [TrazabilidadController::class, 'porProvincia']);
+Route::get('/trazabilidad/animales/especie/{especie}', [TrazabilidadController::class, 'porEspecie']);
+Route::get('/trazabilidad/animales/liberados', [TrazabilidadController::class, 'porLiberados']);
