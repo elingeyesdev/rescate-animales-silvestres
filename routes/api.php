@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\RescuerApiController;
 use App\Http\Controllers\Api\AnimalApiController;
 use App\Http\Controllers\Api\PersonApiController;
 use App\Http\Controllers\Api\WeatherApiController;
+use App\Http\Controllers\TrazabilidadController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -59,3 +60,6 @@ Route::name('api.')->group(function () {
     
     Route::get('weather', [WeatherApiController::class, 'index'])->name('weather');
 });
+
+// Ruta de trazabilidad (fuera del grupo api. para mantener la estructura del PDF)
+Route::get('/trazabilidad/voluntario/{ci}', [TrazabilidadController::class, 'porVoluntario']);

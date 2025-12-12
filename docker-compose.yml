@@ -13,6 +13,21 @@ services:
       DB_DATABASE: rescate_db
       DB_USERNAME: admin
       DB_PASSWORD: admin123
+      APP_NAME: RescateAnimales
+      APP_LOCALE: es
+      APP_FALLBACK_LOCALE: es
+      APP_FAKER_LOCALE: es_BO
+      NASA_FIRMS_API_KEY: ${NASA_FIRMS_API_KEY:-}
+      NASA_FIRMS_API_BASE: ${NASA_FIRMS_API_BASE:-https://firms.modaps.eosdis.nasa.gov/api/area/csv}
+      HOTSPOTS_INTEGRATION_API_URL: ${HOTSPOTS_INTEGRATION_API_URL:-http://brigadas.dasalas.shop/api/v1/hotspots/live}
+      MAIL_MAILER: ${MAIL_MAILER:-smtp}
+      MAIL_HOST: ${MAIL_HOST:-smtp-relay.brevo.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@example.com}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-RescateAnimales}
     depends_on:
       - db
     networks:
@@ -38,9 +53,9 @@ services:
     container_name: rescate-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: rescate_db
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: ${POSTGRES_DB:-rescate_db}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
     ports:
       - "5432:5432" #---> para acceso local a la base de datos, comentar esto para despliegue en producción
     volumes:
