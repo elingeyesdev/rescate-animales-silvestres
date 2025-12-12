@@ -61,5 +61,6 @@ Route::name('api.')->group(function () {
     Route::get('weather', [WeatherApiController::class, 'index'])->name('weather');
 });
 
-// Ruta de trazabilidad (fuera del grupo api. para mantener la estructura del PDF)
+// Rutas de trazabilidad (fuera del grupo api. para mantener la estructura del PDF)
 Route::get('/trazabilidad/voluntario/{ci}', [TrazabilidadController::class, 'porVoluntario']);
+Route::get('/trazabilidad/provincia/{provincia}', [TrazabilidadController::class, 'porProvincia']);
