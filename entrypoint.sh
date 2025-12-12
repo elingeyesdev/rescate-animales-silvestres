@@ -29,5 +29,22 @@ php artisan db:seed --force || true
 echo "Creando symlink de storage..."
 php artisan storage:link || true  
 
+echo "📸 Copiando imágenes por defecto al storage..."
+# Crear directorios necesarios
+mkdir -p storage/app/public/personas || true
+
+# Copiar imágenes por defecto si no existen
+if [ -d "resources/default-images/personas" ]; then
+    for img in resources/default-images/personas/*; do
+        if [ -f "$img" ]; then
+            filename=$(basename "$img")
+            if [ ! -f "storage/app/public/personas/$filename" ]; then
+                cp "$img" "storage/app/public/personas/$filename"
+                echo "  ✓ Copiada: $filename"
+            fi
+        fi
+    done
+fi
+
 echo "🚀 Iniciando PHP-FPM..."
 exec php-fpm
