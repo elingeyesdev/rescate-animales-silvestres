@@ -109,3 +109,10 @@ Route::resource('animal-histories', AnimalHistoryController::class)->only(['inde
 Route::get('reportes', [ReportsController::class, 'index'])->name('reportes.index')->middleware('auth');
 Route::get('reportes/exportar-pdf', [ReportsController::class, 'exportPdf'])->name('reportes.export-pdf')->middleware('auth');
 Route::get('reportes/exportar-csv', [ReportsController::class, 'exportCsv'])->name('reportes.export-csv')->middleware('auth');
+
+
+// ========== HELPDESK WIDGET ==========
+// Ruta generada por: php artisan helpdeskwidget:install
+Route::get('helpdesk', function () {
+    return view('helpdesk');
+})->name('helpdesk')->middleware('auth');

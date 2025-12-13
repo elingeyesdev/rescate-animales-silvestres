@@ -13,6 +13,7 @@
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10",
         "laravel/ui": "^4.6",
+        "lukehowland/helpdeskwidget": "^2.0",
         "spatie/laravel-permission": "^6.23"
     },
     "require-dev": {
