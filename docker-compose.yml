@@ -28,6 +28,8 @@ services:
       MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@example.com}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-RescateAnimales}
+      HELPDESK_WIDGET_API_KEY: ${HELPDESK_WIDGET_API_KEY:-}
+      HELPDESK_WIDGET_API_URL: ${HELPDESK_WIDGET_API_URL:-}
     depends_on:
       - db
     networks:
