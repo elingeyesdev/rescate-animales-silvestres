@@ -2,7 +2,7 @@
 
 ## Descripción del Proyecto
 
-El Sistema de Rescate Animal Integrado es una plataforma de software diseñada para optimizar y digitalizar la gestión operativa de organizaciones dedicadas al bienestar animal. Esta solución permite la administración centralizada de expedientes médicos, seguimiento de rescates, control de inventario veterinario y gestión de procesos de adopción.
+El Sistema de Rescate Animal Integrado es una plataforma de software diseñada para optimizar y digitalizar la gestión operativa de dedicadas al bienestar animal. Esta solución permite la administración centralizada de expedientes médicos, seguimiento de rescates, control de inventario veterinario y gestión de procesos de adopción.
 
 El objetivo principal es proporcionar una herramienta robusta y escalable que facilite la toma de decisiones basada en datos, garantizando la trazabilidad de cada animal desde su ingreso hasta su adopción final.
 
@@ -162,6 +162,4 @@ Si la aplicación reporta errores al escribir logs o guardar imágenes.
 chmod -R 775 storage bootstrap/cache
 ```
 
-## Licencia
 
-Este proyecto es software de código abierto licenciado bajo la [Licencia MIT](https://opensource.org/licenses/MIT).
