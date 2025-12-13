@@ -16,6 +16,11 @@ use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class ReportsController extends Controller
 {
@@ -1410,9 +1415,9 @@ class ReportsController extends Controller
     }
 
     /**
-     * Exporta el reporte actual a CSV
+     * Exporta el reporte actual a Excel
      */
-    public function exportCsv(Request $request): StreamedResponse
+    public function exportExcel(Request $request): StreamedResponse
     {
         $tab = $request->get('tab', 'activity');
         $subtab = $request->get('subtab', 'states');
@@ -1421,28 +1426,28 @@ class ReportsController extends Controller
         // Determinar qué reporte exportar según el tab activo
         if ($tab === 'activity') {
             if ($subtab === 'health') {
-                return $this->exportHealthAnimalCsv($request);
+                return $this->exportHealthAnimalExcel($request);
             } else {
-                return $this->exportActivityStatesCsv($request);
+                return $this->exportActivityStatesExcel($request);
             }
         } elseif ($tab === 'management') {
             if ($managementSubtab === 'treatment') {
-                return $this->exportTreatmentEfficiencyCsv($request);
+                return $this->exportTreatmentEfficiencyExcel($request);
             } elseif ($managementSubtab === 'release') {
-                return $this->exportReleaseEfficiencyCsv($request);
+                return $this->exportReleaseEfficiencyExcel($request);
             } else {
-                return $this->exportRescueEfficiencyCsv($request);
+                return $this->exportRescueEfficiencyExcel($request);
             }
         }
         
         // Por defecto, exportar reporte de actividad por estados
-        return $this->exportActivityStatesCsv($request);
+        return $this->exportActivityStatesExcel($request);
     }
 
     /**
-     * Exporta el reporte de Actividad por Estados a CSV
+     * Exporta el reporte de Actividad por Estados a Excel
      */
-    private function exportActivityStatesCsv(Request $request): StreamedResponse
+    private function exportActivityStatesExcel(Request $request): StreamedResponse
     {
         // Obtener los mismos datos que en activityReports()
         $reports = Report::where('aprobado', true)
@@ -1573,100 +1578,165 @@ class ReportsController extends Controller
             'liberados' => count($liberados),
         ];
         
-        $fileName = 'reporte_actividad_estados_' . date('d_m_Y') . '.csv';
+        $fileName = 'reporte_actividad_estados_' . date('d_m_Y') . '.xlsx';
         
         return new StreamedResponse(function() use ($totals, $enPeligro, $rescatados, $tratados, $liberados) {
-            $handle = fopen('php://output', 'w');
-            
-            // BOM para UTF-8 (para que Excel abra correctamente caracteres especiales)
-            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Actividad por Estados');
             
             // Título
-            fputcsv($handle, ['Reporte de Actividad por Estados']);
-            fputcsv($handle, ['Generado el: ' . Carbon::now()->format('d/m/Y H:i:s')]);
-            fputcsv($handle, []);
+            $sheet->setCellValue('A1', 'Reporte de Actividad por Estados');
+            $sheet->mergeCells('A1:D1');
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+            $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            $sheet->setCellValue('A2', 'Generado el: ' . Carbon::now()->format('d/m/Y H:i:s'));
+            $sheet->mergeCells('A2:D2');
+            $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            $currentRow = 4;
             
             // Totales
-            fputcsv($handle, ['Totales']);
-            fputcsv($handle, ['En Peligro', $totals['en_peligro']]);
-            fputcsv($handle, ['En Traslado', $totals['rescatados']]);
-            fputcsv($handle, ['Tratados', $totals['tratados']]);
-            fputcsv($handle, ['Liberados', $totals['liberados']]);
-            fputcsv($handle, ['Total General', $totals['en_peligro'] + $totals['rescatados'] + $totals['tratados'] + $totals['liberados']]);
-            fputcsv($handle, []);
+            $sheet->setCellValue('A' . $currentRow, 'Resumen de Totales');
+            $sheet->mergeCells('A' . $currentRow . ':B' . $currentRow);
+            $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true);
+            $currentRow++;
+            
+            $sheet->setCellValue('A' . $currentRow, 'Estado');
+            $sheet->setCellValue('B' . $currentRow, 'Cantidad');
+            $this->applyExcelStyles($sheet, $currentRow, 'B');
+            $currentRow++;
+            
+            $sheet->setCellValue('A' . $currentRow, 'En Peligro');
+            $sheet->setCellValue('B' . $currentRow, $totals['en_peligro']);
+            $currentRow++;
+            $sheet->setCellValue('A' . $currentRow, 'En Traslado');
+            $sheet->setCellValue('B' . $currentRow, $totals['rescatados']);
+            $currentRow++;
+            $sheet->setCellValue('A' . $currentRow, 'Tratados');
+            $sheet->setCellValue('B' . $currentRow, $totals['tratados']);
+            $currentRow++;
+            $sheet->setCellValue('A' . $currentRow, 'Liberados');
+            $sheet->setCellValue('B' . $currentRow, $totals['liberados']);
+            $currentRow++;
+            $sheet->setCellValue('A' . $currentRow, 'Total General');
+            $sheet->setCellValue('B' . $currentRow, array_sum($totals));
+            $sheet->getStyle('A' . $currentRow . ':B' . $currentRow)->getFont()->setBold(true);
+            
+            $currentRow += 3;
             
             // Tabla En Peligro
             if (!empty($enPeligro)) {
-                fputcsv($handle, ['Reporte de Animales en Peligro']);
-                fputcsv($handle, ['Provincia', 'Estado', 'Fecha Hallazgo', 'Tiempo Transcurrido']);
+                $sheet->setCellValue('A' . $currentRow, 'Reporte de Animales en Peligro');
+                $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(12);
+                $currentRow++;
+                
+                $headerRow = $currentRow;
+                $sheet->setCellValue('A' . $currentRow, 'Provincia');
+                $sheet->setCellValue('B' . $currentRow, 'Estado');
+                $sheet->setCellValue('C' . $currentRow, 'Fecha Hallazgo');
+                $sheet->setCellValue('D' . $currentRow, 'Tiempo Transcurrido');
+                
+                $currentRow++;
                 foreach ($enPeligro as $report) {
-                    fputcsv($handle, [
-                        $report['province'],
-                        'En Peligro',
-                        $report['fecha_hallazgo']->format('d/m/Y H:i'),
-                        $report['tiempo_transcurrido']
-                    ]);
+                    $sheet->setCellValue('A' . $currentRow, $report['province']);
+                    $sheet->setCellValue('B' . $currentRow, 'En Peligro');
+                    $sheet->setCellValue('C' . $currentRow, $report['fecha_hallazgo']->format('d/m/Y H:i'));
+                    $sheet->setCellValue('D' . $currentRow, $report['tiempo_transcurrido']);
+                    $currentRow++;
                 }
-                fputcsv($handle, []);
+                $this->applyExcelStyles($sheet, $headerRow, 'D');
+                $currentRow += 2;
             }
             
             // Tabla En Traslado
             if (!empty($rescatados)) {
-                fputcsv($handle, ['Reporte de Animales en Traslado']);
-                fputcsv($handle, ['Nombre', 'Estado', 'Centro de Destino', 'Fecha Traslado', 'Tiempo H-T']);
+                $sheet->setCellValue('A' . $currentRow, 'Reporte de Animales en Traslado');
+                $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(12);
+                $currentRow++;
+                
+                $headerRow = $currentRow;
+                $sheet->setCellValue('A' . $currentRow, 'Nombre');
+                $sheet->setCellValue('B' . $currentRow, 'Estado');
+                $sheet->setCellValue('C' . $currentRow, 'Centro de Destino');
+                $sheet->setCellValue('D' . $currentRow, 'Fecha Traslado');
+                $sheet->setCellValue('E' . $currentRow, 'Tiempo H-T');
+                
+                $currentRow++;
                 foreach ($rescatados as $report) {
-                    fputcsv($handle, [
-                        $report['nombre'] ?? 'Sin nombre',
-                        'En Traslado',
-                        $report['centro'] ? $report['centro']->nombre : '-',
-                        $report['fecha_traslado'] ? $report['fecha_traslado']->format('d/m/Y H:i') : '-',
-                        $report['tiempo_hallazgo_traslado'] ?? '-'
-                    ]);
+                    $sheet->setCellValue('A' . $currentRow, $report['nombre'] ?? 'Sin nombre');
+                    $sheet->setCellValue('B' . $currentRow, 'En Traslado');
+                    $sheet->setCellValue('C' . $currentRow, $report['centro'] ? $report['centro']->nombre : '-');
+                    $sheet->setCellValue('D' . $currentRow, $report['fecha_traslado'] ? $report['fecha_traslado']->format('d/m/Y H:i') : '-');
+                    $sheet->setCellValue('E' . $currentRow, $report['tiempo_hallazgo_traslado'] ?? '-');
+                    $currentRow++;
                 }
-                fputcsv($handle, []);
+                $this->applyExcelStyles($sheet, $headerRow, 'E');
+                $currentRow += 2;
             }
             
             // Tabla Tratados
             if (!empty($tratados)) {
-                fputcsv($handle, ['Reporte de Animales en Tratamiento']);
-                fputcsv($handle, ['Nombre', 'Estado', 'Fecha Hallazgo', 'Fecha Inicio Tratamiento', 'Tiempo desde Tratamiento']);
+                $sheet->setCellValue('A' . $currentRow, 'Reporte de Animales en Tratamiento');
+                $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(12);
+                $currentRow++;
+                
+                $headerRow = $currentRow;
+                $sheet->setCellValue('A' . $currentRow, 'Nombre');
+                $sheet->setCellValue('B' . $currentRow, 'Estado');
+                $sheet->setCellValue('C' . $currentRow, 'Fecha Hallazgo');
+                $sheet->setCellValue('D' . $currentRow, 'Fecha Inicio Tratamiento');
+                $sheet->setCellValue('E' . $currentRow, 'Tiempo desde Tratamiento');
+                
+                $currentRow++;
                 foreach ($tratados as $report) {
-                    fputcsv($handle, [
-                        $report['nombre'] ?? 'Sin nombre',
-                        'Tratado',
-                        $report['fecha_hallazgo']->format('d/m/Y H:i'),
-                        $report['fecha_tratamiento'] ? $report['fecha_tratamiento']->format('d/m/Y H:i') : '-',
-                        $report['tiempo_desde_tratamiento'] ?? '-'
-                    ]);
+                    $sheet->setCellValue('A' . $currentRow, $report['nombre'] ?? 'Sin nombre');
+                    $sheet->setCellValue('B' . $currentRow, 'Tratado');
+                    $sheet->setCellValue('C' . $currentRow, $report['fecha_hallazgo']->format('d/m/Y H:i'));
+                    $sheet->setCellValue('D' . $currentRow, $report['fecha_tratamiento'] ? $report['fecha_tratamiento']->format('d/m/Y H:i') : '-');
+                    $sheet->setCellValue('E' . $currentRow, $report['tiempo_desde_tratamiento'] ?? '-');
+                    $currentRow++;
                 }
-                fputcsv($handle, []);
+                $this->applyExcelStyles($sheet, $headerRow, 'E');
+                $currentRow += 2;
             }
             
             // Tabla Liberados
             if (!empty($liberados)) {
-                fputcsv($handle, ['Reporte de Animales Liberados']);
-                fputcsv($handle, ['Nombre', 'Estado', 'Fecha Hallazgo', 'Fecha Liberación']);
+                $sheet->setCellValue('A' . $currentRow, 'Reporte de Animales Liberados');
+                $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(12);
+                $currentRow++;
+                
+                $headerRow = $currentRow;
+                $sheet->setCellValue('A' . $currentRow, 'Nombre');
+                $sheet->setCellValue('B' . $currentRow, 'Estado');
+                $sheet->setCellValue('C' . $currentRow, 'Fecha Hallazgo');
+                $sheet->setCellValue('D' . $currentRow, 'Fecha Liberación');
+                
+                $currentRow++;
                 foreach ($liberados as $report) {
-                    fputcsv($handle, [
-                        $report['nombre'] ?? 'Sin nombre',
-                        'Liberado',
-                        $report['fecha_hallazgo']->format('d/m/Y H:i'),
-                        $report['fecha_liberacion']->format('d/m/Y H:i')
-                    ]);
+                    $sheet->setCellValue('A' . $currentRow, $report['nombre'] ?? 'Sin nombre');
+                    $sheet->setCellValue('B' . $currentRow, 'Liberado');
+                    $sheet->setCellValue('C' . $currentRow, $report['fecha_hallazgo']->format('d/m/Y H:i'));
+                    $sheet->setCellValue('D' . $currentRow, $report['fecha_liberacion']->format('d/m/Y H:i'));
+                    $currentRow++;
                 }
+                $this->applyExcelStyles($sheet, $headerRow, 'D');
             }
             
-            fclose($handle);
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
         }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ]);
     }
 
     /**
-     * Exporta el reporte de Salud Animal Actual a CSV
+     * Exporta el reporte de Salud Animal Actual a Excel
      */
-    private function exportHealthAnimalCsv(Request $request): StreamedResponse
+    private function exportHealthAnimalExcel(Request $request): StreamedResponse
     {
         $fechaDesde = $request->get('fecha_desde');
         $fechaHasta = $request->get('fecha_hasta');
@@ -1758,18 +1828,24 @@ class ReportsController extends Controller
             return strcmp($a['nombre_animal'], $b['nombre_animal']);
         });
         
-        $fileName = 'reporte_salud_animal_' . date('d_m_Y') . '.csv';
+        $fileName = 'reporte_salud_animal_' . date('d_m_Y') . '.xlsx';
         
         return new StreamedResponse(function() use ($healthData, $fechaDesde, $fechaHasta) {
-            $handle = fopen('php://output', 'w');
-            
-            // BOM para UTF-8
-            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Salud Animal');
             
             // Título
-            fputcsv($handle, ['Reporte de Salud Animal Actual']);
-            fputcsv($handle, ['Generado el: ' . Carbon::now()->format('d/m/Y H:i:s')]);
+            $sheet->setCellValue('A1', 'Reporte de Salud Animal Actual');
+            $sheet->mergeCells('A1:G1');
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+            $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             
+            $sheet->setCellValue('A2', 'Generado el: ' . Carbon::now()->format('d/m/Y H:i:s'));
+            $sheet->mergeCells('A2:G2');
+            $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            $currentRow = 3;
             if ($fechaDesde || $fechaHasta) {
                 $filtroTexto = 'Filtro aplicado: ';
                 if ($fechaDesde && $fechaHasta) {
@@ -1779,12 +1855,24 @@ class ReportsController extends Controller
                 } elseif ($fechaHasta) {
                     $filtroTexto .= 'Hasta: ' . Carbon::parse($fechaHasta)->format('d/m/Y');
                 }
-                fputcsv($handle, [$filtroTexto]);
+                $sheet->setCellValue('A' . $currentRow, $filtroTexto);
+                $sheet->mergeCells('A' . $currentRow . ':G' . $currentRow);
+                $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $currentRow++;
             }
-            fputcsv($handle, []);
+            $currentRow++;
             
             // Encabezados
-            fputcsv($handle, ['Centro', 'Nombre del Animal', 'Diagnóstico Inicial', 'Fecha Inicial', 'Fecha Última Evaluación', 'Última Intervención Médica', 'Estado Actual']);
+            $headerRow = $currentRow;
+            $sheet->setCellValue('A' . $currentRow, 'Centro');
+            $sheet->setCellValue('B' . $currentRow, 'Nombre del Animal');
+            $sheet->setCellValue('C' . $currentRow, 'Diagnóstico Inicial');
+            $sheet->setCellValue('D' . $currentRow, 'Fecha Inicial');
+            $sheet->setCellValue('E' . $currentRow, 'Fecha Última Evaluación');
+            $sheet->setCellValue('F' . $currentRow, 'Última Intervención Médica');
+            $sheet->setCellValue('G' . $currentRow, 'Estado Actual');
+            
+            $currentRow++;
             
             // Datos
             foreach ($healthData as $data) {
@@ -1801,28 +1889,31 @@ class ReportsController extends Controller
                     $intervencionTexto = 'Sin intervenciones registradas';
                 }
                 
-                fputcsv($handle, [
-                    $data['centro'],
-                    $data['nombre_animal'],
-                    $data['diagnostico_inicial'],
-                    $data['fecha_creacion_hoja'] ? $data['fecha_creacion_hoja']->format('d/m/Y') : '-',
-                    $data['fecha_ultima_evaluacion'] ? $data['fecha_ultima_evaluacion']->format('d/m/Y') : '-',
-                    $intervencionTexto,
-                    $data['estado_actual']
-                ]);
+                $sheet->setCellValue('A' . $currentRow, $data['centro']);
+                $sheet->setCellValue('B' . $currentRow, $data['nombre_animal']);
+                $sheet->setCellValue('C' . $currentRow, $data['diagnostico_inicial']);
+                $sheet->setCellValue('D' . $currentRow, $data['fecha_creacion_hoja'] ? $data['fecha_creacion_hoja']->format('d/m/Y') : '-');
+                $sheet->setCellValue('E' . $currentRow, $data['fecha_ultima_evaluacion'] ? $data['fecha_ultima_evaluacion']->format('d/m/Y') : '-');
+                $sheet->setCellValue('F' . $currentRow, $intervencionTexto);
+                $sheet->setCellValue('G' . $currentRow, $data['estado_actual']);
+                
+                $currentRow++;
             }
             
-            fclose($handle);
+            $this->applyExcelStyles($sheet, $headerRow, 'G');
+            
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
         }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ]);
     }
 
     /**
-     * Exporta el reporte de Eficacia de Rescate a CSV
+     * Exporta el reporte de Eficacia de Rescate a Excel
      */
-    private function exportRescueEfficiencyCsv(Request $request): StreamedResponse
+    private function exportRescueEfficiencyExcel(Request $request): StreamedResponse
     {
         $fechaInicio30Dias = Carbon::now()->subDays(30)->startOfDay();
         $fechaFin30Dias = Carbon::now()->endOfDay();
@@ -1895,16 +1986,16 @@ class ReportsController extends Controller
             $fechaActual->addDay();
         }
         
-        return $this->exportEfficiencyCsv(
-            'Eficacia Mensual del Rescate de Animales',
+        return $this->exportEfficiencyExcel(
+            'Eficacia del Rescate',
             $eficaciaMensual,
             $traslados30Dias . ' traslados / ' . $hallazgos30Dias . ' hallazgos',
             $filtro,
             $fechaDesde,
             $fechaHasta,
-            ['Fecha', 'Cantidad de Hallazgos', 'Cantidad de Traslados', 'Eficacia Diaria', 'Estado'],
+            ['Fecha', 'Hallazgos', 'Traslados', 'Eficacia Diaria', 'Estado'],
             $datosDiarios,
-            'reporte_eficacia_rescate_' . date('d_m_Y') . '.csv',
+            'reporte_eficacia_rescate_' . date('d_m_Y') . '.xlsx',
             function($dato) {
                 return [
                     $dato['fecha']->format('d/m/Y'),
@@ -1918,9 +2009,9 @@ class ReportsController extends Controller
     }
 
     /**
-     * Exporta el reporte de Eficacia de Tratamiento a CSV
+     * Exporta el reporte de Eficacia de Tratamiento a Excel
      */
-    private function exportTreatmentEfficiencyCsv(Request $request): StreamedResponse
+    private function exportTreatmentEfficiencyExcel(Request $request): StreamedResponse
     {
         $fechaInicio30Dias = Carbon::now()->subDays(30)->startOfDay();
         $fechaFin30Dias = Carbon::now()->endOfDay();
@@ -2000,7 +2091,7 @@ class ReportsController extends Controller
             $fechaActual->addDay();
         }
         
-        return $this->exportEfficiencyCsv(
+        return $this->exportEfficiencyExcel(
             'Eficacia de los Tratamientos',
             $eficaciaMensual,
             $animalesEstables30Dias . ' animales estables / ' . $animalesEnTratamiento30Dias . ' animales en tratamiento',
@@ -2009,7 +2100,7 @@ class ReportsController extends Controller
             $fechaHasta,
             ['Fecha', 'Animales en Tratamiento', 'Animales Estables', 'Eficacia Diaria', 'Estado'],
             $datosDiarios,
-            'reporte_eficacia_tratamiento_' . date('d_m_Y') . '.csv',
+            'reporte_eficacia_tratamiento_' . date('d_m_Y') . '.xlsx',
             function($dato) {
                 return [
                     $dato['fecha']->format('d/m/Y'),
@@ -2023,9 +2114,9 @@ class ReportsController extends Controller
     }
 
     /**
-     * Exporta el reporte de Eficacia de Liberación a CSV
+     * Exporta el reporte de Eficacia de Liberación a Excel
      */
-    private function exportReleaseEfficiencyCsv(Request $request): StreamedResponse
+    private function exportReleaseEfficiencyExcel(Request $request): StreamedResponse
     {
         $fechaInicio30Dias = Carbon::now()->subDays(30)->startOfDay();
         $fechaFin30Dias = Carbon::now()->endOfDay();
@@ -2101,7 +2192,7 @@ class ReportsController extends Controller
             $fechaActual->addDay();
         }
         
-        return $this->exportEfficiencyCsv(
+        return $this->exportEfficiencyExcel(
             'Eficacia de la Liberación',
             $eficaciaMensual,
             $animalesLiberados30Dias . ' animales liberados / ' . $animalesEstables30Dias . ' animales estables',
@@ -2110,7 +2201,7 @@ class ReportsController extends Controller
             $fechaHasta,
             ['Fecha', 'Animales Estables', 'Animales Liberados', 'Eficacia Diaria', 'Estado'],
             $datosDiarios,
-            'reporte_eficacia_liberacion_' . date('d_m_Y') . '.csv',
+            'reporte_eficacia_liberacion_' . date('d_m_Y') . '.xlsx',
             function($dato) {
                 return [
                     $dato['fecha']->format('d/m/Y'),
@@ -2124,25 +2215,36 @@ class ReportsController extends Controller
     }
 
     /**
-     * Método helper para exportar reportes de eficacia a CSV
+     * Método helper para exportar reportes de eficacia a Excel
      */
-    private function exportEfficiencyCsv($titulo, $eficaciaMensual, $detalles, $filtro, $fechaDesde, $fechaHasta, $headers, $datosDiarios, $fileName, $callback): StreamedResponse
+    private function exportEfficiencyExcel($titulo, $eficaciaMensual, $detalles, $filtro, $fechaDesde, $fechaHasta, $headers, $datosDiarios, $fileName, $callback): StreamedResponse
     {
-        return new StreamedResponse(function() use ($titulo, $eficaciaMensual, $detalles, $filtro, $fechaDesde, $fechaHasta, $headers, $datosDiarios, $callback) {
-            $handle = fopen('php://output', 'w');
-            
-            // BOM para UTF-8
-            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+        return new StreamedResponse(function() use ($titulo, $eficaciaMensual, $detalles, $filtro, $fechaDesde, $fechaHasta, $headers, $datosDiarios, $callback, $fileName) {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Eficacia');
             
             // Título
-            fputcsv($handle, [$titulo]);
-            fputcsv($handle, ['Generado el: ' . Carbon::now()->format('d/m/Y H:i:s')]);
-            fputcsv($handle, []);
+            $sheet->setCellValue('A1', $titulo);
+            $sheet->mergeCells('A1:E1');
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+            $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            $sheet->setCellValue('A2', 'Generado el: ' . Carbon::now()->format('d/m/Y H:i:s'));
+            $sheet->mergeCells('A2:E2');
+            $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            $currentRow = 4;
             
             // Resumen de eficacia
-            fputcsv($handle, ['Eficacia de los últimos 30 días:', $eficaciaMensual . '%']);
-            fputcsv($handle, [$detalles]);
-            fputcsv($handle, []);
+            $sheet->setCellValue('A' . $currentRow, 'Eficacia de los últimos 30 días: ' . $eficaciaMensual . '%');
+            $sheet->mergeCells('A' . $currentRow . ':E' . $currentRow);
+            $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true);
+            $currentRow++;
+            
+            $sheet->setCellValue('A' . $currentRow, $detalles);
+            $sheet->mergeCells('A' . $currentRow . ':E' . $currentRow);
+            $currentRow++;
             
             // Filtro
             if ($filtro) {
@@ -2154,22 +2256,68 @@ class ReportsController extends Controller
                 } elseif ($filtro === 'rango' && $fechaDesde && $fechaHasta) {
                     $filtroTexto .= 'Rango: ' . Carbon::parse($fechaDesde)->format('d/m/Y') . ' - ' . Carbon::parse($fechaHasta)->format('d/m/Y');
                 }
-                fputcsv($handle, [$filtroTexto]);
-                fputcsv($handle, []);
+                $sheet->setCellValue('A' . $currentRow, $filtroTexto);
+                $sheet->mergeCells('A' . $currentRow . ':E' . $currentRow);
+                $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $currentRow++;
             }
+            $currentRow++;
             
             // Encabezados
-            fputcsv($handle, $headers);
+            $headerRow = $currentRow;
+            $colIndex = 'A';
+            foreach ($headers as $header) {
+                $sheet->setCellValue($colIndex . $currentRow, $header);
+                $colIndex++;
+            }
+            $lastCol = chr(ord($colIndex) - 1);
+            
+            $currentRow++;
             
             // Datos
             foreach ($datosDiarios as $dato) {
-                $datos = $callback($dato);
-                fputcsv($handle, $datos);
+                $values = $callback($dato);
+                $colIndex = 'A';
+                foreach ($values as $value) {
+                    $sheet->setCellValue($colIndex . $currentRow, $value);
+                    $colIndex++;
+                }
+                
+                // Aplicar color a la celda de Estado (última columna)
+                $colorCode = 'FFFFFF'; // Default
+                switch ($dato['color']) {
+                    case 'verde':
+                        $colorCode = '28A745'; // Green (Bootstrap Success)
+                        break;
+                    case 'amarillo':
+                        $colorCode = 'FFC107'; // Yellow (Bootstrap Warning)
+                        break;
+                    case 'azul':
+                        $colorCode = '17A2B8'; // Blue (Bootstrap Info/Cyan)
+                        break;
+                    case 'rojo':
+                        $colorCode = 'DC3545'; // Red (Bootstrap Danger)
+                        break;
+                }
+                
+                $sheet->getStyle($lastCol . $currentRow)->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setRGB($colorCode);
+                
+                // Texto blanco si el fondo es oscuro (azul o rojo o verde)
+                if (in_array($dato['color'], ['azul', 'rojo', 'verde'])) {
+                     $sheet->getStyle($lastCol . $currentRow)->getFont()->getColor()->setRGB('FFFFFF');
+                }
+                
+                $currentRow++;
             }
             
-            fclose($handle);
+            $this->applyExcelStyles($sheet, $headerRow, $lastCol);
+            
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
         }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ]);
     }
@@ -2189,6 +2337,57 @@ class ReportsController extends Controller
             case 'rojo':
             default:
                 return '≤ 50%';
+        }
+    }
+
+    /**
+     * Aplica estilos comunes a una hoja de Excel
+     */
+    private function applyExcelStyles($sheet, $headerRowIndex, $highestColumn)
+    {
+        // Estilo para el encabezado
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '4B5563'], // Un gris oscuro/azulado
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                ],
+            ],
+        ];
+
+        $sheet->getStyle('A' . $headerRowIndex . ':' . $highestColumn . $headerRowIndex)->applyFromArray($headerStyle);
+
+        // Auto-ajustar columnas
+        foreach (range('A', $highestColumn) as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        // Bordes para todo el contenido
+        $highestRow = $sheet->getHighestRow();
+        if ($highestRow > $headerRowIndex) {
+            $contentStyle = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['rgb' => 'D1D5DB'],
+                    ],
+                ],
+                'alignment' => [
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+            ];
+            $sheet->getStyle('A' . ($headerRowIndex + 1) . ':' . $highestColumn . $highestRow)->applyFromArray($contentStyle);
         }
     }
 }
