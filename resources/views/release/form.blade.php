@@ -2,7 +2,7 @@
     <div class="col-md-12">
         <input type="hidden" name="animal_file_id" id="animal_file_id" value="{{ old('animal_file_id', $release?->animal_file_id) }}">
         <div class="mb-3">
-            <h5 class="mb-2">{{ __('Paso 1: Seleccione el Animal a Liberar') }}</h5>
+            <h5 class="mb-2">{{ __('Paso 1: Seleccione el Animal a Liberar') }} <span class="text-danger">*</span></h5>
             @php
                 $totalCards = count($afCards ?? []);
                 $useCarousel = $totalCards > 4;

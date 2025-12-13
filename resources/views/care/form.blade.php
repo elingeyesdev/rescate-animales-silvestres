@@ -2,7 +2,7 @@
     <div class="col-md-12">
         
         <div class="form-group mb-2 mb20">
-            <label for="hoja_animal_id" class="form-label">{{ __('Animal') }}</label>
+            <label for="hoja_animal_id" class="form-label">{{ __('Animal') }} <span class="text-danger">*</span></label>
             <select name="hoja_animal_id" id="hoja_animal_id" class="form-control @error('hoja_animal_id') is-invalid @enderror">
                 <option value="">Seleccione</option>
                 @foreach(($animalFiles ?? []) as $af)
@@ -12,7 +12,7 @@
             {!! $errors->first('hoja_animal_id', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
-            <label for="tipo_cuidado_id" class="form-label">{{ __('Tipo de Cuidado') }}</label>
+            <label for="tipo_cuidado_id" class="form-label">{{ __('Tipo de Cuidado') }} <span class="text-danger">*</span></label>
             <select name="tipo_cuidado_id" id="tipo_cuidado_id" class="form-control @error('tipo_cuidado_id') is-invalid @enderror">
                 <option value="">Seleccione</option>
                 @foreach(($careTypes ?? []) as $ct)

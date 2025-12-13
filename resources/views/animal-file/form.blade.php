@@ -2,7 +2,7 @@
     {!! $errors->first('general', '<div class="alert alert-danger" role="alert"><strong>:message</strong></div>') !!}
     @if(($showAnimalSelect ?? true))
         <div class="form-group mb-2">
-            <label for="animal_id" class="form-label">{{ __('Animal') }}</label>
+            <label for="animal_id" class="form-label">{{ __('Animal') }} <span class="text-danger">*</span></label>
             <select name="animal_id" id="animal_id" class="form-control @error('animal_id') is-invalid @enderror">
                 <option value="">{{ __('Seleccione') }}</option>
                 @foreach(($animals ?? []) as $a)
@@ -14,7 +14,7 @@
     @endif
 
     <div class="form-group mb-2">
-        <label for="especie_id" class="form-label">{{ __('Especie') }}</label>
+        <label for="especie_id" class="form-label">{{ __('Especie') }} <span class="text-danger">*</span></label>
         <select name="especie_id" id="especie_id" class="form-control @error('especie_id') is-invalid @enderror">
             @foreach(($species ?? []) as $s)
                 <option value="{{ $s->id }}" {{ (string)old('especie_id', $animalFile?->especie_id) === (string)$s->id ? 'selected' : '' }}>{{ $s->nombre }}</option>
@@ -40,7 +40,7 @@
 
     @if(empty($hideState))
         <div class="form-group mb-2">
-            <label for="estado_id" class="form-label">{{ __('Estado') }}</label>
+            <label for="estado_id" class="form-label">{{ __('Estado') }} <span class="text-danger">*</span></label>
             <select name="estado_id" id="estado_id" class="form-control @error('estado_id') is-invalid @enderror">
                 @foreach(($animalStatuses ?? []) as $st)
                     <option value="{{ $st->id }}" {{ (string)old('estado_id', $animalFile?->estado_id) === (string)$st->id || ((!old('estado_id', $animalFile?->estado_id)) && empty($animalFile?->estado_id) && mb_strtolower($st->nombre) === 'en recuperación') ? 'selected' : '' }}>{{ $st->nombre }}</option>

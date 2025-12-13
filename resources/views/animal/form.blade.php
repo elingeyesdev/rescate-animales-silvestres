@@ -7,7 +7,7 @@
         </div>
     @endif
     <div class="form-group mb-2">
-        <label for="sexo" class="form-label">{{ __('Sexo') }}</label>
+        <label for="sexo" class="form-label">{{ __('Sexo') }} <span class="text-danger">*</span></label>
         <select name="sexo" id="sexo" class="form-control @error('sexo') is-invalid @enderror">
             @php($current = old('sexo', $animal?->sexo))
             @foreach(['Hembra','Macho','Desconocido'] as $opt)
@@ -35,7 +35,7 @@
     @endif
     @if(empty($hideReportSelect))
         <div class="form-group mb-2">
-            <label for="reporte_id" class="form-label">{{ __('Número de reporte') }}</label>
+            <label for="reporte_id" class="form-label">{{ __('Número de reporte') }} <span class="text-danger">*</span></label>
             <select name="reporte_id" id="reporte_id" class="form-control @error('reporte_id') is-invalid @enderror">
                 <option value="">{{ __('Seleccione') }}</option>
                 @foreach(($reports ?? []) as $r)

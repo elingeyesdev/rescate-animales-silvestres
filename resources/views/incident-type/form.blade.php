@@ -2,12 +2,12 @@
     <div class="col-md-12">
         
         <div class="form-group mb-2 mb20">
-            <label for="nombre" class="form-label">{{ __('Nombre') }}</label>
+            <label for="nombre" class="form-label">{{ __('Nombre') }} <span class="text-danger">*</span></label>
             <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre', $incidentType?->nombre) }}" id="nombre" placeholder="Nombre">
             {!! $errors->first('nombre', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
-            <label for="riesgo" class="form-label">{{ __('Nivel de riesgo') }}</label>
+            <label for="riesgo" class="form-label">{{ __('Nivel de riesgo') }} <span class="text-danger">*</span></label>
             @php($r = old('riesgo', $incidentType?->riesgo))
             <select name="riesgo" id="riesgo" class="form-control @error('riesgo') is-invalid @enderror">
                 <option value="0" {{ (string)$r==='0'?'selected':'' }}>{{ __('Bajo') }}</option>
@@ -17,7 +17,7 @@
             {!! $errors->first('riesgo', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
-            <label for="activo" class="form-label">{{ __('Activo') }}</label>
+            <label for="activo" class="form-label">{{ __('Activo') }} <span class="text-danger">*</span></label>
             @php($a = old('activo', $incidentType?->activo))
             <select name="activo" id="activo" class="form-control @error('activo') is-invalid @enderror">
                 <option value="1" {{ (string)$a==='1'?'selected':'' }}>{{ __('Sí') }}</option>

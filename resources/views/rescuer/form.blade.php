@@ -2,7 +2,7 @@
     <div class="col-md-12">
         
         <div class="form-group mb-2 mb20">
-            <label for="persona_id" class="form-label">{{ __('Persona') }}</label>
+            <label for="persona_id" class="form-label">{{ __('Persona') }} <span class="text-danger">*</span></label>
             <select name="persona_id" id="persona_id" class="form-control @error('persona_id') is-invalid @enderror">
                 <option value="">Seleccione</option>
                 @foreach(($people ?? []) as $p)

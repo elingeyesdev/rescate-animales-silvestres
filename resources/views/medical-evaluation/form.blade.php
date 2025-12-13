@@ -22,7 +22,7 @@
             {!! $errors->first('fecha', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
-            <label for="veterinario_id" class="form-label">{{ __('Veterinario') }}</label>
+            <label for="veterinario_id" class="form-label">{{ __('Veterinario') }} <span class="text-danger">*</span></label>
             <select name="veterinario_id" id="veterinario_id" class="form-control @error('veterinario_id') is-invalid @enderror" aria-describedby="vet_specialty_hint">
                 <option value="">{{ __('Seleccione') }}</option>
                 @foreach(($veterinarians ?? []) as $v)

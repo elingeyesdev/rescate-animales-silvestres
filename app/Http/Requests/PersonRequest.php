@@ -35,7 +35,7 @@ class PersonRequest extends FormRequest
         
         $rules = [
 			'nombre' => 'required|string',
-			'ci' => 'required|string',
+			'ci' => 'required|string|unique:people,ci' . ($personId ? ',' . $personId : ''),
 			'telefono' => 'nullable|string',
 			'es_cuidador' => 'nullable|boolean',
 			'cuidador_center_id' => 'nullable|exists:centers,id',

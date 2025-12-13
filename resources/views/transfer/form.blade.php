@@ -13,7 +13,7 @@
         </div>
 
         <div class="form-group mb-2 mb20">
-            <label for="animal_file_id" class="form-label">{{ __('Hoja del animal') }}</label>
+            <label for="animal_file_id" class="form-label">{{ __('Hoja del animal') }} <span class="text-danger">*</span></label>
             <select name="animal_file_id" id="animal_file_id" class="form-control @error('animal_file_id') is-invalid @enderror">
                 <option value="">{{ __('Seleccione') }}</option>
                 @foreach(($animalFiles ?? []) as $af)
@@ -29,7 +29,7 @@
         
 
         <div class="form-group mb-2 mb20" id="centers_map_wrap" style="display:none;">
-            <label class="form-label">{{ __('Seleccione el centro de destino en el mapa') }}</label>
+            <label class="form-label">{{ __('Seleccione el centro de destino en el mapa') }} <span class="text-danger">*</span></label>
             <div id="centers_map" style="height: 280px; border-radius: 4px; margin-bottom: 8px;"></div>
             <input type="hidden" name="centro_id" id="centro_id" value="{{ old('centro_id', $transfer?->centro_id) }}">
             <div id="centers_legend" class="small text-muted"></div>

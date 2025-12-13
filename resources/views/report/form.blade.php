@@ -20,7 +20,7 @@
         {!! $errors->first('general', '<div class="alert alert-danger" role="alert"><strong>:message</strong></div>') !!}
 
         <div class="form-group mb-2 mb20">
-            <label for="imagen" class="form-label">{{ __('Imagen') }}</label>
+            <label for="imagen" class="form-label">{{ __('Imagen') }}@if(empty($report?->id)) <span class="text-danger">*</span>@endif</label>
             <div class="custom-file">
                 <input type="file" accept="image/jpeg,image/jpg,image/png" name="imagen" class="custom-file-input @error('imagen') is-invalid @enderror" id="imagen">
                 <label class="custom-file-label" for="imagen" data-browse="Subir">Subir la imagen del animal</label>
@@ -36,7 +36,7 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group mb-2 mb20">
-                    <label for="condicion_inicial_id" class="form-label">{{ __('Estado inicial del animal') }}</label>
+                    <label for="condicion_inicial_id" class="form-label">{{ __('Estado inicial del animal') }} <span class="text-danger">*</span></label>
                     <select name="condicion_inicial_id" id="condicion_inicial_id" class="form-control @error('condicion_inicial_id') is-invalid @enderror">
                         <option value="">{{ __('Seleccione...') }}</option>
                         @foreach(($conditions ?? []) as $c)
@@ -54,7 +54,7 @@
             </div>
             <div class="col-md-6">
                 <div class="form-group mb-2 mb20">
-                    <label for="tipo_incidente_id" class="form-label">{{ __('Tipo de incidente') }}</label>
+                    <label for="tipo_incidente_id" class="form-label">{{ __('Tipo de incidente') }} <span class="text-danger">*</span></label>
                     <select name="tipo_incidente_id" id="tipo_incidente_id" class="form-control @error('tipo_incidente_id') is-invalid @enderror">
                         <option value="">{{ __('Seleccione...') }}</option>
                         @foreach(($incidentTypes ?? []) as $it)
@@ -75,7 +75,7 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group mb-2 mb20">
-                    <label class="form-label d-block">{{ __('Tamaño del animal') }}</label>
+                    <label class="form-label d-block">{{ __('Tamaño del animal') }} <span class="text-danger">*</span></label>
                     @php($tam = old('tamano', $report?->tamano ?? 'mediano'))
                     <div class="icheck-primary d-inline mr-3">
                         <input type="radio" id="tamano_peq" name="tamano" value="pequeno" {{ $tam==='pequeno' ? 'checked' : '' }}>
@@ -94,7 +94,7 @@
             </div>
             <div class="col-md-6">
                 <div class="form-group mb-2 mb20">
-                    <label class="form-label d-block">{{ __('¿Puede moverse?') }}</label>
+                    <label class="form-label d-block">{{ __('¿Puede moverse?') }} <span class="text-danger">*</span></label>
                     @php($pm = old('puede_moverse', is_null($report?->puede_moverse) ? '0' : (int)$report->puede_moverse))
                     <div class="icheck-primary d-inline mr-3">
                         <input type="radio" id="moverse_si" name="puede_moverse" value="1" {{ (string)$pm === '1' ? 'checked' : '' }}>
@@ -143,7 +143,7 @@
 
         @if(empty($report?->id))
         <div class="form-group mb-2 mb20">
-            <label class="form-label">{{ __('Selecciona la ubicación en el mapa') }}</label>
+            <label class="form-label">{{ __('Selecciona la ubicación en el mapa') }} <span class="text-danger">*</span></label>
             <div class="row">
                 <div class="col-12">
                     <div id="mapid" style="height: 360px; width: 100%; border-radius: 4px;"></div>
@@ -164,7 +164,7 @@
             {!! $errors->first('traslado_inmediato', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20" id="centro_wrap" style="display:none;">
-            <label class="form-label">{{ __('Seleccione el centro de destino en el mapa') }}</label>
+            <label class="form-label">{{ __('Seleccione el centro de destino en el mapa') }} <span class="text-danger">*</span></label>
             <div class="row">
                 <div class="col-12">
                     <div id="centers_map" style="height: 320px; width: 100%; border-radius: 4px; margin-bottom: 8px;"></div>
