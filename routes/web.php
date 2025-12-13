@@ -54,7 +54,7 @@ Route::get('/refresh-csrf', function () {
 Route::get('/landing', [App\Http\Controllers\LandingController::class, 'index'])->name('landing');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->middleware('auth')->name('home');
 Route::get('/dashboard/export-pdf', [App\Http\Controllers\HomeController::class, 'exportPdf'])->middleware('auth')->name('dashboard.export-pdf');
-Route::get('/dashboard/export-csv', [App\Http\Controllers\HomeController::class, 'exportCsv'])->middleware('auth')->name('dashboard.export-csv');
+Route::get('/dashboard/export-excel', [App\Http\Controllers\HomeController::class, 'exportExcel'])->middleware('auth')->name('dashboard.export-excel');
 Route::get('animal-histories/{animal_history}/pdf', [AnimalHistoryController::class, 'pdf'])->name('animal-histories.pdf')->middleware('auth');
 Route::prefix('reports')->name('reports.')->group(function () {
     Route::put('{report}/approve', [ReportController::class, 'approve'])->name('approve')->middleware('auth');
@@ -108,7 +108,7 @@ Route::resource('animal-histories', AnimalHistoryController::class)->only(['inde
 
 Route::get('reportes', [ReportsController::class, 'index'])->name('reportes.index')->middleware('auth');
 Route::get('reportes/exportar-pdf', [ReportsController::class, 'exportPdf'])->name('reportes.export-pdf')->middleware('auth');
-Route::get('reportes/exportar-csv', [ReportsController::class, 'exportCsv'])->name('reportes.export-csv')->middleware('auth');
+Route::get('reportes/exportar-excel', [ReportsController::class, 'exportExcel'])->name('reportes.export-excel')->middleware('auth');
 
 
 // ========== HELPDESK WIDGET ==========
