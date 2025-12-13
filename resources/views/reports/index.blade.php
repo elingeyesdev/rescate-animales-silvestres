@@ -36,10 +36,10 @@
                target="_blank">
                 <i class="fas fa-file-pdf mr-2"></i>Exportar a PDF
             </a>
-            <a href="{{ route('reportes.export-csv', request()->all()) }}" 
+            <a href="{{ route('reportes.export-excel', request()->all()) }}" 
                class="btn btn-success btn-sm ml-2" 
                target="_blank">
-                <i class="fas fa-file-csv mr-2"></i>Exportar a CSV
+                <i class="fas fa-file-excel mr-2"></i>Exportar a Excel
             </a>
         </div>
     </div>
