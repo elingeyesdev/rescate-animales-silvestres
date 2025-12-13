@@ -17,6 +17,7 @@ use Illuminate\View\View;
 use App\Services\Animal\AnimalTransferTransactionalService;
 use App\Services\Report\ReportUrgencyService;
 use App\Services\Fire\FocosCalorService;
+use App\Services\Fire\ExternalFireReportsService;
 use App\Models\AnimalCondition;
 use App\Models\IncidentType;
 use App\Models\AnimalHistory;
@@ -33,7 +34,8 @@ class ReportController extends Controller
     public function __construct(
         private readonly AnimalTransferTransactionalService $transferService,
         private readonly ReportUrgencyService $urgencyService,
-        private readonly FocosCalorService $focosCalorService
+        private readonly FocosCalorService $focosCalorService,
+        private readonly ExternalFireReportsService $externalFireReportsService
     ) {
         // Permitir create y store sin autenticación (para usuarios anónimos desde landing)
         $this->middleware('auth')->except(['create', 'store']);
@@ -473,11 +475,16 @@ class ReportController extends Controller
         $speciesIds = $releases->pluck('especie_id')->filter()->unique();
         $species = Species::whereIn('id', $speciesIds)->orderBy('nombre')->get(['id', 'nombre']);
 
+        // Obtener reportes externos de incendios
+        $externalFireReports = $this->externalFireReportsService->getExternalFireReports();
+        $externalFireReportsFormatted = $this->externalFireReportsService->formatForMap($externalFireReports);
+
         return view('report.mapa-campo', compact(
             'reports', 
             'focosCalorFormatted', 
             'releases', 
-            'species'
+            'species',
+            'externalFireReportsFormatted'
         ));
     }
 

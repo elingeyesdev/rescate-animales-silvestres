@@ -93,6 +93,12 @@
                                         </label>
                                     </div>
                                     <div class="form-check form-check-inline mb-1">
+                                        <input class="form-check-input" type="checkbox" id="toggleExternalFireReports" checked style="margin-top: 0.25rem;">
+                                        <label class="form-check-label" for="toggleExternalFireReports" style="font-size: 11px;">
+                                            <i class="fas fa-fire-alt"></i> {{ __('Reportes Externos') }}
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline mb-1">
                                         <input class="form-check-input" type="checkbox" id="togglePredictions" checked style="margin-top: 0.25rem;">
                                         <label class="form-check-label" for="togglePredictions" style="font-size: 11px;">
                                             <i class="fas fa-fire"></i> {{ __('Predicciones') }}
@@ -206,6 +212,25 @@
                                     <span style="display: inline-block; width: 10px; height: 10px; background-color: #ff0000; border: 1px solid #fff; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.3); vertical-align: middle;"></span>
                                     <span style="margin-left: 4px;">{{ __('Foco de Calor') }}</span>
                                 </div>
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #dee2e6;">
+                                    <strong>{{ __('Reportes Externos') }}:</strong>
+                                    <div style="margin-top: 4px;">
+                                        <span style="display: inline-block; width: 12px; height: 12px; background-color: #dc3545; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle;"></span>
+                                        <span style="margin-left: 4px; font-size: 10px;">{{ __('Fuera de control') }}</span>
+                                    </div>
+                                    <div style="margin-top: 2px;">
+                                        <span style="display: inline-block; width: 12px; height: 12px; background-color: #ff8800; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle;"></span>
+                                        <span style="margin-left: 4px; font-size: 10px;">{{ __('Activo') }}</span>
+                                    </div>
+                                    <div style="margin-top: 2px;">
+                                        <span style="display: inline-block; width: 12px; height: 12px; background-color: #ffc107; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle;"></span>
+                                        <span style="margin-left: 4px; font-size: 10px;">{{ __('Contenido') }}</span>
+                                    </div>
+                                    <div style="margin-top: 2px;">
+                                        <span style="display: inline-block; width: 12px; height: 12px; background-color: #28a745; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.3); vertical-align: middle;"></span>
+                                        <span style="margin-left: 4px; font-size: 10px;">{{ __('Controlado') }}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -223,11 +248,13 @@
         let releaseMarkers = [];
         let predictionLayers = [];
         let focosCalorMarkers = [];
+        let externalFireReportsMarkers = [];
         let loadedPredictions = new Set(); // Para evitar cargar predicciones duplicadas
         let showReports = true;
         let showReleases = true;
         let showPredictions = true;
         let showFocosCalor = true;
+        let showExternalFireReports = true;
         let selectedSpeciesId = null;
         let reportStatusFilter = 'all'; // 'all', 'with_file', 'without_file'
         let weatherRequestInProgress = false; // Para evitar múltiples peticiones simultáneas
@@ -235,6 +262,7 @@
         const reportsData = @json($reports ?? []);
         const releasesData = @json($releases ?? []);
         const focosCalorData = @json($focosCalorFormatted ?? []);
+        const externalFireReportsData = @json($externalFireReportsFormatted ?? []);
 
         function initMap() {
             if (typeof L === 'undefined') {
@@ -279,6 +307,9 @@
             
             // Agregar marcadores de focos de calor (intenta primero API de integración, luego FIRMS desde BD)
             addFocosCalorMarkers();
+            
+            // Agregar marcadores de reportes externos de incendios
+            addExternalFireReportsMarkers();
 
             // Toggle de reportes/hallazgos
             const toggleReports = document.getElementById('toggleReports');
@@ -313,6 +344,15 @@
                 toggleFocosCalor.addEventListener('change', function() {
                     showFocosCalor = this.checked;
                     updateFocosCalorMarkers();
+                });
+            }
+
+            // Toggle de reportes externos de incendios
+            const toggleExternalFireReports = document.getElementById('toggleExternalFireReports');
+            if (toggleExternalFireReports) {
+                toggleExternalFireReports.addEventListener('change', function() {
+                    showExternalFireReports = this.checked;
+                    updateExternalFireReportsMarkers();
                 });
             }
 
@@ -581,6 +621,147 @@
             });
         }
 
+        function addExternalFireReportsMarkers() {
+            if (!map) return;
+            
+            if (!externalFireReportsData || externalFireReportsData.length === 0) {
+                console.log('[Reportes Externos] No hay datos de reportes externos para mostrar');
+                return;
+            }
+            
+            console.log(`[Reportes Externos] Agregando ${externalFireReportsData.length} reportes externos al mapa`);
+            
+            externalFireReportsData.forEach(function(report) {
+                if (!report.lat || !report.lng) return;
+                
+                const hasLocalReports = report.has_local_reports || false;
+                const localReportsCount = report.local_reports_count || 0;
+                
+                // Si tiene hallazgos locales, usar ícono de animal con efecto de titileo
+                // Si no, usar ícono de fuego normal
+                const iconClass = hasLocalReports ? 'fa-paw' : 'fa-fire';
+                const iconColor = report.color || '#6c757d';
+                const blinkClass = hasLocalReports ? 'external-fire-report-blink' : '';
+                
+                const iconHtml = `
+                    <div class="external-fire-report-icon ${blinkClass}" style="
+                        background-color: ${iconColor};
+                        width: 28px;
+                        height: 28px;
+                        border-radius: 50%;
+                        border: 3px solid white;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        position: relative;
+                    ">
+                        <i class="fas ${iconClass}" style="color: white; font-size: 14px;"></i>
+                        ${hasLocalReports ? `
+                        <div style="
+                            position: absolute;
+                            top: -4px;
+                            right: -4px;
+                            background-color: #dc3545;
+                            color: white;
+                            border-radius: 50%;
+                            width: 18px;
+                            height: 18px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 10px;
+                            font-weight: bold;
+                            border: 2px solid white;
+                        ">${localReportsCount}</div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                const icon = L.divIcon({
+                    className: 'custom-external-fire-report-marker',
+                    html: iconHtml,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14],
+                });
+                
+                const marker = L.marker([report.lat, report.lng], { icon: icon });
+                
+                if (showExternalFireReports) {
+                    marker.addTo(map);
+                }
+                
+                const nivelGravedad = report.nivel_gravedad || 'Desconocido';
+                const fechaHora = report.fecha_hora ? new Date(report.fecha_hora).toLocaleString('es-BO') : 'N/A';
+                const creado = report.creado ? new Date(report.creado).toLocaleString('es-BO') : 'N/A';
+                
+                const popupContent = `
+                    <div style="min-width: 250px;">
+                        <h6 style="margin: 0 0 8px 0; font-weight: bold; color: ${report.color || '#6c757d'};">
+                            <i class="fas ${iconClass}"></i> {{ __('Reporte de Incendio Externo') }}
+                            ${hasLocalReports ? '<span style="color: #dc3545; margin-left: 8px;"><i class="fas fa-exclamation-triangle"></i> {{ __('Animales en Peligro') }}</span>' : ''}
+                        </h6>
+                        ${hasLocalReports ? `
+                        <div style="font-size: 11px; margin-bottom: 8px; padding: 6px; background-color: #fff3cd; border-left: 3px solid #dc3545; border-radius: 4px;">
+                            <strong><i class="fas fa-paw"></i> ${localReportsCount} ${localReportsCount === 1 ? '{{ __('hallazgo local') }}' : '{{ __('hallazgos locales') }}'} relacionado${localReportsCount === 1 ? '' : 's'}</strong>
+                        </div>
+                        ` : ''}
+                        <div style="font-size: 12px; margin-bottom: 4px;">
+                            <strong>{{ __('Nivel de Gravedad') }}:</strong> 
+                            <span style="color: ${report.color || '#6c757d'}; font-weight: bold;">
+                                ${nivelGravedad}
+                            </span>
+                        </div>
+                        <div style="font-size: 12px; margin-bottom: 4px;">
+                            <strong>{{ __('Reportante') }}:</strong> ${report.nombre_reportante || 'N/A'}
+                        </div>
+                        <div style="font-size: 12px; margin-bottom: 4px;">
+                            <strong>{{ __('Teléfono') }}:</strong> ${report.telefono_contacto || 'N/A'}
+                        </div>
+                        <div style="font-size: 12px; margin-bottom: 4px;">
+                            <strong>{{ __('Ubicación') }}:</strong> ${report.nombre_lugar || 'N/A'}
+                        </div>
+                        <div style="font-size: 12px; margin-bottom: 4px;">
+                            <strong>{{ __('Fecha/Hora') }}:</strong> ${fechaHora}
+                        </div>
+                        ${report.comentario_adicional ? `
+                        <div style="font-size: 11px; margin-top: 8px; padding: 6px; background-color: #f8f9fa; border-radius: 4px;">
+                            <strong>{{ __('Comentario') }}:</strong><br>
+                            ${report.comentario_adicional}
+                        </div>
+                        ` : ''}
+                        <div style="font-size: 10px; color: #6c757d; margin-top: 8px;">
+                            <i class="fas fa-info-circle"></i> {{ __('Creado') }}: ${creado}
+                        </div>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                
+                marker.on('click', function(e) {
+                    if (e.originalEvent) {
+                        e.originalEvent.stopPropagation();
+                    }
+                    getWeatherData(report.lat, report.lng);
+                });
+                
+                externalFireReportsMarkers.push(marker);
+            });
+        }
+
+        function updateExternalFireReportsMarkers() {
+            externalFireReportsMarkers.forEach(function(marker) {
+                if (showExternalFireReports) {
+                    if (!map.hasLayer(marker)) {
+                        marker.addTo(map);
+                    }
+                } else {
+                    if (map.hasLayer(marker)) {
+                        map.removeLayer(marker);
+                    }
+                }
+            });
+        }
 
         function addReleaseMarkers() {
             if (!map) return;
@@ -1104,6 +1285,31 @@
     .map-legend {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
+    
+    /* Efecto de titileo para reportes externos con animales en peligro */
+    .external-fire-report-blink {
+        animation: externalFireReportBlink 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes externalFireReportBlink {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+        50% {
+            opacity: 0.7;
+            transform: scale(1.15);
+            box-shadow: 0 4px 16px rgba(220, 53, 69, 0.6);
+        }
+    }
+    
+    /* Asegurar que el marcador personalizado no tenga fondo por defecto */
+    .custom-external-fire-report-marker {
+        background: transparent !important;
+        border: none !important;
+    }
+    
     @media (max-width: 768px) {
         .map-controls {
             max-width: 240px;

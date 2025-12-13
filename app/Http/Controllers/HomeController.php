@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\Dashboard\DashboardService;
 use App\Services\Fire\FocosCalorService;
+use App\Services\Fire\ExternalFireReportsService;
 use App\Models\Species;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -20,12 +21,14 @@ class HomeController extends Controller
 {
     protected $dashboardService;
     protected $focosCalorService;
+    protected $externalFireReportsService;
 
-    public function __construct(DashboardService $dashboardService, FocosCalorService $focosCalorService)
+    public function __construct(DashboardService $dashboardService, FocosCalorService $focosCalorService, ExternalFireReportsService $externalFireReportsService)
     {
         $this->middleware('auth');
         $this->dashboardService = $dashboardService;
         $this->focosCalorService = $focosCalorService;
+        $this->externalFireReportsService = $externalFireReportsService;
     }
 
     public function index()
@@ -128,11 +131,16 @@ class HomeController extends Controller
         $speciesIds = $releases->pluck('especie_id')->filter()->unique();
         $species = Species::whereIn('id', $speciesIds)->orderBy('nombre')->get(['id', 'nombre']);
 
+        // Obtener reportes externos de incendios
+        $externalFireReports = $this->externalFireReportsService->getExternalFireReports();
+        $externalFireReportsFormatted = $this->externalFireReportsService->formatForMap($externalFireReports);
+
         return [
             'reports' => $reports,
             'focosCalorFormatted' => $focosCalorFormatted,
             'releases' => $releases,
             'species' => $species,
+            'externalFireReportsFormatted' => $externalFireReportsFormatted,
         ];
     }
 

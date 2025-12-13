@@ -20,6 +20,7 @@ services:
       NASA_FIRMS_API_KEY: ${NASA_FIRMS_API_KEY:-}
       NASA_FIRMS_API_BASE: ${NASA_FIRMS_API_BASE:-https://firms.modaps.eosdis.nasa.gov/api/area/csv}
       HOTSPOTS_INTEGRATION_API_URL: ${HOTSPOTS_INTEGRATION_API_URL:-http://brigadas.dasalas.shop/api/v1/hotspots/live}
+      EXTERNAL_FIRE_REPORTS_API_URL: ${EXTERNAL_FIRE_REPORTS_API_URL:-}
       MAIL_MAILER: ${MAIL_MAILER:-smtp}
       MAIL_HOST: ${MAIL_HOST:-smtp-relay.brevo.com}
       MAIL_PORT: ${MAIL_PORT:-587}

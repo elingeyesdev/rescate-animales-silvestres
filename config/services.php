@@ -52,4 +52,8 @@ return [
         'api_url' => env('OPEN_METEO_API_URL', 'https://api.open-meteo.com/v1/forecast'),
     ],
 
+    'external_fire_reports' => [
+        'api_url' => env('EXTERNAL_FIRE_REPORTS_API_URL', ''),
+    ],
+
 ];
