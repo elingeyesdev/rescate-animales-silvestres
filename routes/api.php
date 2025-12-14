@@ -49,7 +49,7 @@ Route::name('api.')->group(function () {
     Route::apiResource('users', UserApiController::class);
     Route::apiResource('people', PersonApiController::class)->only(['index', 'show']);
     Route::apiResource('centers', CenterApiController::class)->only(['index', 'show']);
-    Route::apiResource('species', SpeciesApiController::class)->only(['index', 'show']);
+    Route::apiResource('species', SpeciesApiController::class)->only(['show']);
     Route::apiResource('animal-statuses', AnimalStatusApiController::class)->only(['index', 'show']);
     Route::apiResource('veterinarians', VeterinarianApiController::class)->only(['index', 'show']);
     Route::apiResource('rescuers', RescuerApiController::class)->only(['index', 'show']);
