@@ -45,7 +45,7 @@ return [
     ],
 
     'hotspots_integration' => [
-        'api_url' => env('HOTSPOTS_INTEGRATION_API_URL', ''),
+        'api_url' => env('HOTSPOTS_INTEGRATION_API_URL', 'http://gatealas.dasalas.shop/api/gateway/brigadas/hotspots'),
     ],
 
     'open_meteo' => [
@@ -53,15 +53,15 @@ return [
     ],
 
     'sipi_weather' => [
-        'api_url' => env('SIPI_WEATHER_API_URL', 'http://sipi.dasalas.shop/api/public/weather'),
+        'api_url' => env('SIPI_WEATHER_API_URL', 'http://gatealas.dasalas.shop/api/gateway/prediccion/weather'),
     ],
 
     'external_fire_reports' => [
-        'api_url' => env('EXTERNAL_FIRE_REPORTS_API_URL', ''),
+        'api_url' => env('EXTERNAL_FIRE_REPORTS_API_URL', 'http://gatealas.dasalas.shop/api/gateway/brigadas/reportesanimales'),
     ],
 
     'fire_predictions_lookup' => [
-        'api_url' => env('FIRE_PREDICTIONS_LOOKUP_API_URL', 'http://sipi.dasalas.shop/api/public/predictions/lookup'),
+        'api_url' => env('FIRE_PREDICTIONS_LOOKUP_API_URL', 'http://gatealas.dasalas.shop/api/gateway/prediccion/lookup'),
     ],
 
 ];

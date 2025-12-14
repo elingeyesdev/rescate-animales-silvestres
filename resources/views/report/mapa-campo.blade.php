@@ -184,7 +184,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div style="padding: 6px; background-color: #e7f3ff; border-radius: 4px; font-size: 9px; color: #0066cc; margin-bottom: 6px;">
+                                    <div style="padding: 6px; background-color: #e7f3ff; border-radius: 4px; font-size: 9px; color: #0066cc; margin-bottom: 6px;" hidden>
                                         <i class="fas fa-map-marker-alt"></i> 
                                         <span id="weatherCoords">--</span>
                                     </div>

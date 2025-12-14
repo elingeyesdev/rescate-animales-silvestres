@@ -21,11 +21,11 @@ services:
       APP_FAKER_LOCALE: es_BO
       NASA_FIRMS_API_KEY: ${NASA_FIRMS_API_KEY:-}
       NASA_FIRMS_API_BASE: ${NASA_FIRMS_API_BASE:-https://firms.modaps.eosdis.nasa.gov/api/area/csv}
-      HOTSPOTS_INTEGRATION_API_URL: ${HOTSPOTS_INTEGRATION_API_URL:-http://brigadas.dasalas.shop/api/v1/hotspots/live}
-      EXTERNAL_FIRE_REPORTS_API_URL: http://brigadas.dasalas.shop/api/v1/reporte-rescate-animales
-      SIPI_WEATHER_API_URL: ${SIPI_WEATHER_API_URL:-http://sipi.dasalas.shop/api/public/weather}
+      HOTSPOTS_INTEGRATION_API_URL: ${HOTSPOTS_INTEGRATION_API_URL:-http://gatealas.dasalas.shop/api/gateway/brigadas/hotspots}
+      EXTERNAL_FIRE_REPORTS_API_URL: ${EXTERNAL_FIRE_REPORTS_API_URL:-http://gatealas.dasalas.shop/api/gateway/brigadas/reportesanimales}
+      SIPI_WEATHER_API_URL: ${SIPI_WEATHER_API_URL:-http://gatealas.dasalas.shop/api/gateway/prediccion/weather}
       OPEN_METEO_API_URL: https://api.open-meteo.com/v1/forecast
-      FIRE_PREDICTIONS_LOOKUP_API_URL: ${FIRE_PREDICTIONS_LOOKUP_API_URL:-http://sipi.dasalas.shop/api/public/predictions/lookup}
+      FIRE_PREDICTIONS_LOOKUP_API_URL: ${FIRE_PREDICTIONS_LOOKUP_API_URL:-http://gatealas.dasalas.shop/api/gateway/prediccion/lookup}
       MAIL_MAILER: ${MAIL_MAILER:-smtp}
       MAIL_HOST: ${MAIL_HOST:-smtp-relay.brevo.com}
       MAIL_PORT: ${MAIL_PORT:-587}
@@ -34,8 +34,9 @@ services:
       MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@example.com}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-RescateAnimales}
-      HELPDESK_WIDGET_API_KEY: ${HELPDESK_WIDGET_API_KEY:-}
-      HELPDESK_WIDGET_API_URL: ${HELPDESK_WIDGET_API_URL:-}
+      HELPDESK_API_KEY: ${HELPDESK_API_KEY:-}
+      HELPDESK_API_URL: ${HELPDESK_API_URL:-}
+      HELPDESK_DEBUG: ${HELPDESK_DEBUG:-false}
     depends_on:
       - db
     networks:
