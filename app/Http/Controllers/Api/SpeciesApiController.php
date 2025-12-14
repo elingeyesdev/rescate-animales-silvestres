@@ -11,9 +11,10 @@ class SpeciesApiController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
+        // Excluir el método index del middleware de autenticación para permitir acceso público
+        $this->middleware('auth:sanctum')->except(['index']);
     }
- 
+
     public function index(Request $request): JsonResponse
     {
         return response()->json(
