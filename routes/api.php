@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\AnimalApiController;
 use App\Http\Controllers\Api\PersonApiController;
 use App\Http\Controllers\Api\WeatherApiController;
 use App\Http\Controllers\TrazabilidadController;
+use App\Http\Controllers\Auth\RegistroSimpleController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -67,3 +68,6 @@ Route::get('/trazabilidad/voluntario/{ci}', [TrazabilidadController::class, 'por
 Route::get('/trazabilidad/provincia/{provincia}', [TrazabilidadController::class, 'porProvincia']);
 Route::get('/trazabilidad/animales/especie/{especie}', [TrazabilidadController::class, 'porEspecie']);
 Route::get('/trazabilidad/animales/liberados', [TrazabilidadController::class, 'porLiberados']);
+
+// Ruta para búsqueda por CI para el API Gateway
+Route::get('registro/ci/{ci}', [RegistroSimpleController::class, 'showByCi']);
