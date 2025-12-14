@@ -205,10 +205,47 @@
                             </div>
                         @endif
                     </div>
+                    <!-- /.card-body -->
+                    @if($animalFiles->hasPages())
+                    <div class="card-footer">
+                        <nav aria-label="Hojas de Vida Page Navigation">
+                            <div class="d-flex justify-content-center">
+                                {!! $animalFiles->withQueryString()->links('pagination::bootstrap-4') !!}
+                            </div>
+                        </nav>
+                    </div>
+                    <!-- /.card-footer -->
+                    @endif
                 </div>
-                {!! $animalFiles->withQueryString()->links() !!}
             </div>
         </div>
     </div>
     @include('partials.page-pad')
+    
+    <style>
+        /* Estilos para la paginación */
+        .card-footer .pagination {
+            margin-bottom: 0;
+            justify-content: center;
+        }
+        .card-footer .pagination .page-item .page-link {
+            color: #495057;
+            border-color: #dee2e6;
+        }
+        .card-footer .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: #fff;
+        }
+        .card-footer .pagination .page-item:hover:not(.active) .page-link {
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+        }
+        .card-footer .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            background-color: #fff;
+            border-color: #dee2e6;
+            cursor: not-allowed;
+        }
+    </style>
 @endsection
