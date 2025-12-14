@@ -60,4 +60,8 @@ return [
         'api_url' => env('EXTERNAL_FIRE_REPORTS_API_URL', ''),
     ],
 
+    'fire_predictions_lookup' => [
+        'api_url' => env('FIRE_PREDICTIONS_LOOKUP_API_URL', 'http://sipi.dasalas.shop/api/public/predictions/lookup'),
+    ],
+
 ];

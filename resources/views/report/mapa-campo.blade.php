@@ -92,19 +92,37 @@
                                             <i class="fas fa-satellite"></i> {{ __('Focos') }}
                                         </label>
                                     </div>
-                                    <div class="form-check form-check-inline mb-1">
+                                    @if(!empty($externalFireReportsFormatted) && count($externalFireReportsFormatted) > 0)
+                                    <div class="form-check form-check-inline mb-1" id="toggleExternalFireReportsContainer">
                                         <input class="form-check-input" type="checkbox" id="toggleExternalFireReports" checked style="margin-top: 0.25rem;">
                                         <label class="form-check-label" for="toggleExternalFireReports" style="font-size: 11px;">
                                             <i class="fas fa-fire-alt"></i> {{ __('Reportes Externos') }}
                                         </label>
                                     </div>
-                                    <div class="form-check form-check-inline mb-1">
+                                    @endif
+                                </div>
+                                
+                                @if(!empty($externalFireReportsFormatted) && count($externalFireReportsFormatted) > 0)
+                                <!-- Botón para cargar predicciones -->
+                                <div class="mt-2" id="predictionsButtonContainer">
+                                    <button type="button" id="btnLoadPredictions" class="btn btn-warning btn-sm btn-block" style="font-size: 11px;">
+                                        <i class="fas fa-fire"></i> {{ __('Ver Predicciones') }}
+                                    </button>
+                                    <div id="predictionsLoading" style="display: none; text-align: center; margin-top: 5px; font-size: 10px; color: #6c757d;">
+                                        <i class="fas fa-spinner fa-spin"></i> Cargando predicciones...
+                                    </div>
+                                </div>
+                                
+                                <!-- Toggle para mostrar/ocultar predicciones cargadas -->
+                                <div class="mt-2" id="togglePredictionsContainer" style="display: none;">
+                                    <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="checkbox" id="togglePredictions" checked style="margin-top: 0.25rem;">
                                         <label class="form-check-label" for="togglePredictions" style="font-size: 11px;">
-                                            <i class="fas fa-fire"></i> {{ __('Predicciones') }}
+                                            <i class="fas fa-eye"></i> {{ __('Mostrar Predicciones') }}
                                         </label>
                                     </div>
                                 </div>
+                                @endif
                             </div>
                             
                             <!-- Panel de clima en la esquina superior derecha -->
@@ -264,6 +282,25 @@
         const focosCalorData = @json($focosCalorFormatted ?? []);
         const externalFireReportsData = @json($externalFireReportsFormatted ?? []);
 
+        // Ocultar controles de reportes externos y predicciones si no hay datos
+        (function() {
+            if (!externalFireReportsData || externalFireReportsData.length === 0) {
+                const toggleContainer = document.getElementById('toggleExternalFireReportsContainer');
+                const predictionsButtonContainer = document.getElementById('predictionsButtonContainer');
+                
+                if (toggleContainer) {
+                    toggleContainer.style.display = 'none';
+                }
+                if (predictionsButtonContainer) {
+                    predictionsButtonContainer.style.display = 'none';
+                }
+                
+                console.log('[Mapa] No hay reportes externos disponibles, ocultando controles relacionados');
+            } else {
+                console.log(`[Mapa] ${externalFireReportsData.length} reportes externos disponibles`);
+            }
+        })();
+
         function initMap() {
             if (typeof L === 'undefined') {
                 console.log('[Mapa] Esperando a que Leaflet se cargue...');
@@ -336,6 +373,17 @@
                     showPredictions = this.checked;
                     updatePredictionLayers();
                 });
+            }
+            
+            // Handler del botón "Ver Predicciones"
+            const btnLoadPredictions = document.getElementById('btnLoadPredictions');
+            if (btnLoadPredictions) {
+                btnLoadPredictions.addEventListener('click', function() {
+                    console.log('[Predicciones] Botón presionado, iniciando carga de predicciones');
+                    loadAllPredictions();
+                });
+            } else {
+                console.warn('[Predicciones] Botón btnLoadPredictions no encontrado');
             }
 
             // Toggle de focos de calor (NASA FIRMS)
@@ -1041,64 +1089,189 @@
                 });
             });
 
-            // Módulo independiente: Predicciones de incendios (simulación)
-            // Cargar predicciones para todos los reportes con incendio_id
-            // Esto se hace después de agregar todos los marcadores
-            if (showPredictions) {
-                reportsData.forEach(function(report) {
-                    if (report.incendio_id) {
-                        console.log(`[Predicciones] Cargando predicción para reporte ${report.id} (incendio_id: ${report.incendio_id})`);
-                        loadFirePrediction(report.incendio_id);
-                    }
-                });
-            }
+            // Las predicciones se cargan solo cuando se presiona el botón "Ver Predicciones"
         }
 
-        function loadFirePrediction(focoIncendioId) {
-            // Evitar cargar la misma predicción dos veces
-            if (loadedPredictions.has(focoIncendioId)) {
-                console.log(`[Predicciones] Predicción ${focoIncendioId} ya cargada, omitiendo`);
+        function loadAllPredictions() {
+            const btn = document.getElementById('btnLoadPredictions');
+            const loadingDiv = document.getElementById('predictionsLoading');
+            const toggleContainer = document.getElementById('togglePredictionsContainer');
+            
+            if (!btn || !loadingDiv) {
+                console.error('[Predicciones] Botón o loading div no encontrado');
                 return;
             }
             
-            loadedPredictions.add(focoIncendioId);
-            console.log(`[Predicciones] Solicitando predicción para foco_incendio_id: ${focoIncendioId}`);
+            console.log('[Predicciones] ===== INICIANDO CARGA DE PREDICCIONES =====');
+            console.log('[Predicciones] Total de reportes externos disponibles:', externalFireReportsData ? externalFireReportsData.length : 0);
+            console.log('[Predicciones] Datos de reportes externos:', externalFireReportsData);
             
-            fetch(`/api/fire-predictions?foco_incendio_id=${focoIncendioId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.data && data.data.length > 0) {
-                        const prediction = data.data[0];
-                        console.log(`[Predicciones] Predicción recibida, dibujando en mapa`);
-                        drawFirePrediction(prediction);
-                    } else {
-                        console.warn(`[Predicciones] No se encontraron datos de predicción para foco_incendio_id: ${focoIncendioId}`);
-                        // Si no hay datos, remover del set para permitir reintento
-                        loadedPredictions.delete(focoIncendioId);
+            // Obtener todos los reportes externos de incendios con latitud y longitud
+            const externalReportsWithLocation = externalFireReportsData.filter(function(report) {
+                const hasLocation = report.lat != null && report.lng != null;
+                if (!hasLocation) {
+                    console.warn('[Predicciones] Reporte sin ubicación válida:', report);
+                }
+                return hasLocation;
+            });
+            
+            console.log(`[Predicciones] Reportes con ubicación válida: ${externalReportsWithLocation.length}`);
+            console.log('[Predicciones] Reportes con ubicación:', externalReportsWithLocation);
+            
+            if (externalReportsWithLocation.length === 0) {
+                alert('No hay reportes externos de incendios con ubicación para cargar predicciones');
+                console.warn('[Predicciones] No hay reportes con ubicación para procesar');
+                return;
+            }
+            
+            console.log(`[Predicciones] Cargando predicciones para ${externalReportsWithLocation.length} reportes externos de incendios`);
+            
+            // Deshabilitar botón y mostrar loading
+            btn.disabled = true;
+            loadingDiv.style.display = 'block';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+            
+            let completed = 0;
+            const total = externalReportsWithLocation.length;
+            
+            // Cargar predicciones una por una
+            externalReportsWithLocation.forEach(function(report, index) {
+                const key = `${report.lat}_${report.lng}`;
+                
+                console.log(`[Predicciones] Procesando reporte ${index + 1}/${total}: lat=${report.lat}, lng=${report.lng}`);
+                
+                // Evitar cargar la misma predicción dos veces
+                if (loadedPredictions.has(key)) {
+                    console.log(`[Predicciones] Predicción para ${report.lat}, ${report.lng} ya cargada, omitiendo`);
+                    completed++;
+                    if (completed === total) {
+                        finishLoadingPredictions(btn, loadingDiv, toggleContainer);
                     }
+                    return;
+                }
+                
+                // Pequeño delay entre peticiones para no sobrecargar el servidor
+                setTimeout(function() {
+                    loadFirePrediction(report.lat, report.lng, function() {
+                        completed++;
+                        console.log(`[Predicciones] Completado ${completed}/${total}`);
+                        if (completed === total) {
+                            finishLoadingPredictions(btn, loadingDiv, toggleContainer);
+                        }
+                    });
+                }, index * 200); // 200ms de delay entre cada petición
+            });
+        }
+
+        function finishLoadingPredictions(btn, loadingDiv, toggleContainer) {
+            btn.disabled = false;
+            loadingDiv.style.display = 'none';
+            btn.innerHTML = '<i class="fas fa-fire"></i> {{ __('Ver Predicciones') }}';
+            
+            if (predictionLayers.length > 0 && toggleContainer) {
+                toggleContainer.style.display = 'block';
+            }
+        }
+
+        function loadFirePrediction(lat, lng, callback) {
+            const key = `${lat}_${lng}`;
+            
+            // Evitar cargar la misma predicción dos veces
+            if (loadedPredictions.has(key)) {
+                console.log(`[Predicciones] Predicción para ${lat}, ${lng} ya cargada, omitiendo`);
+                if (callback) callback();
+                return;
+            }
+            
+            loadedPredictions.add(key);
+            console.log(`[Predicciones] Solicitando predicción para lat: ${lat}, lng: ${lng}`);
+            
+            // Usar el endpoint de lookup con GET (según la documentación del endpoint)
+            const apiUrl = '{{ config("services.fire_predictions_lookup.api_url") }}';
+            const url = `${apiUrl}?lat=${parseFloat(lat)}&lng=${parseFloat(lng)}&hours=6`;
+            
+            console.log(`[Predicciones] URL de petición: ${url}`);
+            
+            // Enviar por GET con query parameters
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => {
+                    console.log(`[Predicciones] Respuesta HTTP recibida, status: ${response.status}`);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error(`[Predicciones] Error HTTP ${response.status}:`, text);
+                            throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`[Predicciones] Respuesta JSON recibida para ${lat}, ${lng}:`, data);
+                    
+                    if (data && data.success && data.data && data.data.path && Array.isArray(data.data.path)) {
+                        console.log(`[Predicciones] Predicción válida recibida para ${lat}, ${lng}`);
+                        console.log(`[Predicciones] Path points: ${data.data.path.length}`);
+                        console.log(`[Predicciones] Primer punto del path:`, data.data.path[0]);
+                        drawFirePrediction(data.data, lat, lng);
+                    } else {
+                        console.warn(`[Predicciones] Respuesta inválida o sin path para ${lat}, ${lng}`, data);
+                        if (data && data.data) {
+                            console.warn(`[Predicciones] Estructura de data:`, Object.keys(data.data));
+                        }
+                        loadedPredictions.delete(key);
+                    }
+                    if (callback) callback();
                 })
                 .catch(error => {
-                    console.error(`[Predicciones] Error al cargar predicción para foco_incendio_id ${focoIncendioId}:`, error);
-                    // Remover del set en caso de error para permitir reintento
-                    loadedPredictions.delete(focoIncendioId);
+                    console.error(`[Predicciones] Error al cargar predicción para ${lat}, ${lng}:`, error);
+                    console.error(`[Predicciones] Stack trace:`, error.stack);
+                    loadedPredictions.delete(key);
+                    if (callback) callback();
                 });
         }
 
-        function drawFirePrediction(prediction) {
-            if (!map || !prediction.path || !Array.isArray(prediction.path)) return;
+        function drawFirePrediction(predictionData, originalLat, originalLng) {
+            console.log('[Predicciones] ===== INICIANDO DIBUJO DE PREDICCIÓN =====');
+            console.log('[Predicciones] originalLat:', originalLat, 'originalLng:', originalLng);
+            console.log('[Predicciones] predictionData:', predictionData);
+            
+            if (!map) {
+                console.error('[Predicciones] El mapa no está inicializado');
+                return;
+            }
+            
+            if (!predictionData || !predictionData.path || !Array.isArray(predictionData.path)) {
+                console.warn('[Predicciones] Datos de predicción inválidos:', predictionData);
+                return;
+            }
 
-            const path = prediction.path;
+            const path = predictionData.path;
+            console.log(`[Predicciones] Dibujando predicción con ${path.length} puntos de path`);
+            console.log('[Predicciones] Path data completo:', JSON.stringify(path, null, 2));
+            
+            if (path.length === 0) {
+                console.warn('[Predicciones] El path está vacío, no hay nada que dibujar');
+                return;
+            }
+            
             const circles = [];
             let polyline = null;
             
-            // Guardar el foco_incendio_id en las opciones para evitar duplicados
-            const focoIncendioId = prediction.foco_incendio_id || prediction.id || null;
+            // Usar el ID de la predicción o crear una clave única
+            const predictionId = predictionData.id || `${originalLat}_${originalLng}`;
+            console.log(`[Predicciones] ID de predicción: ${predictionId}`);
 
             // Primero crear la línea punteada (para que quede debajo de los círculos)
-            if (path.length > 1 && showPredictions) {
+            if (path.length > 1) {
                 const latlngs = path
-                    .filter(p => p.lat && p.lng)
-                    .map(p => [p.lat, p.lng]);
+                    .filter(p => p.lat != null && p.lng != null)
+                    .map(p => [parseFloat(p.lat), parseFloat(p.lng)]);
+
+                console.log(`[Predicciones] Puntos válidos para línea: ${latlngs.length} de ${path.length}`);
 
                 if (latlngs.length > 1) {
                     polyline = L.polyline(latlngs, {
@@ -1107,40 +1280,57 @@
                         opacity: 0.8,
                         dashArray: '10, 5',
                         zIndexOffset: -100, // Asegurar que esté debajo
-                        focoIncendioId: focoIncendioId // Guardar ID para evitar duplicados
+                        predictionId: predictionId // Guardar ID para evitar duplicados
                     });
                     
                     if (showPredictions) {
                         polyline.addTo(map);
+                        console.log('[Predicciones] Línea de propagación agregada al mapa');
                     }
                     predictionLayers.push(polyline);
+                } else {
+                    console.warn('[Predicciones] No hay suficientes puntos válidos para dibujar la línea');
                 }
             }
 
             // Luego crear los círculos (quedarán encima de la línea)
             path.forEach(function(point, index) {
-                if (!point.lat || !point.lng) return;
+                if (point.lat == null || point.lng == null) {
+                    console.warn(`[Predicciones] Punto ${index} sin coordenadas válidas:`, point);
+                    return;
+                }
 
-                const radius = (point.spread_radius_km || 0) * 1000; // convertir km a metros
-                const intensity = point.intensity || 0;
+                // El nuevo formato usa perimeter_radius_m (en metros)
+                const radius = parseFloat(point.perimeter_radius_m) || 0; // ya está en metros
+                const intensity = parseFloat(point.intensity) || 0;
+                
+                console.log(`[Predicciones] Punto ${index}: lat=${point.lat}, lng=${point.lng}, radius=${radius}m, intensity=${intensity}`);
 
-                // Color según intensidad (0-10) - más visibles
+                // Calcular horas desde el inicio
+                let hoursFromStart = 0;
+                if (point.t && path[0] && path[0].t) {
+                    const startTime = new Date(path[0].t);
+                    const pointTime = new Date(point.t);
+                    hoursFromStart = (pointTime - startTime) / (1000 * 60 * 60); // convertir a horas
+                }
+
+                // Color según intensidad (0-1) - más visibles
                 let color = '#ff8800';
                 let borderColor = '#ff6600';
                 let opacity = 0.4;
                 let borderWidth = 3;
                 
-                if (intensity >= 7) {
+                if (intensity >= 0.7) {
                     color = '#ff0000';
                     borderColor = '#cc0000';
                     opacity = 0.6;
                     borderWidth = 4;
-                } else if (intensity >= 5) {
+                } else if (intensity >= 0.5) {
                     color = '#ff4400';
                     borderColor = '#ff2200';
                     opacity = 0.5;
                     borderWidth = 3;
-                } else if (intensity >= 3) {
+                } else if (intensity >= 0.3) {
                     color = '#ff8800';
                     borderColor = '#ff6600';
                     opacity = 0.4;
@@ -1148,33 +1338,68 @@
                 }
 
                 // Crear círculo de propagación
-                const circle = L.circle([point.lat, point.lng], {
-                    radius: radius,
+                // Si el radio es muy pequeño, usar un mínimo para que sea visible
+                const minRadius = 50; // mínimo 50 metros para que sea visible
+                const finalRadius = Math.max(radius, minRadius);
+                
+                const circle = L.circle([parseFloat(point.lat), parseFloat(point.lng)], {
+                    radius: finalRadius,
                     color: borderColor,
                     fillColor: color,
                     fillOpacity: opacity,
                     weight: borderWidth,
                     zIndexOffset: 100, // Asegurar que esté encima de la línea
-                    focoIncendioId: focoIncendioId // Guardar ID para evitar duplicados
+                    predictionId: predictionId // Guardar ID para evitar duplicados
                 });
 
                 if (showPredictions) {
                     circle.addTo(map);
+                    console.log(`[Predicciones] Círculo ${index} agregado: radio=${finalRadius}m, intensidad=${intensity}`);
                 }
 
                 circles.push(circle);
+                
+                // Agregar marcador en el centro del círculo para mejor visibilidad
+                if (index === 0 || intensity >= 0.7) {
+                    const marker = L.marker([parseFloat(point.lat), parseFloat(point.lng)], {
+                        icon: L.divIcon({
+                            className: 'prediction-marker',
+                            html: `<div style="
+                                width: 12px;
+                                height: 12px;
+                                background-color: ${color};
+                                border: 2px solid ${borderColor};
+                                border-radius: 50%;
+                                box-shadow: 0 0 8px ${color};
+                            "></div>`,
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6]
+                        }),
+                        predictionId: predictionId
+                    });
+                    
+                    if (showPredictions) {
+                        marker.addTo(map);
+                    }
+                    predictionLayers.push(marker);
+                }
 
                 // Agregar popup al círculo
+                const radiusKm = (radius / 1000).toFixed(2);
+                const areaKm2 = (Math.PI * Math.pow(radius / 1000, 2)).toFixed(2);
+                const perimeterKm = (2 * Math.PI * radius / 1000).toFixed(2);
+                
                 const popupContent = `
                     <div style="min-width: 180px;">
                         <h6 style="margin: 0 0 8px 0;">
-                            <i class="fas fa-fire"></i> Predicción - Hora ${point.hour}
+                            <i class="fas fa-fire"></i> Predicción - +${hoursFromStart.toFixed(1)}h
                         </h6>
                         <div style="font-size: 12px;">
                             <div><strong>Intensidad:</strong> ${intensity.toFixed(2)}</div>
-                            <div><strong>Radio:</strong> ${point.spread_radius_km?.toFixed(2) || 0} km</div>
-                            <div><strong>Área afectada:</strong> ${point.affected_area_km2?.toFixed(2) || 0} km²</div>
-                            <div><strong>Perímetro:</strong> ${point.perimeter_km?.toFixed(2) || 0} km</div>
+                            <div><strong>Radio:</strong> ${radiusKm} km</div>
+                            <div><strong>Área afectada:</strong> ${areaKm2} km²</div>
+                            <div><strong>Perímetro:</strong> ${perimeterKm} km</div>
+                            ${point.t ? `<div style="font-size: 10px; color: #6c757d; margin-top: 4px;">${new Date(point.t).toLocaleString()}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -1182,10 +1407,17 @@
             });
 
             predictionLayers.push(...circles);
+            
+            console.log(`[Predicciones] ===== PREDICCIÓN DIBUJADA COMPLETAMENTE =====`);
+            console.log(`[Predicciones] Total de capas agregadas: ${predictionLayers.length}`);
+            console.log(`[Predicciones] - Línea: ${polyline ? 'Sí' : 'No'}`);
+            console.log(`[Predicciones] - Círculos: ${circles.length}`);
+            console.log(`[Predicciones] showPredictions está: ${showPredictions}`);
         }
 
         function updatePredictionLayers() {
-            // Actualizar capas existentes
+            // Solo actualizar capas existentes (mostrar/ocultar)
+            // No cargar nuevas predicciones automáticamente
             predictionLayers.forEach(function(layer) {
                 if (showPredictions) {
                     if (!map.hasLayer(layer)) {
@@ -1197,15 +1429,6 @@
                     }
                 }
             });
-
-            // Si se activó el toggle y hay reportes con incendio_id, cargar predicciones
-            if (showPredictions) {
-                reportsData.forEach(function(report) {
-                    if (report.incendio_id && !loadedPredictions.has(report.incendio_id)) {
-                        loadFirePrediction(report.incendio_id);
-                    }
-                });
-            }
         }
 
         // Inicializar cuando el DOM esté listo y Leaflet esté cargado
