@@ -4,6 +4,127 @@
         <a href="{{ route('register') }}">Crear cuenta nueva</a>
     </p>
     
+    {{-- Sección de búsqueda por CI - Siempre visible encima de Usuarios de Prueba --}}
+    <div class="mt-3 mb-2" id="ci-lookup-section">
+        <p class="text-center text-muted mb-2" style="font-size: 0.9rem;">
+            Si formas parte del sistema, anota tu CI
+        </p>
+        <div class="input-group">
+            <input type="text" 
+                   id="ci-lookup-input" 
+                   class="form-control" 
+                   placeholder="Ingrese su CI" 
+                   maxlength="20">
+            <div class="input-group-append">
+                <button type="button" 
+                        id="ci-lookup-btn" 
+                        class="btn btn-primary">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    {{-- Script inline para definir la función inmediatamente --}}
+    @php
+        $gatewayUrl = rtrim(env('GATEWAY_REGISTRO_SIMPLE_URL', 'http://gatealas.dasalas.shop/api/gateway/registro/ci'), '/');
+    @endphp
+    <script>
+    (function() {
+        var gatewayBaseUrl = @json($gatewayUrl);
+        console.log('Gateway URL configurado (inline):', gatewayBaseUrl);
+        
+        window.handleCiLookup = async function() {
+            console.log('=== handleCiLookup EJECUTADO ===');
+            var ciLookupInput = document.getElementById('ci-lookup-input');
+            console.log('Input encontrado:', ciLookupInput);
+            var ci = (ciLookupInput ? ciLookupInput.value : '').trim();
+            
+            console.log('handleCiLookup llamado, CI:', ci);
+            
+            if (!ci || ci.length < 5) {
+                alert('Por favor ingrese un CI válido (mínimo 5 caracteres)');
+                return;
+            }
+
+            // Llamar al gateway antes de redirigir
+            try {
+                const gatewayUrl = gatewayBaseUrl + '/' + encodeURIComponent(ci);
+                console.log('Llamando al gateway:', gatewayUrl);
+                
+                const response = await fetch(gatewayUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Client-System': 'rescate',
+                    },
+                });
+
+                console.log('Respuesta del gateway:', response.status, response.statusText);
+
+                if (response.ok) {
+                    const json = await response.json();
+                    console.log('Datos recibidos del gateway:', json);
+                    
+                    // Guardar los datos en sessionStorage para que el registro los pueda leer
+                    if (json.success && json.found && json.data) {
+                        sessionStorage.setItem('gatewayData', JSON.stringify(json.data));
+                        console.log('Datos del gateway guardados en sessionStorage:', json.data);
+                    } else {
+                        // Si no hay datos, limpiar sessionStorage
+                        sessionStorage.removeItem('gatewayData');
+                        console.log('No se encontraron datos en el gateway');
+                    }
+                } else {
+                    console.warn('Error al llamar al gateway:', response.status);
+                    sessionStorage.removeItem('gatewayData');
+                }
+            } catch (error) {
+                console.error('Error al llamar al gateway:', error);
+                sessionStorage.removeItem('gatewayData');
+            }
+
+            // Redirigir al registro con el CI en la URL
+            console.log('Redirigiendo al registro con CI:', ci);
+            window.location.href = '{{ route("register") }}?ci=' + encodeURIComponent(ci);
+        };
+        
+        // Agregar event listener cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                var btn = document.getElementById('ci-lookup-btn');
+                var input = document.getElementById('ci-lookup-input');
+                if (btn) {
+                    btn.addEventListener('click', window.handleCiLookup);
+                }
+                if (input) {
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            window.handleCiLookup();
+                        }
+                    });
+                }
+            });
+        } else {
+            // DOM ya está listo
+            var btn = document.getElementById('ci-lookup-btn');
+            var input = document.getElementById('ci-lookup-input');
+            if (btn) {
+                btn.addEventListener('click', window.handleCiLookup);
+            }
+            if (input) {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        window.handleCiLookup();
+                    }
+                });
+            }
+        }
+    })();
+    </script>
+    
     {{-- Usuarios de prueba --}}
     <div class="test-users-section">
         <h6 class="text-center"><i class="fas fa-info-circle"></i> Usuarios de Prueba</h6>
@@ -104,6 +225,13 @@
         font-size: 0.65rem;
         padding: 2px 6px;
     }
+    #toggle-ci-lookup:hover {
+        color: #357ca5 !important;
+        text-decoration: underline !important;
+    }
+    #ci-lookup-section {
+        transition: all 0.3s ease;
+    }
 </style>
 @endpush
 @push('scripts')
@@ -161,6 +289,77 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Error refreshing CSRF token:', error);
         });
     }, 30 * 60 * 1000); // 30 minutos
+
+    // CI lookup - Configuración adicional de event listeners
+    function initCiLookup() {
+        var ciLookupInput = document.getElementById('ci-lookup-input');
+        var ciLookupBtn = document.getElementById('ci-lookup-btn');
+
+        console.log('Inicializando CI lookup...', {
+            input: ciLookupInput,
+            btn: ciLookupBtn,
+            gatewayUrl: gatewayBaseUrl
+        });
+
+        if (!ciLookupBtn || !ciLookupInput) {
+            console.warn('Elementos no encontrados, reintentando...');
+            setTimeout(initCiLookup, 100);
+            return;
+        }
+
+        // Handle CI lookup and redirect to register - función local que llama a la global
+        async function handleCiLookupLocal() {
+            window.handleCiLookup();
+        }
+
+        // Agregar event listener al botón
+        if (ciLookupBtn) {
+            ciLookupBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botón Buscar presionado');
+                handleCiLookupLocal();
+            });
+            
+            // También agregar onclick directo como respaldo
+            ciLookupBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botón Buscar presionado - onclick');
+                handleCiLookupLocal();
+                return false;
+            };
+        }
+        
+        // Agregar event listener al input para Enter
+        if (ciLookupInput) {
+            ciLookupInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Enter presionado en el input');
+                    handleCiLookupLocal();
+                }
+            });
+        }
+        
+        console.log('Event listeners agregados correctamente');
+    }
+
+    // Inicializar inmediatamente y también después de un delay
+    console.log('Iniciando setup de CI lookup...');
+    initCiLookup();
+    setTimeout(function() {
+        console.log('Reintentando inicialización de CI lookup...');
+        initCiLookup();
+    }, 500);
+    
+    // También intentar después de que todo esté cargado
+    window.addEventListener('load', function() {
+        console.log('Página completamente cargada, verificando CI lookup...');
+        initCiLookup();
+    });
+
 });
 </script>
 @endpush

@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 <h5 class="text-muted mb-3">Datos Personales</h5>
 
                 <div class="input-group mb-3">
-                    <input type="text" name="nombre"
+                    <input type="text" name="nombre" id="nombre"
                         class="form-control @error('nombre') is-invalid @enderror"
                         placeholder="Nombre completo" value="{{ old('nombre') }}" required autofocus>
                     <div class="input-group-append">
@@ -88,9 +88,9 @@ document.addEventListener('DOMContentLoaded', function(){
                 </div>
          
                 <div class="input-group mb-3">
-                    <input type="text" name="ci"
+                    <input type="text" name="ci" id="ci"
                         class="form-control @error('ci') is-invalid @enderror"
-                        placeholder="CI" value="{{ old('ci') }}" required>
+                        placeholder="CI" value="{{ old('ci', request('ci')) }}" required>
                     <div class="input-group-append">
                         <div class="input-group-text"><span class="fas fa-id-card"></span></div>
                     </div>
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 </div>
          
                 <div class="input-group mb-3">
-                    <input type="text" name="telefono"
+                    <input type="text" name="telefono" id="telefono"
                         class="form-control @error('telefono') is-invalid @enderror"
                         placeholder="Teléfono" value="{{ old('telefono') }}">
                     <div class="input-group-append">
@@ -252,5 +252,133 @@ document.addEventListener('DOMContentLoaded', function(){
     <p class="my-0">
         <a href="{{ route('login') }}">Ya tengo una cuenta</a>
     </p>
+    @php
+        $gatewayLookupUrl = rtrim(env('GATEWAY_REGISTRO_SIMPLE_URL', 'http://gatealas.dasalas.shop/api/gateway/registro/ci'), '/');
+    @endphp
+
+    @if($gatewayLookupUrl)
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const ciInput       = document.getElementById('ci');
+                const nombreInput   = document.getElementById('nombre');
+                const telefonoInput = document.getElementById('telefono');
+
+                const lookupBaseUrl = @json($gatewayLookupUrl);
+
+                if (!ciInput || !lookupBaseUrl) {
+                    return;
+                }
+
+                let lastLookupCi = null;
+                let isFetching   = false;
+
+                // Función para buscar en el gateway
+                async function lookupCi(ci) {
+                    const ciValue = (ci || '').trim();
+
+                    // Evitar llamadas con CI muy corto o repetidas
+                    if (ciValue.length < 5 || ciValue === lastLookupCi || isFetching) {
+                        return;
+                    }
+
+                    lastLookupCi = ciValue;
+                    isFetching   = true;
+
+                    try {
+                        const url = `${lookupBaseUrl}/${encodeURIComponent(ciValue)}`;
+
+                        const response = await fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Client-System': 'rescate',
+                            },
+                        });
+
+                        if (!response.ok) {
+                            console.warn('Gateway lookup failed with status', response.status);
+                            return;
+                        }
+
+                        const json = await response.json();
+
+                        // Si el gateway no encontró nada, no tocamos el formulario
+                        if (!json.success || !json.found || !json.data) {
+                            return;
+                        }
+
+                        const data = json.data;
+
+                        // Fusionar nombre y apellido para el campo nombre
+                        let nombreCompleto = '';
+                        if (data.nombre) {
+                            nombreCompleto = data.nombre;
+                            if (data.apellido) {
+                                nombreCompleto += ' ' + data.apellido;
+                            }
+                        }
+
+                        // Solo rellenar campos vacíos para no pisar lo que el usuario ya escribió
+                        if (nombreInput && !nombreInput.value.trim() && nombreCompleto) {
+                            nombreInput.value = nombreCompleto.trim();
+                        }
+                        if (telefonoInput && !telefonoInput.value.trim() && data.telefono) {
+                            telefonoInput.value = data.telefono;
+                        }
+
+                        // Opcional: normalizar el CI si viene formateado distinto
+                        if (data.ci && ciInput.value.trim() !== data.ci) {
+                            ciInput.value = data.ci;
+                        }
+
+                    } catch (error) {
+                        console.error('Error llamando al gateway para autocompletar', error);
+                    } finally {
+                        isFetching = false;
+                    }
+                }
+
+                // Leer datos del gateway desde sessionStorage (viene del login)
+                const gatewayDataStr = sessionStorage.getItem('gatewayData');
+                if (gatewayDataStr) {
+                    try {
+                        const gatewayData = JSON.parse(gatewayDataStr);
+                        console.log('Datos recibidos del gateway:', gatewayData);
+                        
+                        // Mostrar en consola los datos recibidos
+                        if (gatewayData && Object.keys(gatewayData).length > 0) {
+                            console.log('=== DATOS DEL GATEWAY ===');
+                            console.log('CI:', gatewayData.ci);
+                            console.log('Nombre:', gatewayData.nombre);
+                            console.log('Apellido:', gatewayData.apellido);
+                            console.log('Teléfono:', gatewayData.telefono);
+                            console.log('========================');
+                            
+                            // Por ahora solo mostrar en consola, más adelante se cargarán en el formulario
+                        }
+                        
+                        // Limpiar sessionStorage después de leerlo
+                        sessionStorage.removeItem('gatewayData');
+                    } catch (e) {
+                        console.error('Error al parsear datos del gateway:', e);
+                    }
+                }
+
+                // Si hay un CI en la URL (viene del login), buscar automáticamente
+                const urlParams = new URLSearchParams(window.location.search);
+                const ciFromUrl = urlParams.get('ci');
+                if (ciFromUrl && ciInput.value === ciFromUrl) {
+                    lookupCi(ciFromUrl);
+                }
+
+                // También buscar cuando el usuario sale del campo CI (blur)
+                ciInput.addEventListener('blur', function () {
+                    if (ciInput.value.trim().length >= 5) {
+                        lookupCi(ciInput.value);
+                    }
+                });
+            });
+        </script>
+    @endif
 @endsection
 @include('partials.custom-file')
