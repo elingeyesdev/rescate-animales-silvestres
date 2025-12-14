@@ -33,6 +33,7 @@ Route::get('/user', function (Request $request) {
 
 // Ruta pública para reports (sin autenticación)
 Route::post('/reports', [ReportApiController::class, 'store'])->name('api.reports.public');
+Route::get('/species', [SpeciesApiController::class, 'index'])->name('api.species.public');
 
 Route::name('api.')->group(function () {
     Route::apiResource('login', AuthApiController::class)->only(['store']);
