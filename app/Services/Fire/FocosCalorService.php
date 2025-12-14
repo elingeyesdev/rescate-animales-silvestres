@@ -2,51 +2,39 @@
 
 namespace App\Services\Fire;
 
-use App\Models\FocosCalor;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
- * Servicio para consultar focos de calor desde la base de datos local
- * (en lugar de llamar directamente a la API de NASA FIRMS)
+ * Servicio para consultar focos de calor desde servicios externos
+ * NO usa base de datos - solo consume APIs externas
  * 
- * Los datos se guardan en BD (persistente) y se cachean para consultas rápidas.
- * El caché se limpia automáticamente cuando se importan nuevos datos.
+ * Prioridad:
+ * 1. API de integración (v1/hotspots/live)
+ * 2. NASA FIRMS directo (sin guardar en BD)
  */
 class FocosCalorService
 {
     /**
-     * Tiempo de expiración del caché (en minutos)
-     * Los datos se actualizan cuando se ejecuta el comando de importación
-     */
-    private const CACHE_TTL = 360; // 6 horas
-
-    /**
      * Obtener focos de calor recientes (últimos N días)
      * 
-     * Los datos se consultan desde la BD. El caché se usa solo para
-     * consultas simples, no para datos grandes que pueden causar problemas.
-     *
+     * DEPRECADO: Usar getRecentHotspotsWithFallback() en su lugar
+     * 
      * @param int $days Número de días hacia atrás
      * @return Collection
+     * @deprecated
      */
     public function getRecentHotspots(int $days = 2): Collection
     {
-        // Usar caché solo para consultas pequeñas (estadísticas, conteos)
-        // Para colecciones grandes, consultar directamente desde BD
-        $since = Carbon::now()->subDays($days);
-        
-        return FocosCalor::where('acq_date', '>=', $since)
-            ->orderBy('acq_date', 'desc')
-            ->orderBy('acq_time', 'desc')
-            ->get();
+        // Redirigir al método con fallback
+        return $this->getRecentHotspotsWithFallback($days);
     }
 
     /**
      * Obtener focos de calor intentando primero desde la API de integración,
-     * si falla, usar datos de FIRMS desde la BD
+     * si falla, usar datos de FIRMS directamente (sin guardar en BD)
      * 
      * @param int $days Número de días hacia atrás
      * @return Collection
@@ -58,18 +46,24 @@ class FocosCalorService
             $integrationData = $this->fetchFromIntegrationApi();
             
             if ($integrationData !== null && !empty($integrationData) && is_array($integrationData)) {
-                // Convertir los datos de la API a formato Collection de modelos FocosCalor
+                // Convertir los datos de la API a formato Collection
                 $collection = $this->convertIntegrationDataToCollection($integrationData);
                 if ($collection->isNotEmpty()) {
+                    Log::info('FocosCalorService: Datos obtenidos de API de integración', [
+                        'count' => $collection->count()
+                    ]);
                     return $collection;
                 }
             }
         } catch (\Exception $e) {
-            // Si hay cualquier error, continuar con el fallback
+            Log::warning('FocosCalorService: Error al obtener datos de API de integración', [
+                'error' => $e->getMessage()
+            ]);
         }
         
-        // Si falla, usar datos de FIRMS desde la BD
-        return $this->getRecentHotspots($days);
+        // Si falla, usar datos de FIRMS directamente (sin guardar en BD)
+        Log::info('FocosCalorService: Usando NASA FIRMS como fallback');
+        return $this->fetchFromNasaFirmsDirect($days);
     }
 
     /**
@@ -110,7 +104,89 @@ class FocosCalorService
     }
 
     /**
-     * Convertir datos de la API de integración a Collection de modelos FocosCalor
+     * Obtener datos directamente de NASA FIRMS sin guardar en BD
+     * 
+     * @param int $days Número de días hacia atrás
+     * @return Collection
+     */
+    private function fetchFromNasaFirmsDirect(int $days = 2): Collection
+    {
+        $apiKey = config('services.nasa_firms.api_key');
+        $apiBase = config('services.nasa_firms.api_base', 'https://firms.modaps.eosdis.nasa.gov/api/area/csv');
+        
+        if (empty($apiKey)) {
+            Log::warning('FocosCalorService: NASA_FIRMS_API_KEY no configurada');
+            return collect();
+        }
+        
+        // Bolivia bounding box
+        $bounds = [
+            'min_lat' => -22.9,
+            'max_lat' => -9.7,
+            'min_lng' => -69.6,
+            'max_lng' => -57.5,
+        ];
+        
+        $collection = collect();
+        $satellites = ['VIIRS_NOAA21_NRT', 'VIIRS_SNPP_NRT', 'MODIS_NRT'];
+        
+        foreach ($satellites as $satellite) {
+            try {
+                $url = sprintf(
+                    '%s/%s/%s/%s,%s,%s,%s/%s',
+                    $apiBase,
+                    $apiKey,
+                    $satellite,
+                    $bounds['min_lng'],
+                    $bounds['min_lat'],
+                    $bounds['max_lng'],
+                    $bounds['max_lat'],
+                    $days
+                );
+                
+                $response = Http::timeout(30)->get($url);
+                
+                if ($response->successful()) {
+                    $csvData = $response->body();
+                    $lines = explode("\n", trim($csvData));
+                    
+                    if (count($lines) > 1) {
+                        $headers = null;
+                        foreach ($lines as $line) {
+                            if (strpos($line, 'latitude') !== false) {
+                                $headers = str_getcsv($line);
+                            } else if (!empty(trim($line)) && $headers) {
+                                $values = str_getcsv($line);
+                                if (count($values) >= count($headers)) {
+                                    $fire = array_combine($headers, $values);
+                                    
+                                    // Filtrar por Bolivia
+                                    $lat = (float) ($fire['latitude'] ?? 0);
+                                    $lng = (float) ($fire['longitude'] ?? 0);
+                                    
+                                    if ($lat >= $bounds['min_lat'] && $lat <= $bounds['max_lat'] &&
+                                        $lng >= $bounds['min_lng'] && $lng <= $bounds['max_lng']) {
+                                        
+                                        $hotspot = $this->createHotspotObject($fire);
+                                        $collection->push($hotspot);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning("FocosCalorService: Error obteniendo datos de {$satellite}", [
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        return $collection;
+    }
+
+    /**
+     * Convertir datos de la API de integración a Collection
      */
     private function convertIntegrationDataToCollection(array $hotspots): Collection
     {
@@ -160,29 +236,49 @@ class FocosCalorService
                 $brightTi5 = $brightness;
             }
 
-            // Crear modelo temporal (no guardado en BD)
-            $focoCalor = new FocosCalor();
-            $focoCalor->latitude = (float) $hotspot['latitude'];
-            $focoCalor->longitude = (float) $hotspot['longitude'];
-            $focoCalor->confidence = $confidence;
-            $focoCalor->acq_date = $acqDate;
-            $focoCalor->acq_time = $formattedTime;
-            $focoCalor->bright_ti4 = $brightTi4;
-            $focoCalor->bright_ti5 = $brightTi5;
-            $focoCalor->frp = isset($hotspot['frp']) ? (float) $hotspot['frp'] : null;
+            // Crear objeto simple (no modelo de BD)
+            $hotspotObj = $this->createHotspotObject([
+                'latitude' => (float) $hotspot['latitude'],
+                'longitude' => (float) $hotspot['longitude'],
+                'confidence' => $confidence,
+                'acq_date' => $acqDate->format('Y-m-d'),
+                'acq_time' => $formattedTime,
+                'bright_ti4' => $brightTi4,
+                'bright_ti5' => $brightTi5,
+                'frp' => isset($hotspot['frp']) ? (float) $hotspot['frp'] : null,
+            ], 'integration_' . md5($hotspot['latitude'] . $hotspot['longitude'] . $dateStr . $timeStr));
             
-            // Asignar un ID temporal único para evitar conflictos
-            $focoCalor->id = 'integration_' . md5($hotspot['latitude'] . $hotspot['longitude'] . $dateStr . $timeStr);
-            $focoCalor->exists = false; // Marcar como no persistido
-            
-            $collection->push($focoCalor);
+            $collection->push($hotspotObj);
         }
         
         return $collection;
     }
 
     /**
+     * Crear un objeto simple para representar un hotspot (sin BD)
+     */
+    private function createHotspotObject(array $data, ?string $id = null): object
+    {
+        $id = $id ?? 'firms_' . md5(($data['latitude'] ?? 0) . ($data['longitude'] ?? 0) . ($data['acq_date'] ?? '') . ($data['acq_time'] ?? ''));
+        
+        $acqDate = isset($data['acq_date']) ? Carbon::parse($data['acq_date']) : Carbon::today();
+        
+        return (object) [
+            'id' => $id,
+            'latitude' => (float) ($data['latitude'] ?? 0),
+            'longitude' => (float) ($data['longitude'] ?? 0),
+            'confidence' => isset($data['confidence']) ? (int) $data['confidence'] : null,
+            'acq_date' => $acqDate,
+            'acq_time' => $data['acq_time'] ?? '00:00:00',
+            'bright_ti4' => isset($data['bright_ti4']) ? (float) $data['bright_ti4'] : null,
+            'bright_ti5' => isset($data['bright_ti5']) ? (float) $data['bright_ti5'] : null,
+            'frp' => isset($data['frp']) ? (float) $data['frp'] : null,
+        ];
+    }
+
+    /**
      * Obtener focos de calor dentro de un área geográfica
+     * Filtra desde los datos obtenidos de las APIs externas
      *
      * @param float $minLat
      * @param float $maxLat
@@ -198,17 +294,31 @@ class FocosCalorService
         float $maxLng,
         ?int $days = null
     ): Collection {
-        $query = FocosCalor::whereBetween('latitude', [$minLat, $maxLat])
-            ->whereBetween('longitude', [$minLng, $maxLng]);
-
-        if ($days !== null) {
-            $since = Carbon::now()->subDays($days);
-            $query->where('acq_date', '>=', $since);
-        }
-
-        return $query->orderBy('acq_date', 'desc')
-            ->orderBy('acq_time', 'desc')
-            ->get();
+        $allHotspots = $this->getRecentHotspotsWithFallback($days ?? 2);
+        
+        return $allHotspots->filter(function ($hotspot) use ($minLat, $maxLat, $minLng, $maxLng, $days) {
+            $lat = $hotspot->latitude;
+            $lng = $hotspot->longitude;
+            
+            // Filtrar por área
+            if ($lat < $minLat || $lat > $maxLat || $lng < $minLng || $lng > $maxLng) {
+                return false;
+            }
+            
+            // Filtrar por días si se especifica
+            if ($days !== null) {
+                $since = Carbon::now()->subDays($days);
+                $acqDate = $hotspot->acq_date instanceof Carbon ? $hotspot->acq_date : Carbon::parse($hotspot->acq_date);
+                if ($acqDate->lt($since)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        })->sortByDesc(function ($hotspot) {
+            $acqDate = $hotspot->acq_date instanceof Carbon ? $hotspot->acq_date : Carbon::parse($hotspot->acq_date);
+            return $acqDate->timestamp;
+        })->values();
     }
 
     /**
@@ -220,16 +330,23 @@ class FocosCalorService
      */
     public function getHighConfidenceHotspots(int $minConfidence = 70, ?int $days = null): Collection
     {
-        $query = FocosCalor::where('confidence', '>=', $minConfidence);
-
-        if ($days !== null) {
-            $since = Carbon::now()->subDays($days);
-            $query->where('acq_date', '>=', $since);
-        }
-
-        return $query->orderBy('confidence', 'desc')
-            ->orderBy('acq_date', 'desc')
-            ->get();
+        $allHotspots = $this->getRecentHotspotsWithFallback($days ?? 2);
+        
+        return $allHotspots->filter(function ($hotspot) use ($minConfidence, $days) {
+            if (($hotspot->confidence ?? 0) < $minConfidence) {
+                return false;
+            }
+            
+            if ($days !== null) {
+                $since = Carbon::now()->subDays($days);
+                $acqDate = $hotspot->acq_date instanceof Carbon ? $hotspot->acq_date : Carbon::parse($hotspot->acq_date);
+                if ($acqDate->lt($since)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        })->sortByDesc('confidence')->values();
     }
 
     /**
@@ -240,31 +357,35 @@ class FocosCalorService
      */
     public function getStatistics(?int $days = null): array
     {
-        $query = FocosCalor::query();
-
+        $allHotspots = $this->getRecentHotspotsWithFallback($days ?? 2);
+        
         if ($days !== null) {
             $since = Carbon::now()->subDays($days);
-            $query->where('acq_date', '>=', $since);
+            $allHotspots = $allHotspots->filter(function ($hotspot) use ($since) {
+                $acqDate = $hotspot->acq_date instanceof Carbon ? $hotspot->acq_date : Carbon::parse($hotspot->acq_date);
+                return $acqDate->gte($since);
+            });
         }
-
-        $total = $query->count();
-        $highConfidence = (clone $query)->where('confidence', '>=', 70)->count();
-        $today = (clone $query)->whereDate('acq_date', Carbon::today())->count();
-
+        
+        $total = $allHotspots->count();
+        $highConfidence = $allHotspots->filter(fn($h) => ($h->confidence ?? 0) >= 70)->count();
+        $today = $allHotspots->filter(function ($hotspot) {
+            $acqDate = $hotspot->acq_date instanceof Carbon ? $hotspot->acq_date : Carbon::parse($hotspot->acq_date);
+            return $acqDate->isToday();
+        })->count();
+        
+        $avgConfidence = $allHotspots->avg('confidence') ?? 0;
+        
         return [
             'total' => $total,
             'high_confidence' => $highConfidence,
             'today' => $today,
-            'avg_confidence' => $query->avg('confidence') ?? 0,
+            'avg_confidence' => round($avgConfidence, 2),
         ];
     }
 
     /**
      * Formatear focos de calor para mostrar en mapas
-     * 
-     * NOTA: No se cachea el resultado formateado porque puede ser muy grande
-     * y causar problemas con límites de tamaño en la tabla cache.
-     * El caché se aplica solo a las consultas de BD, no al formateo.
      *
      * @param Collection $hotspots
      * @return array
@@ -276,10 +397,10 @@ class FocosCalorService
             return [];
         }
 
-        // Formatear directamente sin caché (el procesamiento es rápido)
+        // Formatear directamente
         return $hotspots->map(function ($hotspot) {
             try {
-                // Manejar tanto modelos de BD como modelos temporales
+                // Manejar fechas
                 $acqDate = $hotspot->acq_date;
                 if ($acqDate instanceof Carbon) {
                     $dateFormatted = $acqDate->format('d/m/Y');
@@ -301,7 +422,7 @@ class FocosCalorService
                 ];
             } catch (\Exception $e) {
                 // Si hay error formateando un hotspot, omitirlo
-                \Log::warning('Error formateando hotspot: ' . $e->getMessage());
+                Log::warning('Error formateando hotspot: ' . $e->getMessage());
                 return null;
             }
         })->filter()->toArray(); // Filtrar nulls
@@ -309,22 +430,11 @@ class FocosCalorService
 
     /**
      * Limpiar todo el caché de focos de calor
-     * 
-     * Se llama automáticamente cuando se importan nuevos datos
-     * para asegurar que se muestren los datos más recientes
+     * Ya no se usa caché, pero se mantiene para compatibilidad
      */
     public function clearCache(): void
     {
-        // Limpiar solo cachés específicos de focos de calor (si existen)
-        // Como ahora no usamos caché para datos grandes, esto es principalmente
-        // para estadísticas o conteos que puedan estar cacheados
-        try {
-            Cache::forget('focos_calor_recent_2');
-            Cache::forget('focos_calor_recent_7');
-            Cache::forget('focos_calor_stats');
-        } catch (\Exception $e) {
-            // Si falla, no es crítico - los datos se consultarán directamente desde BD
-        }
+        // Ya no se usa caché, pero se mantiene el método para compatibilidad
     }
 
     /**
@@ -332,32 +442,15 @@ class FocosCalorService
      *
      * @param float $lat
      * @param float $lng
-     * @param float $maxDistanceKm Distancia máxima en kilómetros (null = sin límite)
+     * @param float|null $maxDistanceKm Distancia máxima en kilómetros (null = sin límite)
      * @param int|null $days Número de días hacia atrás
-     * @return FocosCalor|null
+     * @return object|null
      */
-    public function findNearestHotspot(float $lat, float $lng, ?float $maxDistanceKm = 10, ?int $days = 2): ?FocosCalor
+    public function findNearestHotspot(float $lat, float $lng, ?float $maxDistanceKm = 10, ?int $days = 2): ?object
     {
-        $query = FocosCalor::query();
-
-        if ($days !== null) {
-            $since = Carbon::now()->subDays($days);
-            $query->where('acq_date', '>=', $since);
-        }
-
-        // Filtrar por área aproximada primero (más eficiente)
-        // 1 grado de latitud ≈ 111 km
-        if ($maxDistanceKm !== null) {
-            $latDelta = $maxDistanceKm / 111;
-            $lngDelta = $maxDistanceKm / (111 * cos(deg2rad($lat)));
-            
-            $query->whereBetween('latitude', [$lat - $latDelta, $lat + $latDelta])
-                  ->whereBetween('longitude', [$lng - $lngDelta, $lng + $lngDelta]);
-        }
-
-        $hotspots = $query->get();
-
-        if ($hotspots->isEmpty()) {
+        $allHotspots = $this->getRecentHotspotsWithFallback($days);
+        
+        if ($allHotspots->isEmpty()) {
             return null;
         }
 
@@ -365,8 +458,13 @@ class FocosCalorService
         $nearest = null;
         $minDistance = PHP_FLOAT_MAX;
 
-        foreach ($hotspots as $hotspot) {
-            $distance = $hotspot->distanceTo($lat, $lng);
+        foreach ($allHotspots as $hotspot) {
+            $distance = $this->calculateDistance(
+                $lat,
+                $lng,
+                $hotspot->latitude,
+                $hotspot->longitude
+            );
             
             if ($distance < $minDistance && ($maxDistanceKm === null || $distance <= $maxDistanceKm)) {
                 $minDistance = $distance;
@@ -378,24 +476,42 @@ class FocosCalorService
     }
 
     /**
+     * Calcular distancia entre dos coordenadas en kilómetros
+     */
+    private function calculateDistance(float $lat1, float $lng1, float $lat2, float $lng2): float
+    {
+        $earthRadius = 6371; // Radio de la Tierra en kilómetros
+
+        $latFrom = deg2rad($lat1);
+        $lonFrom = deg2rad($lng1);
+        $latTo = deg2rad($lat2);
+        $lonTo = deg2rad($lng2);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
+             cos($latFrom) * cos($latTo) *
+             sin($lonDelta / 2) * sin($lonDelta / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
+    }
+
+    /**
      * DEPRECADO: No usar asociación por ID
      * 
-     * La API de NASA FIRMS no proporciona IDs de incendios.
-     * Los focos de calor se relacionan con reportes por proximidad geográfica,
-     * no por ID. Usar getNearbyHotspots() en su lugar.
-     * 
-     * @deprecated Usar getNearbyHotspots() en su lugar
+     * @deprecated
      */
     public function associateNearestHotspotToReport(\App\Models\Report $report, float $maxDistanceKm = 10): bool
     {
         // No asociar por ID - los focos de calor son independientes
-        // La relación se hace por proximidad geográfica cuando se visualiza
         return false;
     }
 
     /**
      * Obtener focos de calor cercanos a unas coordenadas (para mostrar en mapa)
-     * Útil para mostrar información contextual sin necesidad de asociar
      *
      * @param float $lat
      * @param float $lng
@@ -405,26 +521,14 @@ class FocosCalorService
      */
     public function getNearbyHotspots(float $lat, float $lng, float $radiusKm = 20, ?int $days = 2): Collection
     {
-        $query = FocosCalor::query();
-
-        if ($days !== null) {
-            $since = Carbon::now()->subDays($days);
-            $query->where('acq_date', '>=', $since);
-        }
-
-        // Filtrar por área aproximada
-        $latDelta = $radiusKm / 111;
-        $lngDelta = $radiusKm / (111 * cos(deg2rad($lat)));
+        $allHotspots = $this->getRecentHotspotsWithFallback($days);
         
-        $query->whereBetween('latitude', [$lat - $latDelta, $lat + $latDelta])
-              ->whereBetween('longitude', [$lng - $lngDelta, $lng + $lngDelta]);
-
-        return $query->orderBy('acq_date', 'desc')
-            ->orderBy('confidence', 'desc')
-            ->get()
-            ->filter(function ($hotspot) use ($lat, $lng, $radiusKm) {
-                return $hotspot->distanceTo($lat, $lng) <= $radiusKm;
-            });
+        return $allHotspots->filter(function ($hotspot) use ($lat, $lng, $radiusKm) {
+            $distance = $this->calculateDistance($lat, $lng, $hotspot->latitude, $hotspot->longitude);
+            return $distance <= $radiusKm;
+        })->sortByDesc(function ($hotspot) {
+            $acqDate = $hotspot->acq_date instanceof Carbon ? $hotspot->acq_date : Carbon::parse($hotspot->acq_date);
+            return $acqDate->timestamp;
+        })->sortByDesc('confidence')->values();
     }
 }
-
