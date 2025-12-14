@@ -790,7 +790,7 @@
                                                 <span id="weatherWindDir">--</span>
                                             </div>
                                         </div>
-                                        <div style="padding: 6px; background-color: #f8f9fa; border-radius: 4px;" hidden>
+                                        <div style="padding: 6px; background-color: #f8f9fa; border-radius: 4px;">
                                             <div style="color: #6c757d; margin-bottom: 2px; font-size: 9px;">
                                                 <i class="fas fa-cloud-rain"></i> Precip.
                                             </div>

@@ -52,6 +52,10 @@ return [
         'api_url' => env('OPEN_METEO_API_URL', 'https://api.open-meteo.com/v1/forecast'),
     ],
 
+    'sipi_weather' => [
+        'api_url' => env('SIPI_WEATHER_API_URL', 'http://sipi.dasalas.shop/api/public/weather'),
+    ],
+
     'external_fire_reports' => [
         'api_url' => env('EXTERNAL_FIRE_REPORTS_API_URL', ''),
     ],

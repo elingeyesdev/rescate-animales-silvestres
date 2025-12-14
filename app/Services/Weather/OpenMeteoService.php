@@ -12,19 +12,139 @@ class OpenMeteoService
      */
     protected string $apiUrl;
 
+    /**
+     * URL base de la API de SIPI Weather
+     */
+    protected string $sipiApiUrl;
+
     public function __construct()
     {
         $this->apiUrl = config('services.open_meteo.api_url', 'https://api.open-meteo.com/v1/forecast');
+        $this->sipiApiUrl = config('services.sipi_weather.api_url');
     }
 
     /**
      * Obtener datos meteorológicos para una ubicación específica
+     * Intenta primero con SIPI Weather, si falla usa OpenMeteo como fallback
      *
      * @param float $latitude
      * @param float $longitude
      * @return array|null
      */
     public function getWeather(float $latitude, float $longitude): ?array
+    {
+        // Intentar primero con SIPI Weather
+        $sipiData = $this->getWeatherFromSipi($latitude, $longitude);
+        if ($sipiData !== null) {
+            Log::info('OpenMeteoService: Datos obtenidos de SIPI Weather', [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+            ]);
+            return $sipiData;
+        }
+
+        // Si SIPI falla, usar OpenMeteo como fallback
+        Log::info('OpenMeteoService: SIPI Weather no disponible, usando OpenMeteo como fallback', [
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+        ]);
+        return $this->getWeatherFromOpenMeteo($latitude, $longitude);
+    }
+
+    /**
+     * Obtener datos meteorológicos desde SIPI Weather API
+     *
+     * @param float $latitude
+     * @param float $longitude
+     * @return array|null
+     */
+    protected function getWeatherFromSipi(float $latitude, float $longitude): ?array
+    {
+        try {
+            $response = Http::timeout(10)->get($this->sipiApiUrl, [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+            ]);
+
+            if (!$response->successful()) {
+                Log::warning('OpenMeteoService: Error al obtener datos de SIPI Weather', [
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                return null;
+            }
+
+            $data = $response->json();
+
+            // Normalizar la respuesta de SIPI al formato esperado
+            // Asumiendo que SIPI devuelve datos similares, ajustar según la estructura real
+            return $this->normalizeSipiResponse($data);
+
+        } catch (\Exception $e) {
+            Log::warning('OpenMeteoService: Excepción al obtener datos de SIPI Weather', [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Normalizar la respuesta de SIPI al formato estándar
+     *
+     * @param array $data
+     * @return array|null
+     */
+    protected function normalizeSipiResponse(array $data): ?array
+    {
+        // Log de la estructura de respuesta para debugging
+        Log::debug('OpenMeteoService: Estructura de respuesta de SIPI Weather', [
+            'response_keys' => array_keys($data),
+            'response_sample' => $data,
+        ]);
+
+        // Intentar mapear los campos de SIPI al formato esperado
+        // Ajustar según la estructura real de la respuesta de SIPI
+        // Intentamos múltiples variaciones de nombres de campos comunes
+        $normalized = [
+            'temperature' => round((float) ($data['temperature'] ?? $data['temp'] ?? $data['temp_c'] ?? $data['tempC'] ?? $data['temp_celsius'] ?? 0), 1),
+            'humidity' => (int) ($data['humidity'] ?? $data['humidity_percent'] ?? $data['humidityPercent'] ?? $data['rh'] ?? 0),
+            'windSpeed' => round((float) ($data['windSpeed'] ?? $data['wind_speed'] ?? $data['windSpeed'] ?? $data['wind_kmh'] ?? $data['windKmh'] ?? $data['ws'] ?? 0), 1),
+            'windDirection' => (int) ($data['windDirection'] ?? $data['wind_direction'] ?? $data['windDirection'] ?? $data['wind_deg'] ?? $data['windDeg'] ?? $data['wd'] ?? 0),
+            'weatherCode' => (int) ($data['weatherCode'] ?? $data['weather_code'] ?? $data['code'] ?? $data['condition'] ?? $data['weather'] ?? 0),
+            'precipitation' => round((float) ($data['precipitation'] ?? $data['precip'] ?? $data['precip_mm'] ?? $data['precipMm'] ?? $data['rain'] ?? 0), 1),
+        ];
+
+        // Validar que al menos tengamos temperatura (campo mínimo requerido)
+        // Verificamos si realmente hay datos de temperatura o si todos los valores son 0
+        $hasTemperature = isset($data['temperature']) || isset($data['temp']) || isset($data['temp_c']) || isset($data['tempC']) || isset($data['temp_celsius']);
+        
+        if (!$hasTemperature && $normalized['temperature'] == 0) {
+            Log::warning('OpenMeteoService: Respuesta de SIPI sin datos de temperatura válidos', [
+                'response' => $data,
+                'normalized' => $normalized,
+            ]);
+            return null;
+        }
+
+        Log::debug('OpenMeteoService: Datos normalizados de SIPI Weather', [
+            'normalized' => $normalized,
+        ]);
+
+        return $normalized;
+    }
+
+    /**
+     * Obtener datos meteorológicos desde OpenMeteo API (fallback)
+     *
+     * @param float $latitude
+     * @param float $longitude
+     * @return array|null
+     */
+    protected function getWeatherFromOpenMeteo(float $latitude, float $longitude): ?array
     {
         try {
             // OpenMeteo requiere que los parámetros hourly se pasen como cadena separada por comas
@@ -37,7 +157,7 @@ class OpenMeteoService
             ]);
 
             if (!$response->successful()) {
-                Log::warning('OpenMeteoService: Error al obtener datos meteorológicos', [
+                Log::warning('OpenMeteoService: Error al obtener datos meteorológicos de OpenMeteo', [
                     'latitude' => $latitude,
                     'longitude' => $longitude,
                     'status' => $response->status(),
@@ -51,7 +171,7 @@ class OpenMeteoService
 
             // Validar que la respuesta tenga la estructura esperada
             if (!isset($data['current_weather'])) {
-                Log::warning('OpenMeteoService: Respuesta sin current_weather', [
+                Log::warning('OpenMeteoService: Respuesta de OpenMeteo sin current_weather', [
                     'latitude' => $latitude,
                     'longitude' => $longitude,
                     'response' => $data,
@@ -68,7 +188,7 @@ class OpenMeteoService
             $precipitation = null;
             
             // Log de la estructura completa para debugging
-            Log::debug('OpenMeteoService: Estructura de respuesta', [
+            Log::debug('OpenMeteoService: Estructura de respuesta de OpenMeteo', [
                 'has_hourly' => isset($data['hourly']),
                 'hourly_keys' => isset($data['hourly']) ? array_keys($data['hourly']) : [],
             ]);
@@ -103,7 +223,7 @@ class OpenMeteoService
                 }
                 
                 // Log detallado para debugging
-                Log::debug('OpenMeteoService: Datos de precipitación', [
+                Log::debug('OpenMeteoService: Datos de precipitación de OpenMeteo', [
                     'latitude' => $latitude,
                     'longitude' => $longitude,
                     'has_precipitation_key' => isset($data['hourly']['precipitation']),
@@ -116,7 +236,7 @@ class OpenMeteoService
                 
                 // Log para debugging si no se encuentran los datos
                 if ($humidity === null && $precipitation === null) {
-                    Log::warning('OpenMeteoService: No se encontraron datos de humedad/precipitación', [
+                    Log::warning('OpenMeteoService: No se encontraron datos de humedad/precipitación en OpenMeteo', [
                         'latitude' => $latitude,
                         'longitude' => $longitude,
                         'hourly_structure' => array_keys($data['hourly']),
@@ -129,7 +249,7 @@ class OpenMeteoService
                     ]);
                 }
             } else {
-                Log::warning('OpenMeteoService: No se encontró la clave hourly en la respuesta', [
+                Log::warning('OpenMeteoService: No se encontró la clave hourly en la respuesta de OpenMeteo', [
                     'latitude' => $latitude,
                     'longitude' => $longitude,
                     'response_keys' => array_keys($data),
@@ -148,7 +268,7 @@ class OpenMeteoService
             ];
 
         } catch (\Exception $e) {
-            Log::error('OpenMeteoService: Excepción al obtener datos meteorológicos', [
+            Log::error('OpenMeteoService: Excepción al obtener datos meteorológicos de OpenMeteo', [
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'error' => $e->getMessage(),
