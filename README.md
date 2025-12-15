@@ -1,10 +1,10 @@
-# Sistema de Rescate Animal Integrado
+# Sistema de Rescate Animal Integrado WEB
 
 ## Descripción del Proyecto
 
-El Sistema de Rescate Animal Integrado es una plataforma de software diseñada para optimizar y digitalizar la gestión operativa de dedicadas al bienestar animal. Esta solución permite la administración centralizada de expedientes médicos, seguimiento de rescates, control de inventario veterinario y gestión de procesos de adopción.
+El Sistema de Rescate Animal es una plataforma de software diseñada para optimizar y digitalizar la gestión operativa dedicada al bienestar de animales silvestres. Esta solución permite la administración centralizada de evaluaciones médicas, seguimiento de rescates desde el hallazgo y administración de las liberaciones.
 
-El objetivo principal es proporcionar una herramienta robusta y escalable que facilite la toma de decisiones basada en datos, garantizando la trazabilidad de cada animal desde su ingreso hasta su adopción final.
+El objetivo principal es proporcionar una herramienta robusta y escalable que facilite la toma de decisiones basada en datos, garantizando la trazabilidad de cada animal desde su ingreso hasta su reinserción a la naturaleza.
 
 ## Tecnologías Utilizadas
 
@@ -43,7 +43,7 @@ Este método garantiza que todas las dependencias y servicios se ejecuten en un 
 1.  **Clonación del Repositorio**
     Descargue el código fuente en su directorio de trabajo:
     ```bash
-    git clone https://github.com/tu-usuario/rescate-integrado.git
+    git clone https://github.com/sofia1210/rescate-integrado.git
     cd rescate-integrado
     ```
 
@@ -118,30 +118,33 @@ Este método garantiza que todas las dependencias y servicios se ejecuten en un 
 
 El sistema se divide en módulos funcionales interconectados:
 
-### 1. Gestión de Expedientes
-Permite el registro detallado de cada animal, incluyendo fotografías, características físicas, historial de comportamiento y ubicación actual (refugio o casa cuna).
+### 1. Gestión de Hojas de Vida del Animal
+Permite el registro detallado de cada animal, incluyendo fotografías, características físicas, historial de evaluaciones médicas, cuidados y ubicación actual.
 
 ### 2. Módulo Veterinario
 Control integral de la salud del animal. Incluye:
-*   Registro de vacunas y desparasitaciones.
-*   Historial de consultas médicas y cirugías.
-*   Seguimiento de tratamientos activos.
+*   Registro de evaluaciones médicas.
+*   Historial de cuidados y alimentación.
+*   Seguimiento de tratamientos y estado actual.
 
 ### 3. Operaciones de Rescate
-Gestión de reportes ciudadanos, asignación de unidades de rescate y documentación del estado inicial del animal al momento del ingreso.
+Gestión de hallazgos de animales en peligro, traslado del animal y registro del estado inicial del animal al momento de generar su hoja de vida.
 
-### 4. Gestión de Adopciones
-Flujo de trabajo para el procesamiento de solicitudes de adopción, evaluación de candidatos y seguimiento post-adopción.
+### 4. Gestión de Liberaciones
+Cuando un animal presenta un estado de salud estable se puede considerar su pronta liberación o reinserción en la naturaleza.
 
 ## Control de Acceso y Roles
 
-El sistema implementa un estricto control de acceso basado en roles (RBAC). A continuación se detallan las credenciales predeterminadas para el entorno de desarrollo:
+El sistema implementa un estricto control de acceso basado en roles. A continuación se detallan las credenciales predeterminadas para el entorno de desarrollo:
 
 | Rol | Correo Electrónico | Contraseña Predeterminada | Nivel de Acceso |
 | :--- | :--- | :--- | :--- |
 | **Administrador** | `rescateanimales25@gmail.com` | `rescate123` | Acceso total al sistema y configuración. |
 | **Veterinario** | (Creación manual requerida) | - | Acceso a expedientes médicos y tratamientos. |
-| **Rescatista** | (Creación manual requerida) | - | Acceso a módulo de reportes y traslados. |
+| **Rescatista** | (Creación manual requerida) | - | Acceso a módulo de hallazgos y traslados. |
+| **Cuidador** | (Creación manual requerida) | - | Gestión diaria de animales: alimentación, limpieza, reporte de novedades y actualización de estado físico/conductual. |
+| **Encargado** | (Creación manual requerida) | - | Supervisión de refugio: asignación de cuidadores, control de inventario, aprobación de traslados y reportes operativos. |
+| **Ciudadano** | (Auto-registro mediante formulario público) | - | Reporte de animales encontrados, seguimiento de solicitudes de adopción y actualización de datos personales. |
 
 *Nota: Se recomienda cambiar estas credenciales inmediatamente después del despliegue en un entorno de producción.*
 
@@ -161,5 +164,7 @@ Si la aplicación reporta errores al escribir logs o guardar imágenes.
 ```bash
 chmod -R 775 storage bootstrap/cache
 ```
+
+
 
 
