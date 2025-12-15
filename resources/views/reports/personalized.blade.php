@@ -49,18 +49,7 @@
             </div>
             
             <div class="collapse" id="columnsCollapse">
-                <div class="row mb-3">
-                    <div class="col-12">
-                        <div class="mb-2">
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllBtn" onclick="return selectAllColumns();">
-                                <i class="fas fa-check-square mr-1"></i>Seleccionar Todas
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllBtn" onclick="return deselectAllColumns();">
-                                <i class="fas fa-square mr-1"></i>Deseleccionar Todas
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="row">
@@ -239,11 +228,6 @@
                                         <td>{{ $eval['status'] }}</td>
                                         <td>
                                             @if($eval['animal_id'])
-                                                <a href="{{ route('animal-histories.index', ['animal_file_id' => $eval['animal_id']]) }}" 
-                                                   class="btn btn-sm btn-info" 
-                                                   title="Ver Historial">
-                                                    <i class="fas fa-history"></i> Historial
-                                                </a>
                                                 <a href="{{ route('animal-files.show', $eval['animal_id']) }}" 
                                                    class="btn btn-sm btn-primary" 
                                                    title="Ver Detalles">
@@ -313,11 +297,7 @@
                                 @endforeach
                                 <td>
                                     @if(isset($row['_animal_file_id']))
-                                        <a href="{{ route('animal-histories.index', ['animal_file_id' => $row['_animal_file_id']]) }}" 
-                                           class="btn btn-sm btn-info" 
-                                           title="Ver Historial">
-                                            <i class="fas fa-history"></i> Historial
-                                        </a>
+                                        
                                         <a href="{{ route('animal-files.show', $row['_animal_file_id']) }}" 
                                            class="btn btn-sm btn-primary" 
                                            title="Ver Detalles">
