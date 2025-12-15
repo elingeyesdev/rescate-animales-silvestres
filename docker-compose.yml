@@ -6,8 +6,6 @@ services:
     container_name: rescate-laravel
     volumes:
       - .:/var/www
-    env_file:
-      - .env
     environment:
       DB_CONNECTION: pgsql
       DB_HOST: db       # Nombre del servicio del contenedor de postgres
