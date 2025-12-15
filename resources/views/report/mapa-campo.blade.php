@@ -282,6 +282,28 @@
         const focosCalorData = @json($focosCalorFormatted ?? []);
         const externalFireReportsData = @json($externalFireReportsFormatted ?? []);
 
+        // Área de exclusión de predicciones (ciudad)
+        // Rectángulo definido por dos puntos diagonales
+        const cityExclusionArea = {
+            latMin: -17.83014885201047,  // Sur (latitud mínima)
+            latMax: -17.722261562205507, // Norte (latitud máxima)
+            lngMin: -63.21929667333384,  // Oeste (longitud mínima)
+            lngMax: -63.114926559251174  // Este (longitud máxima)
+        };
+
+        /**
+         * Verificar si un punto está dentro del área de exclusión de la ciudad
+         * @param {number} lat - Latitud del punto
+         * @param {number} lng - Longitud del punto
+         * @returns {boolean} - true si está dentro del área de exclusión
+         */
+        function isInsideCityExclusionArea(lat, lng) {
+            return lat >= cityExclusionArea.latMin && 
+                   lat <= cityExclusionArea.latMax && 
+                   lng >= cityExclusionArea.lngMin && 
+                   lng <= cityExclusionArea.lngMax;
+        }
+
         // Ocultar controles de reportes externos y predicciones si no hay datos
         (function() {
             if (!externalFireReportsData || externalFireReportsData.length === 0) {
@@ -1134,12 +1156,21 @@
             console.log('[Predicciones] Datos de reportes externos:', externalFireReportsData);
             
             // Obtener todos los reportes externos de incendios con latitud y longitud
+            // Excluir los que están dentro del área de la ciudad
             const externalReportsWithLocation = externalFireReportsData.filter(function(report) {
                 const hasLocation = report.lat != null && report.lng != null;
                 if (!hasLocation) {
                     console.warn('[Predicciones] Reporte sin ubicación válida:', report);
+                    return false;
                 }
-                return hasLocation;
+                
+                // Verificar si está dentro del área de exclusión de la ciudad
+                if (isInsideCityExclusionArea(report.lat, report.lng)) {
+                    console.log(`[Predicciones] Reporte en lat=${report.lat}, lng=${report.lng} está dentro del área de la ciudad, excluyendo de predicciones`);
+                    return false;
+                }
+                
+                return true;
             });
             
             console.log(`[Predicciones] Reportes con ubicación válida: ${externalReportsWithLocation.length}`);
@@ -1201,6 +1232,13 @@
         }
 
         function loadFirePrediction(lat, lng, callback) {
+            // Verificar si está dentro del área de exclusión de la ciudad
+            if (isInsideCityExclusionArea(lat, lng)) {
+                console.log(`[Predicciones] Punto en lat=${lat}, lng=${lng} está dentro del área de la ciudad, no se cargará predicción`);
+                if (callback) callback();
+                return;
+            }
+            
             const key = `${lat}_${lng}`;
             
             // Evitar cargar la misma predicción dos veces
