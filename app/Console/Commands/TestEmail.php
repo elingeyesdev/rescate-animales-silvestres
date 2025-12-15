@@ -20,7 +20,7 @@ class TestEmail extends Command
      *
      * @var string
      */
-    protected $description = 'Prueba el envío de correos y verifica la configuración de Brevo';
+    protected $description = 'Prueba el envío de correos y verifica la configuración de Gmail';
 
     /**
      * Execute the console command.
@@ -78,18 +78,18 @@ class TestEmail extends Command
         $this->line('');
         
         try {
-            Mail::raw('Este es un correo de prueba desde Laravel con Brevo - ' . now()->format('d-m-Y H:i:s'), function ($message) use ($testEmail) {
+            Mail::raw('Este es un correo de prueba desde Laravel con Gmail - ' . now()->format('d-m-Y H:i:s'), function ($message) use ($testEmail) {
                 $message->to($testEmail)
-                        ->subject('Test Brevo - ' . now()->format('H:i:s'));
+                        ->subject('Test Gmail - ' . now()->format('H:i:s'));
             });
             
             $this->info('✅ Correo enviado sin errores en Laravel');
             $this->line('');
             $this->line('📋 PRÓXIMOS PASOS:');
-            $this->line('1. Ve a Brevo → Sending → Email Logs');
-            $this->line('2. Debe aparecer el correo en menos de 1 minuto');
-            $this->line('3. Si aparece: el problema es de entrega (revisa spam)');
-            $this->line('4. Si NO aparece: el problema es de conexión SMTP');
+            $this->line('1. Revisa la bandeja de entrada del correo de destino');
+            $this->line('2. Si no aparece, revisa la carpeta de spam');
+            $this->line('3. El correo debe llegar en menos de 1 minuto');
+            $this->line('4. Si no llega: verifica la configuración SMTP y la contraseña de aplicación');
             $this->line('');
             $this->line('Revisa también: storage/logs/laravel.log para más detalles');
             
