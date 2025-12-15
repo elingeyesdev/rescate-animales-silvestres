@@ -50,11 +50,11 @@
 
                                             <td>
                                                 <form action="{{ route('animal-statuses.destroy', $animalStatus->id) }}" method="POST">
-                                                    <a class="btn btn-sm btn-primary " href="{{ route('animal-statuses.show', $animalStatus->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Show') }}</a>
-                                                    <a class="btn btn-sm btn-success" href="{{ route('animal-statuses.edit', $animalStatus->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
+                                                    <a class="btn btn-sm btn-primary " href="{{ route('animal-statuses.show', $animalStatus->id) }}"><i class="fa fa-fw fa-eye"></i> <span class="d-none d-md-inline">{{ __('Ver') }}</span></a>
+                                                    <a class="btn btn-sm btn-success" href="{{ route('animal-statuses.edit', $animalStatus->id) }}"><i class="fa fa-fw fa-edit"></i> <span class="d-none d-md-inline">{{ __('Editar') }}</span></a>
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="button" class="btn btn-danger btn-sm js-confirm-delete"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
+                                                    <button type="button" class="btn btn-danger btn-sm js-confirm-delete"><i class="fa fa-fw fa-trash"></i> <span class="d-none d-md-inline">{{ __('Eliminar') }}</span></button>
                                                 </form>
                                             </td>
                                         </tr>
