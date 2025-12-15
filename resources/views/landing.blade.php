@@ -146,7 +146,6 @@
                 <button type="button" class="carousel-arrow left disabled" id="relArrowPrev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
                 <button type="button" class="carousel-arrow right" id="relArrowNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
                 <div class="carousel-track" id="relTrack">
-                    @php($slots = 8)
                     @if(isset($recentReleases) && $recentReleases->count() > 0)
                         @foreach($recentReleases as $rel)
                             @php($af = $rel->animalFile)
@@ -175,18 +174,8 @@
                                 </div>
                             </div>
                         @endforeach
-                        @for($i = $recentReleases->count(); $i < $slots; $i++)
-                            <div class="release-card empty card card-outline card-warning">
-                                <div class="release-card-img card-img-top">
-                                    <i class="fas fa-dove" style="font-size: 28px; color:#9ca3af"></i>
-                                </div>
-                                <div class="release-card-body card-body">
-                                    <div class="font-weight-bold">Sin liberaciones</div>
-                                    <div class="release-meta">Espacio disponible</div>
-                                </div>
-                            </div>
-                        @endfor
                     @else
+                        @php($slots = 8)
                         @for($i = 0; $i < $slots; $i++)
                             <div class="release-card empty card card-outline card-warning">
                                 <div class="release-card-img card-img-top">
