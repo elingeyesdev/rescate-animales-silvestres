@@ -52,11 +52,11 @@
 
                                             <td>
                                                 <form action="{{ route('feeding-frequencies.destroy', $feedingFrequency->id) }}" method="POST">
-                                                    <a class="btn btn-sm btn-primary " href="{{ route('feeding-frequencies.show', $feedingFrequency->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Show') }}</a>
-                                                    <a class="btn btn-sm btn-success" href="{{ route('feeding-frequencies.edit', $feedingFrequency->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
+                                                    <a class="btn btn-sm btn-primary " href="{{ route('feeding-frequencies.show', $feedingFrequency->id) }}"><i class="fa fa-fw fa-eye"></i> <span class="d-none d-md-inline">{{ __('Ver') }}</span></a>
+                                                    <a class="btn btn-sm btn-success" href="{{ route('feeding-frequencies.edit', $feedingFrequency->id) }}"><i class="fa fa-fw fa-edit"></i> <span class="d-none d-md-inline">{{ __('Editar') }}</span></a>
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="button" class="btn btn-danger btn-sm js-confirm-delete"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
+                                                    <button type="button" class="btn btn-danger btn-sm js-confirm-delete"><i class="fa fa-fw fa-trash"></i> <span class="d-none d-md-inline">{{ __('Eliminar') }}</span></button>
                                                 </form>
                                             </td>
                                         </tr>
