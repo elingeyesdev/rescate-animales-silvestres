@@ -27,7 +27,7 @@ services:
       OPEN_METEO_API_URL: https://api.open-meteo.com/v1/forecast
       FIRE_PREDICTIONS_LOOKUP_API_URL: ${FIRE_PREDICTIONS_LOOKUP_API_URL:-http://gatealas.dasalas.shop/api/gateway/prediccion/lookup}
       MAIL_MAILER: ${MAIL_MAILER:-smtp}
-      MAIL_HOST: ${MAIL_HOST:-smtp-relay.brevo.com}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
