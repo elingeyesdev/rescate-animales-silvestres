@@ -369,6 +369,15 @@
             
             // Agregar marcadores de reportes externos de incendios
             addExternalFireReportsMarkers();
+            
+            // Asegurar que los reportes de incendio estén al frente después de agregar todos los marcadores
+            setTimeout(function() {
+                externalFireReportsMarkers.forEach(function(marker) {
+                    if (map.hasLayer(marker)) {
+                        marker.bringToFront();
+                    }
+                });
+            }, 200);
 
             // Toggle de reportes/hallazgos
             const toggleReports = document.getElementById('toggleReports');
@@ -617,13 +626,15 @@
                 if (!foco.lat || !foco.lng) return;
                 
                 // Crear punto rojo simple (no círculo)
+                // zIndexOffset negativo para que esté por encima del mapa pero por debajo de los reportes de incendio
                 const point = L.circleMarker([foco.lat, foco.lng], {
                     radius: 6,
                     fillColor: '#ff0000',
                     color: '#ffffff',
                     weight: 2,
                     opacity: 1,
-                    fillOpacity: 0.9
+                    fillOpacity: 0.9,
+                    zIndexOffset: -500 // Por encima del mapa base pero por debajo de reportes de incendio
                 });
                 
                 // Solo agregar al mapa si el toggle está activado
@@ -687,6 +698,13 @@
                     if (map.hasLayer(marker)) {
                         map.removeLayer(marker);
                     }
+                }
+            });
+            
+            // Asegurar que los reportes de incendio se mantengan al frente
+            externalFireReportsMarkers.forEach(function(marker) {
+                if (map.hasLayer(marker)) {
+                    marker.bringToFront();
                 }
             });
         }
@@ -776,10 +794,16 @@
                     iconAnchor: [14, 14],
                 });
                 
-                const marker = L.marker([report.lat, report.lng], { icon: icon });
+                const marker = L.marker([report.lat, report.lng], { 
+                    icon: icon
+                });
                 
                 if (showExternalFireReports) {
                     marker.addTo(map);
+                    // Traer al frente para asegurar visibilidad sobre las predicciones
+                    setTimeout(function() {
+                        marker.bringToFront();
+                    }, 100);
                 }
                 
                 const nivelGravedad = report.nivel_gravedad || 'Desconocido';
@@ -852,6 +876,10 @@
                     if (!map.hasLayer(marker)) {
                         marker.addTo(map);
                     }
+                    // Mantener al frente cuando se muestran
+                    setTimeout(function() {
+                        marker.bringToFront();
+                    }, 50);
                 } else {
                     if (map.hasLayer(marker)) {
                         map.removeLayer(marker);
@@ -1472,6 +1500,13 @@
             });
 
             predictionLayers.push(...circles);
+            
+            // Asegurar que los marcadores de reportes de incendio estén al frente
+            externalFireReportsMarkers.forEach(function(marker) {
+                if (map.hasLayer(marker)) {
+                    marker.bringToFront();
+                }
+            });
             
             console.log(`[Predicciones] ===== PREDICCIÓN DIBUJADA COMPLETAMENTE =====`);
             console.log(`[Predicciones] Total de capas agregadas: ${predictionLayers.length}`);
