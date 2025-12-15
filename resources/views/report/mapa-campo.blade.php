@@ -684,6 +684,7 @@
                 
                 const hasLocalReports = report.has_local_reports || false;
                 const localReportsCount = report.local_reports_count || 0;
+                const isSimulated = report.simulado === true;
                 
                 // Si tiene hallazgos locales, usar ícono de animal con efecto de titileo
                 // Si no, usar ícono de fuego normal
@@ -723,6 +724,26 @@
                             border: 2px solid white;
                         ">${localReportsCount}</div>
                         ` : ''}
+                        ${isSimulated ? `
+                        <div style="
+                            position: absolute;
+                            bottom: -2px;
+                            left: -2px;
+                            background-color: #007bff;
+                            color: white;
+                            border-radius: 50%;
+                            width: 14px;
+                            height: 14px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 8px;
+                            border: 2px solid white;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                        " title="Punto Simulado">
+                            <i class="fas fa-flask" style="font-size: 8px;"></i>
+                        </div>
+                        ` : ''}
                     </div>
                 `;
                 
@@ -749,6 +770,12 @@
                             <i class="fas ${iconClass}"></i> {{ __('Reporte de Incendio Externo') }}
                             ${hasLocalReports ? '<span style="color: #dc3545; margin-left: 8px;"><i class="fas fa-exclamation-triangle"></i> {{ __('Animales en Peligro') }}</span>' : ''}
                         </h6>
+                        ${isSimulated ? `
+                        <div style="font-size: 11px; margin-bottom: 8px; padding: 6px; background-color: #e7f3ff; border-left: 3px solid #007bff; border-radius: 4px;">
+                            <strong><i class="fas fa-flask"></i> {{ __('Punto Simulado') }}</strong>
+                            
+                        </div>
+                        ` : ''}
                         ${hasLocalReports ? `
                         <div style="font-size: 11px; margin-bottom: 8px; padding: 6px; background-color: #fff3cd; border-left: 3px solid #dc3545; border-radius: 4px;">
                             <strong><i class="fas fa-paw"></i> ${localReportsCount} ${localReportsCount === 1 ? '{{ __('hallazgo local') }}' : '{{ __('hallazgos locales') }}'} relacionado${localReportsCount === 1 ? '' : 's'}</strong>
