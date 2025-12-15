@@ -32,14 +32,14 @@ NASA_FIRMS_API_BASE=https://firms.modaps.eosdis.nasa.gov/api/area/csv
 # Hotspots Integration
 HOTSPOTS_INTEGRATION_API_URL=http://brigadas.dasalas.shop/api/v1/hotspots/live
 
-# Configuración de correo (Sendinblue/Brevo)
+# Configuración de correo (Gmail)
 MAIL_MAILER=smtp
-MAIL_HOST=smtp-relay.brevo.com
+MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
-MAIL_USERNAME=tu_usuario_smtp@brevo.com
-MAIL_PASSWORD=tu_password_smtp_aqui
+MAIL_USERNAME=tu-email@gmail.com
+MAIL_PASSWORD=tu_contraseña_de_aplicacion_aqui
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=noreply@example.com
+MAIL_FROM_ADDRESS=tu-email@gmail.com
 MAIL_FROM_NAME=RescateAnimales
 ```
 
@@ -55,7 +55,7 @@ El secreto ya está removido del código actual, pero **aún existe en el histor
 
 1. Ve a: https://github.com/sofia1210/rescate-integrado/security/secret-scanning/unblock-secret/36lDUq8b42rzsAs4VmoYVi6Vx1e
 2. Sigue las instrucciones para invalidar el secreto expuesto
-3. Genera una nueva clave SMTP en Sendinblue/Brevo
+3. Genera una nueva contraseña de aplicación en Gmail (ver CONFIGURACION_GMAIL.md)
 
 ### Opción 2: Remover del Historial (Avanzado)
 
