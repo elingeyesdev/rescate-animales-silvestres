@@ -1,6 +1,16 @@
 @php
     $availableColumns = $availableColumns ?? [];
-    $selectedColumns = $selectedColumns ?? ['animal_name', 'species', 'status', 'center', 'rescue_date'];
+    // Filtrar columnas no permitidas de selectedColumns
+    $allowedColumns = ['animal_name', 'species', 'status', 'center', 'rescue_date', 'rescuer', 'veterinarian', 'release_date', 'condition', 'incident_type'];
+    $defaultColumns = ['animal_name', 'species', 'status', 'center', 'rescue_date'];
+    $selectedColumns = $selectedColumns ?? $defaultColumns;
+    // Asegurar que selectedColumns solo contenga columnas permitidas
+    $selectedColumns = array_filter($selectedColumns, function($col) use ($allowedColumns) {
+        return in_array($col, $allowedColumns);
+    });
+    if (empty($selectedColumns)) {
+        $selectedColumns = $defaultColumns;
+    }
     $reportData = $reportData ?? [];
     $centers = $centers ?? collect();
     $rescuers = $rescuers ?? collect();
@@ -13,6 +23,7 @@
     $isGrouped = $isGrouped ?? false;
     $groupedData = $groupedData ?? [];
 @endphp
+
 
 <div class="card mt-3">
     <div class="card-header bg-info text-white">
@@ -38,6 +49,18 @@
             </div>
             
             <div class="collapse" id="columnsCollapse">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="mb-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllBtn" onclick="return selectAllColumns();">
+                                <i class="fas fa-check-square mr-1"></i>Seleccionar Todas
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllBtn" onclick="return deselectAllColumns();">
+                                <i class="fas fa-square mr-1"></i>Deseleccionar Todas
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="row">
@@ -410,6 +433,17 @@
     
     $(document).on('hide.bs.collapse', '#filtersCollapse', function () {
         $('#filterIcon').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+    });
+
+    // Validar antes de enviar el formulario
+    $('#personalizedReportForm').on('submit', function(e) {
+        const checked = $('.column-checkbox:checked').length;
+        
+        if (checked === 0) {
+            e.preventDefault();
+            alert('Por favor, selecciona al menos una columna.');
+            return false;
+        }
     });
 
     // Inicializar al cargar la página

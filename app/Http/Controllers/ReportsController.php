@@ -2414,6 +2414,12 @@ class ReportsController extends Controller
         $groupBy = $request->get('group_by'); // 'veterinarian' o 'rescuer'
         $selectedColumns = $request->get('columns', []); // Columnas seleccionadas
         
+        // Filtrar columnas no permitidas (animal_id, created_at, sex, rescue_location)
+        $allowedColumns = ['animal_name', 'species', 'status', 'center', 'rescue_date', 'rescuer', 'veterinarian', 'release_date', 'condition', 'incident_type'];
+        $selectedColumns = array_filter($selectedColumns, function($col) use ($allowedColumns) {
+            return in_array($col, $allowedColumns);
+        });
+        
         // Si no hay columnas seleccionadas, usar algunas por defecto
         if (empty($selectedColumns)) {
             $selectedColumns = ['animal_name', 'species', 'status', 'center', 'rescue_date'];
@@ -2544,19 +2550,15 @@ class ReportsController extends Controller
         // Columnas disponibles
         $availableColumns = [
             'animal_name' => 'Nombre del Animal',
-            'animal_id' => 'ID Animal',
             'species' => 'Especie',
             'status' => 'Estado',
             'center' => 'Centro',
             'rescue_date' => 'Fecha de Rescate',
-            'rescue_location' => 'Ubicación de Rescate',
             'rescuer' => 'Rescatista',
             'veterinarian' => 'Veterinario',
             'release_date' => 'Fecha de Liberación',
-            'sex' => 'Sexo',
             'condition' => 'Condición Inicial',
             'incident_type' => 'Tipo de Incidente',
-            'created_at' => 'Fecha de Creación',
         ];
 
         return compact(
@@ -2671,19 +2673,15 @@ class ReportsController extends Controller
 
         $availableColumns = [
             'animal_name' => 'Nombre del Animal',
-            'animal_id' => 'ID Animal',
             'species' => 'Especie',
             'status' => 'Estado',
             'center' => 'Centro',
             'rescue_date' => 'Fecha de Rescate',
-            'rescue_location' => 'Ubicación de Rescate',
             'rescuer' => 'Rescatista',
             'veterinarian' => 'Veterinario',
             'release_date' => 'Fecha de Liberación',
-            'sex' => 'Sexo',
             'condition' => 'Condición Inicial',
             'incident_type' => 'Tipo de Incidente',
-            'created_at' => 'Fecha de Creación',
         ];
 
         return compact(
@@ -2806,19 +2804,15 @@ class ReportsController extends Controller
 
         $availableColumns = [
             'animal_name' => 'Nombre del Animal',
-            'animal_id' => 'ID Animal',
             'species' => 'Especie',
             'status' => 'Estado',
             'center' => 'Centro',
             'rescue_date' => 'Fecha de Rescate',
-            'rescue_location' => 'Ubicación de Rescate',
             'rescuer' => 'Rescatista',
             'veterinarian' => 'Veterinario',
             'release_date' => 'Fecha de Liberación',
-            'sex' => 'Sexo',
             'condition' => 'Condición Inicial',
             'incident_type' => 'Tipo de Incidente',
-            'created_at' => 'Fecha de Creación',
         ];
 
         return compact(
