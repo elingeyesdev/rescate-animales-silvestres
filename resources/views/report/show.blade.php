@@ -56,6 +56,10 @@
                                     <strong>{{ __('Aprobado') }}:</strong> {{ (int)$report->aprobado === 1 ? __('Sí') : __('No') }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
+                                    <strong>{{ __('Estado') }}:</strong>
+                                    <span class="badge {{ $report->getEstadoBadgeClass() }} ml-2">{{ $report->getEstado() }}</span>
+                                </div>
+                                <div class="form-group mb-2 mb20">
                                     <strong>{{ __('Tamaño') }}:</strong>
                                     @php
                                         $tamano = $report->tamano ?? null;

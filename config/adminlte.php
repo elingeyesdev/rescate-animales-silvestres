@@ -320,11 +320,6 @@ return [
             'can'  => 'admin|encargado',
         ],
         [
-            'text' => 'Mi Perfil',
-            'url' => 'profile',
-            'icon' => 'fas fa-fw fa-user-circle',
-        ],
-        [
             'text' => 'blog',
             'url' => 'admin/blog',
             'can' => 'manage-blog',

@@ -138,4 +138,65 @@ class Report extends Model
             $days
         );
     }
+
+    /**
+     * Determina el estado actual del hallazgo basado en su progreso
+     * 
+     * @return string Estado: 'En Peligro', 'En Traslado', 'Tratado', o 'Liberado'
+     */
+    public function getEstado(): string
+    {
+        // Cargar relaciones necesarias si no están cargadas
+        if (!$this->relationLoaded('animals')) {
+            $this->load('animals.animalFiles.release');
+        }
+        if (!$this->relationLoaded('firstTransfer')) {
+            $this->load('firstTransfer');
+        }
+
+        $animals = $this->animals;
+        $animalFiles = $animals->flatMap->animalFiles;
+        $hasAnimalFile = $animalFiles->isNotEmpty();
+        
+        // Buscar si hay release
+        $hasRelease = $animalFiles->contains(function($animalFile) {
+            return $animalFile->release !== null;
+        });
+        
+        // Verificar si hay primer traslado
+        $hasFirstTransfer = $this->firstTransfer !== null;
+
+        // Clasificar según estado (orden de prioridad: Liberado > Tratado > En Traslado > En Peligro)
+        if ($hasRelease) {
+            return 'Liberado';
+        } elseif ($hasAnimalFile) {
+            return 'Tratado';
+        } elseif ($hasFirstTransfer) {
+            return 'En Traslado';
+        } else {
+            return 'En Peligro';
+        }
+    }
+
+    /**
+     * Obtiene la clase CSS del badge según el estado
+     * 
+     * @return string Clase CSS del badge
+     */
+    public function getEstadoBadgeClass(): string
+    {
+        $estado = $this->getEstado();
+        switch ($estado) {
+            case 'Liberado':
+                return 'badge-info';
+            case 'Tratado':
+                return 'badge-success';
+            case 'En Traslado':
+                return 'badge-warning';
+            case 'En Peligro':
+                return 'badge-danger';
+            default:
+                return 'badge-secondary';
+        }
+    }
 }

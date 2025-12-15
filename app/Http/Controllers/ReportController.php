@@ -52,7 +52,16 @@ class ReportController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        $query = Report::with(['person', 'condicionInicial', 'incidentType', 'firstTransfer.center'])
+        $query = Report::with([
+            'person', 
+            'condicionInicial', 
+            'incidentType', 
+            'firstTransfer.center',
+            'animals.animalFiles.release',
+            'transfers' => function($query) {
+                $query->where('primer_traslado', true);
+            }
+        ])
             ->orderByDesc('id');
 
         // Si el usuario es solo ciudadano (sin otros roles), mostrar solo sus hallazgos
@@ -261,7 +270,14 @@ class ReportController extends Controller
      */
     public function show($id): View
     {
-        $report = Report::with(['firstTransfer.center', 'incidentType'])->findOrFail($id);
+        $report = Report::with([
+            'firstTransfer.center', 
+            'incidentType',
+            'animals.animalFiles.release',
+            'transfers' => function($query) {
+                $query->where('primer_traslado', true);
+            }
+        ])->findOrFail($id);
         
         // Obtener focos de calor cercanos (por proximidad, no por ID)
         $nearbyFocosCalor = $report->getNearbyFocosCalor(20, 7);

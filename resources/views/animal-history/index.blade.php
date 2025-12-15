@@ -115,9 +115,18 @@
                                                 @if($animalFile?->animalStatus)
                                                 <li class="list-group-item">
                                                     <i class="fas fa-heartbeat text-muted mr-2"></i>
-                                                    <b>{{ __('Estado:') }}</b>
+                                                    <b>{{ __('Estado de salud:') }}</b>
                                                     <span class="float-right">
                                                         <span class="badge badge-info">{{ $animalFile->animalStatus->nombre }}</span>
+                                                    </span>
+                                                </li>
+                                                @endif
+                                                @if($animalFile)
+                                                <li class="list-group-item">
+                                                    <i class="fas fa-info-circle text-muted mr-2"></i>
+                                                    <b>{{ __('Estado del proceso:') }}</b>
+                                                    <span class="float-right">
+                                                        <span class="badge {{ $animalFile->getEstadoBadgeClass() }}">{{ $animalFile->getEstado() }}</span>
                                                     </span>
                                                 </li>
                                                 @endif

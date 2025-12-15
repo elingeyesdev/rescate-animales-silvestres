@@ -176,6 +176,13 @@
                                                         @endif
                                                     </span>
                                                 </li>
+                                                <li class="list-group-item">
+                                                    <i class="fas fa-info-circle text-muted mr-2"></i>
+                                                    <b>{{ __('Estado:') }}</b>
+                                                    <span class="float-right">
+                                                        <span class="badge {{ $report->getEstadoBadgeClass() }}">{{ $report->getEstado() }}</span>
+                                                    </span>
+                                                </li>
                                                 @if($report->firstTransfer?->center)
                                                 <li class="list-group-item">
                                                     <i class="fas fa-hospital text-muted mr-2"></i>

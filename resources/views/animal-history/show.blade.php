@@ -37,7 +37,10 @@
                                 <div class="d-flex align-items-center">
                                     <h4 class="mb-0 mr-3">{{ $animalName !== '-' ? $animalName : __('Detalle de Historial') }}</h4>
                                     @if($statusName && $statusName !== '-')
-                                        <span class="badge badge-info" style="font-size:0.95rem;">{{ $statusName }}</span>
+                                        <span class="badge badge-info mr-2" style="font-size:0.95rem;">{{ $statusName }}</span>
+                                    @endif
+                                    @if($af)
+                                        <span class="badge {{ $af->getEstadoBadgeClass() }}" style="font-size:0.95rem;">{{ $af->getEstado() }}</span>
                                     @endif
                                 </div>
                                 <div class="text-muted small mt-1">

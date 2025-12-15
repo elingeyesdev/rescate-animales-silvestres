@@ -91,5 +91,54 @@ class AnimalFile extends Model
     {
         return $this->hasMany(\App\Models\MedicalEvaluation::class, 'animal_file_id', 'id');
     }
+
+    /**
+     * Determina el estado actual de la hoja de vida basado en su progreso
+     * 
+     * @return string Estado: 'En Peligro', 'En Traslado', 'Tratado', o 'Liberado'
+     */
+    public function getEstado(): string
+    {
+        // Cargar relación release si no está cargada
+        if (!$this->relationLoaded('release')) {
+            $this->load('release');
+        }
+        
+        // Cargar relación animal y su reporte para verificar traslados
+        if (!$this->relationLoaded('animal')) {
+            $this->load('animal.report.transfers');
+        }
+
+        // Verificar si hay release (liberación)
+        if ($this->release !== null) {
+            return 'Liberado';
+        }
+        
+        // Si existe la hoja de vida, está en tratamiento
+        // (la hoja de vida se crea cuando el animal llega a un centro)
+        return 'Tratado';
+    }
+
+    /**
+     * Obtiene la clase CSS del badge según el estado
+     * 
+     * @return string Clase CSS del badge
+     */
+    public function getEstadoBadgeClass(): string
+    {
+        $estado = $this->getEstado();
+        switch ($estado) {
+            case 'Liberado':
+                return 'badge-info';
+            case 'Tratado':
+                return 'badge-success';
+            case 'En Traslado':
+                return 'badge-warning';
+            case 'En Peligro':
+                return 'badge-danger';
+            default:
+                return 'badge-secondary';
+        }
+    }
     
 }

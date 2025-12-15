@@ -56,7 +56,10 @@ class AnimalHistoryController extends Controller
 			}
 		}
 
-		$animalHistory->loadMissing(['animalFile.animal']);
+		$animalHistory->loadMissing([
+            'animalFile.animal.report.transfers',
+            'animalFile.release'
+        ]);
         $animalFileId = $animalHistory->animal_file_id;
         
         $timeline = $animalFileId
