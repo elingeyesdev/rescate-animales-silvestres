@@ -29,6 +29,14 @@
                     <i class="fas fa-cog mr-2"></i>Reportes de Gestión
                 </a>
             </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {{ $tab === 'personalized' ? 'active' : '' }}" 
+                   id="personalized-tab" 
+                   href="{{ route('reportes.index', ['tab' => 'personalized']) }}"
+                   role="tab">
+                    <i class="fas fa-sliders-h mr-2"></i>Reportes Personalizados
+                </a>
+            </li>
         </ul>
         <div>
             <a href="{{ route('reportes.export-pdf', request()->all()) }}" 
@@ -80,6 +88,7 @@
                      role="tabpanel" 
                      aria-labelledby="states-subtab">
             
+            @if(isset($totals))
             <div class="card mt-3">
                 <div class="card-header bg-primary text-white">
                     <h3 class="card-title mb-0">
@@ -90,25 +99,25 @@
                     <div class="row text-center">
                         <div class="col-md-3">
                             <div class="p-2 bg-danger text-white rounded">
-                                <h4 class="mb-0" style="font-size: 1.5rem;">{{ $totals['en_peligro'] }}</h4>
+                                <h4 class="mb-0" style="font-size: 1.5rem;">{{ $totals['en_peligro'] ?? 0 }}</h4>
                                 <small style="font-size: 0.75rem;">En Peligro</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="p-2 bg-warning text-white rounded">
-                                <h4 class="mb-0" style="font-size: 1.5rem;">{{ $totals['rescatados'] }}</h4>
+                                <h4 class="mb-0" style="font-size: 1.5rem;">{{ $totals['rescatados'] ?? 0 }}</h4>
                                 <small style="font-size: 0.75rem;">En Traslado</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="p-2 bg-success text-white rounded">
-                                <h4 class="mb-0" style="font-size: 1.5rem;">{{ $totals['tratados'] }}</h4>
+                                <h4 class="mb-0" style="font-size: 1.5rem;">{{ $totals['tratados'] ?? 0 }}</h4>
                                 <small style="font-size: 0.75rem;">En Tratamiento</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="p-2 bg-info text-white rounded">
-                                <h4 class="mb-0" style="font-size: 1.5rem;">{{ $totals['liberados'] }}</h4>
+                                <h4 class="mb-0" style="font-size: 1.5rem;">{{ $totals['liberados'] ?? 0 }}</h4>
                                 <small style="font-size: 0.75rem;">Liberados</small>
                             </div>
                         </div>
@@ -116,15 +125,16 @@
                     <div class="row mt-2">
                         <div class="col-12 text-center">
                             <h5 class="mb-0" style="font-size: 1rem;">
-                                <strong>Total: {{ $totals['en_peligro'] + $totals['rescatados'] + $totals['tratados'] + $totals['liberados'] }}</strong>
+                                <strong>Total: {{ ($totals['en_peligro'] ?? 0) + ($totals['rescatados'] ?? 0) + ($totals['tratados'] ?? 0) + ($totals['liberados'] ?? 0) }}</strong>
                             </h5>
                         </div>
                     </div>
                 </div>
             </div>
+            @endif
             
             <!-- Tabla: En Peligro -->
-            @if(!empty($enPeligro))
+            @if(isset($enPeligro) && !empty($enPeligro))
             <div class="card mt-3 border-danger">
                 <div class="card-header bg-light">
                     <h5 class="mb-0 text-danger">
@@ -161,7 +171,7 @@
             @endif
 
             <!-- Tabla: Rescatados -->
-            @if(!empty($rescatados))
+            @if(isset($rescatados) && !empty($rescatados))
             <div class="card mt-3 border-warning">
                 <div class="card-header bg-light">
                     <h5 class="mb-0 text-warning">
@@ -208,7 +218,7 @@
             @endif
 
             <!-- Tabla: Tratados -->
-            @if(!empty($tratados))
+            @if(isset($tratados) && !empty($tratados))
             <div class="card mt-3 border-success">
                 <div class="card-header bg-light">
                     <h5 class="mb-0 text-success">
@@ -247,7 +257,7 @@
             @endif
 
             <!-- Tabla: Liberados -->
-            @if(!empty($liberados))
+            @if(isset($liberados) && !empty($liberados))
             <div class="card mt-3 border-info">
                 <div class="card-header bg-light">
                     <h5 class="mb-0 text-info">
@@ -592,6 +602,23 @@
                 <!-- Fin Subpestaña: Eficacia de Liberación -->
             </div>
             <!-- Fin Contenido de las subpestañas -->
+        </div>
+
+        <!-- Pestaña: Reportes Personalizados -->
+        <div class="tab-pane fade {{ $tab === 'personalized' ? 'show active' : '' }}" 
+             id="personalized" 
+             role="tabpanel" 
+             aria-labelledby="personalized-tab">
+            @if(isset($availableColumns) && isset($selectedColumns))
+                @include('reports.personalized')
+            @else
+                <div class="card mt-3">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Cargando reporte personalizado...</p>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>

@@ -9,6 +9,10 @@ use App\Models\Center;
 use App\Models\Release;
 use App\Models\MedicalEvaluation;
 use App\Models\AnimalStatus;
+use App\Models\Rescuer;
+use App\Models\Veterinarian;
+use App\Models\UserTracking;
+use App\Models\AnimalHistory;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
@@ -54,6 +58,8 @@ class ReportsController extends Controller
                 return $this->releaseEfficiencyReport($request);
             }
             return $this->managementReports($request);
+        } elseif ($tab === 'personalized') {
+            return $this->personalizedReports($request);
         }
         
         return $this->activityReports();
@@ -867,6 +873,8 @@ class ReportsController extends Controller
             } else {
                 return $this->exportRescueEfficiencyPdf($request);
             }
+        } elseif ($tab === 'personalized') {
+            return $this->exportPersonalizedPdf($request);
         }
         
         // Por defecto, exportar reporte de actividad por estados
@@ -1438,6 +1446,8 @@ class ReportsController extends Controller
             } else {
                 return $this->exportRescueEfficiencyExcel($request);
             }
+        } elseif ($tab === 'personalized') {
+            return $this->exportPersonalizedExcel($request);
         }
         
         // Por defecto, exportar reporte de actividad por estados
@@ -2389,6 +2399,575 @@ class ReportsController extends Controller
             ];
             $sheet->getStyle('A' . ($headerRowIndex + 1) . ':' . $highestColumn . $highestRow)->applyFromArray($contentStyle);
         }
+    }
+
+    /**
+     * Obtiene los datos para reportes personalizados
+     */
+    private function getPersonalizedReportData(Request $request): array
+    {
+        // Obtener parámetros de filtro
+        $animalName = $request->get('animal_name');
+        $centerId = $request->get('center_id');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        $groupBy = $request->get('group_by'); // 'veterinarian' o 'rescuer'
+        $selectedColumns = $request->get('columns', []); // Columnas seleccionadas
+        
+        // Si no hay columnas seleccionadas, usar algunas por defecto
+        if (empty($selectedColumns)) {
+            $selectedColumns = ['animal_name', 'species', 'status', 'center', 'rescue_date'];
+        }
+
+        // Construir query base
+        $query = AnimalFile::with([
+            'animal.report',
+            'species',
+            'animalStatus',
+            'center',
+            'animal.report.person',
+            'animal.report.transfers' => function($q) {
+                $q->where('primer_traslado', true)->with(['person', 'center']);
+            },
+            'release',
+        ]);
+
+        // Aplicar filtros
+        if ($animalName) {
+            $query->whereHas('animal', function($q) use ($animalName) {
+                $q->where('nombre', 'like', "%{$animalName}%");
+            });
+        }
+
+        if ($centerId) {
+            $query->where('centro_id', $centerId);
+        }
+
+        if ($dateFrom) {
+            $query->whereHas('animal.report', function($q) use ($dateFrom) {
+                $q->where('created_at', '>=', $dateFrom);
+            });
+        }
+
+        if ($dateTo) {
+            $query->whereHas('animal.report', function($q) use ($dateTo) {
+                $q->where('created_at', '<=', $dateTo . ' 23:59:59');
+            });
+        }
+
+
+        // Si hay agrupación, procesar de manera diferente
+        if ($groupBy === 'veterinarian') {
+            return $this->getGroupedByVeterinarianData($request, $selectedColumns, $dateFrom, $dateTo);
+        } elseif ($groupBy === 'rescuer') {
+            return $this->getGroupedByRescuerData($request, $selectedColumns, $dateFrom, $dateTo);
+        }
+
+        $animalFiles = $query->orderBy('created_at', 'desc')->get();
+
+        // Procesar datos según columnas seleccionadas
+        $reportData = [];
+        foreach ($animalFiles as $animalFile) {
+            $row = [];
+            $animal = $animalFile->animal;
+            $report = $animal ? $animal->report : null;
+
+            foreach ($selectedColumns as $column) {
+                switch ($column) {
+                    case 'animal_name':
+                        $row['animal_name'] = $animal ? $animal->nombre : 'Sin nombre';
+                        break;
+                    case 'animal_id':
+                        $row['animal_id'] = $animalFile->id;
+                        break;
+                    case 'species':
+                        $row['species'] = $animalFile->species ? $animalFile->species->nombre : 'N/A';
+                        break;
+                    case 'status':
+                        $row['status'] = $animalFile->animalStatus ? $animalFile->animalStatus->nombre : 'N/A';
+                        break;
+                    case 'center':
+                        $row['center'] = $animalFile->center ? $animalFile->center->nombre : 'Sin centro';
+                        break;
+                    case 'rescue_date':
+                        $row['rescue_date'] = $report ? $report->created_at->format('d/m/Y H:i') : 'N/A';
+                        break;
+                    case 'rescue_location':
+                        $row['rescue_location'] = $report ? $report->direccion : 'N/A';
+                        break;
+                    case 'rescuer':
+                        $rescuerName = 'N/A';
+                        if ($report && $report->transfers->isNotEmpty()) {
+                            $firstTransfer = $report->transfers->first();
+                            if ($firstTransfer && $firstTransfer->person) {
+                                $rescuerName = $firstTransfer->person->nombre;
+                            }
+                        }
+                        $row['rescuer'] = $rescuerName;
+                        break;
+                    case 'veterinarian':
+                        $vetName = 'N/A';
+                        $medicalEval = $animalFile->medicalEvaluations()->latest()->first();
+                        if ($medicalEval && $medicalEval->veterinarian && $medicalEval->veterinarian->person) {
+                            $vetName = $medicalEval->veterinarian->person->nombre;
+                        }
+                        $row['veterinarian'] = $vetName;
+                        break;
+                    case 'release_date':
+                        $row['release_date'] = $animalFile->release ? $animalFile->release->created_at->format('d/m/Y H:i') : 'No liberado';
+                        break;
+                    case 'sex':
+                        $row['sex'] = $animal ? $animal->sexo : 'N/A';
+                        break;
+                    case 'condition':
+                        $row['condition'] = $report && $report->condicionInicial ? $report->condicionInicial->nombre : 'N/A';
+                        break;
+                    case 'incident_type':
+                        $row['incident_type'] = $report && $report->incidentType ? $report->incidentType->nombre : 'N/A';
+                        break;
+                    case 'created_at':
+                        $row['created_at'] = $animalFile->created_at->format('d/m/Y H:i');
+                        break;
+                }
+            }
+            
+            // Agregar ID del animal_file para enlaces
+            $row['_animal_file_id'] = $animalFile->id;
+            $reportData[] = $row;
+        }
+
+        // Obtener datos para filtros
+        $centers = Center::orderBy('nombre')->get();
+        $rescuers = Rescuer::with('person')->where('aprobado', true)->get();
+        $veterinarians = Veterinarian::with('person')->where('aprobado', true)->get();
+
+        // Columnas disponibles
+        $availableColumns = [
+            'animal_name' => 'Nombre del Animal',
+            'animal_id' => 'ID Animal',
+            'species' => 'Especie',
+            'status' => 'Estado',
+            'center' => 'Centro',
+            'rescue_date' => 'Fecha de Rescate',
+            'rescue_location' => 'Ubicación de Rescate',
+            'rescuer' => 'Rescatista',
+            'veterinarian' => 'Veterinario',
+            'release_date' => 'Fecha de Liberación',
+            'sex' => 'Sexo',
+            'condition' => 'Condición Inicial',
+            'incident_type' => 'Tipo de Incidente',
+            'created_at' => 'Fecha de Creación',
+        ];
+
+        return compact(
+            'reportData',
+            'selectedColumns',
+            'availableColumns',
+            'centers',
+            'rescuers',
+            'veterinarians',
+            'animalName',
+            'centerId',
+            'dateFrom',
+            'dateTo',
+            'groupBy'
+        );
+    }
+
+    /**
+     * Obtiene datos agrupados por veterinario
+     */
+    private function getGroupedByVeterinarianData(Request $request, array $selectedColumns, ?string $dateFrom, ?string $dateTo): array
+    {
+        // Obtener parámetros de filtro para compatibilidad
+        $animalName = $request->get('animal_name', '');
+        $centerId = $request->get('center_id', '');
+        $groupBy = 'veterinarian';
+        
+        $veterinarians = Veterinarian::with('person')->where('aprobado', true)->get();
+        $groupedData = [];
+        $isGrouped = true;
+        $reportData = []; // Para compatibilidad con la vista
+
+        foreach ($veterinarians as $veterinarian) {
+            $person = $veterinarian->person;
+            if (!$person) continue;
+
+            // Obtener evaluaciones médicas del veterinario
+            $medicalEvalsQuery = MedicalEvaluation::where('veterinario_id', $veterinarian->id)
+                ->with(['animalFile.animal', 'animalFile.species', 'animalFile.animalStatus', 'treatmentType']);
+
+            if ($dateFrom) {
+                $medicalEvalsQuery->where('fecha', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $medicalEvalsQuery->where('fecha', '<=', $dateTo . ' 23:59:59');
+            }
+
+            $medicalEvaluations = $medicalEvalsQuery->orderBy('fecha', 'desc')->get();
+
+            // Obtener tracking del usuario usando metadata
+            $userTracking = UserTracking::where('action_type', 'evaluacion_medica')
+                ->where('related_model_type', 'MedicalEvaluation')
+                ->when($dateFrom, function($q) use ($dateFrom) {
+                    $q->where('realizado_en', '>=', $dateFrom);
+                })
+                ->when($dateTo, function($q) use ($dateTo) {
+                    $q->where('realizado_en', '<=', $dateTo . ' 23:59:59');
+                })
+                ->get()
+                ->filter(function($track) use ($veterinarian) {
+                    $metadata = $track->metadata ?? [];
+                    return isset($metadata['veterinarian']['id']) && $metadata['veterinarian']['id'] == $veterinarian->id;
+                });
+
+            $evaluationsData = [];
+            foreach ($medicalEvaluations as $eval) {
+                $animalFile = $eval->animalFile;
+                $animal = $animalFile ? $animalFile->animal : null;
+                
+                // Obtener historial del animal si existe
+                $animalHistoryCount = 0;
+                if ($animalFile) {
+                    $animalHistoryCount = AnimalHistory::where('animal_file_id', $animalFile->id)->count();
+                }
+                
+                $evalRow = [
+                    'evaluation_id' => $eval->id,
+                    'animal_name' => $animal ? $animal->nombre : 'Sin nombre',
+                    'animal_id' => $animalFile ? $animalFile->id : null,
+                    'diagnostico' => $eval->diagnostico ?? 'N/A',
+                    'fecha' => $eval->fecha ? $eval->fecha->format('d/m/Y') : 'N/A',
+                    'treatment_type' => $eval->treatmentType ? $eval->treatmentType->nombre : 'N/A',
+                    'species' => $animalFile && $animalFile->species ? $animalFile->species->nombre : 'N/A',
+                    'status' => $animalFile && $animalFile->animalStatus ? $animalFile->animalStatus->nombre : 'N/A',
+                    'history_count' => $animalHistoryCount,
+                ];
+                $evaluationsData[] = $evalRow;
+            }
+
+            if (count($evaluationsData) > 0 || count($userTracking) > 0) {
+                $groupedData[] = [
+                    'group_type' => 'veterinarian',
+                    'person_name' => $person->nombre,
+                    'person_id' => $person->id,
+                    'veterinarian_id' => $veterinarian->id,
+                    'total_evaluations' => count($evaluationsData),
+                    'evaluations' => $evaluationsData,
+                    'tracking' => $userTracking->map(function($track) {
+                        return [
+                            'action_description' => $track->action_description,
+                            'realizado_en' => $track->realizado_en->format('d/m/Y H:i'),
+                            'metadata' => $track->metadata,
+                        ];
+                    })->toArray(),
+                ];
+            }
+        }
+
+        $centers = Center::orderBy('nombre')->get();
+        $rescuers = Rescuer::with('person')->where('aprobado', true)->get();
+        $veterinarians = Veterinarian::with('person')->where('aprobado', true)->get();
+
+        $availableColumns = [
+            'animal_name' => 'Nombre del Animal',
+            'animal_id' => 'ID Animal',
+            'species' => 'Especie',
+            'status' => 'Estado',
+            'center' => 'Centro',
+            'rescue_date' => 'Fecha de Rescate',
+            'rescue_location' => 'Ubicación de Rescate',
+            'rescuer' => 'Rescatista',
+            'veterinarian' => 'Veterinario',
+            'release_date' => 'Fecha de Liberación',
+            'sex' => 'Sexo',
+            'condition' => 'Condición Inicial',
+            'incident_type' => 'Tipo de Incidente',
+            'created_at' => 'Fecha de Creación',
+        ];
+
+        return compact(
+            'reportData',
+            'groupedData',
+            'isGrouped',
+            'selectedColumns',
+            'availableColumns',
+            'centers',
+            'rescuers',
+            'veterinarians',
+            'animalName',
+            'centerId',
+            'dateFrom',
+            'dateTo',
+            'groupBy'
+        );
+    }
+
+    /**
+     * Obtiene datos agrupados por rescatista
+     */
+    private function getGroupedByRescuerData(Request $request, array $selectedColumns, ?string $dateFrom, ?string $dateTo): array
+    {
+        // Obtener parámetros de filtro para compatibilidad
+        $animalName = $request->get('animal_name', '');
+        $centerId = $request->get('center_id', '');
+        $groupBy = 'rescuer';
+        
+        $rescuers = Rescuer::with('person')->where('aprobado', true)->get();
+        $groupedData = [];
+        $isGrouped = true;
+        $reportData = []; // Para compatibilidad con la vista
+
+        foreach ($rescuers as $rescuer) {
+            $person = $rescuer->person;
+            if (!$person) continue;
+
+            // Obtener traslados del rescatista
+            $transfersQuery = Transfer::where('persona_id', $person->id)
+                ->where('primer_traslado', true)
+                ->with(['report.animals', 'center', 'report']);
+
+            if ($dateFrom) {
+                $transfersQuery->where('created_at', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $transfersQuery->where('created_at', '<=', $dateTo . ' 23:59:59');
+            }
+
+            $transfers = $transfersQuery->orderBy('created_at', 'desc')->get();
+
+            // Obtener tracking del usuario usando metadata
+            $userTracking = UserTracking::where('action_type', 'traslado')
+                ->where('related_model_type', 'Transfer')
+                ->when($dateFrom, function($q) use ($dateFrom) {
+                    $q->where('realizado_en', '>=', $dateFrom);
+                })
+                ->when($dateTo, function($q) use ($dateTo) {
+                    $q->where('realizado_en', '<=', $dateTo . ' 23:59:59');
+                })
+                ->get()
+                ->filter(function($track) use ($person) {
+                    $metadata = $track->metadata ?? [];
+                    return isset($metadata['rescuer']['persona_id']) && $metadata['rescuer']['persona_id'] == $person->id;
+                });
+
+            $transfersData = [];
+            foreach ($transfers as $transfer) {
+                $report = $transfer->report;
+                $animals = $report ? $report->animals : collect();
+                $firstAnimal = $animals->first();
+                
+                // Obtener animal_files relacionados para el historial
+                $animalFiles = collect();
+                if ($firstAnimal) {
+                    $animalFiles = AnimalFile::where('animal_id', $firstAnimal->id)->get();
+                }
+                
+                $historyCount = 0;
+                foreach ($animalFiles as $af) {
+                    $historyCount += AnimalHistory::where('animal_file_id', $af->id)->count();
+                }
+                
+                $transferRow = [
+                    'transfer_id' => $transfer->id,
+                    'animal_name' => $firstAnimal ? $firstAnimal->nombre : 'Sin nombre',
+                    'report_id' => $report ? $report->id : null,
+                    'center_name' => $transfer->center ? $transfer->center->nombre : 'N/A',
+                    'fecha_traslado' => $transfer->created_at->format('d/m/Y H:i'),
+                    'rescue_location' => $report ? $report->direccion : 'N/A',
+                    'rescue_date' => $report ? $report->created_at->format('d/m/Y H:i') : 'N/A',
+                    'history_count' => $historyCount,
+                    'animal_file_id' => $animalFiles->first() ? $animalFiles->first()->id : null,
+                ];
+                $transfersData[] = $transferRow;
+            }
+
+            if (count($transfersData) > 0 || count($userTracking) > 0) {
+                $groupedData[] = [
+                    'group_type' => 'rescuer',
+                    'person_name' => $person->nombre,
+                    'person_id' => $person->id,
+                    'rescuer_id' => $rescuer->id,
+                    'total_transfers' => count($transfersData),
+                    'transfers' => $transfersData,
+                    'tracking' => $userTracking->map(function($track) {
+                        return [
+                            'action_description' => $track->action_description,
+                            'realizado_en' => $track->realizado_en->format('d/m/Y H:i'),
+                            'metadata' => $track->metadata,
+                        ];
+                    })->toArray(),
+                ];
+            }
+        }
+
+        $centers = Center::orderBy('nombre')->get();
+        $veterinarians = Veterinarian::with('person')->where('aprobado', true)->get();
+
+        $availableColumns = [
+            'animal_name' => 'Nombre del Animal',
+            'animal_id' => 'ID Animal',
+            'species' => 'Especie',
+            'status' => 'Estado',
+            'center' => 'Centro',
+            'rescue_date' => 'Fecha de Rescate',
+            'rescue_location' => 'Ubicación de Rescate',
+            'rescuer' => 'Rescatista',
+            'veterinarian' => 'Veterinario',
+            'release_date' => 'Fecha de Liberación',
+            'sex' => 'Sexo',
+            'condition' => 'Condición Inicial',
+            'incident_type' => 'Tipo de Incidente',
+            'created_at' => 'Fecha de Creación',
+        ];
+
+        return compact(
+            'reportData',
+            'groupedData',
+            'isGrouped',
+            'selectedColumns',
+            'availableColumns',
+            'centers',
+            'rescuers',
+            'veterinarians',
+            'animalName',
+            'centerId',
+            'dateFrom',
+            'dateTo',
+            'groupBy'
+        );
+    }
+
+    /**
+     * Reportes Personalizados - Generador dinámico de reportes
+     */
+    private function personalizedReports(Request $request): View
+    {
+        $data = $this->getPersonalizedReportData($request);
+        return view('reports.index', array_merge($data, ['tab' => 'personalized']));
+    }
+
+    /**
+     * Exporta el reporte personalizado a PDF
+     */
+    private function exportPersonalizedPdf(Request $request): Response
+    {
+        $data = $this->getPersonalizedReportData($request);
+        $pdf = Pdf::loadView('reports.export.personalized-pdf', $data);
+        return $pdf->download('reporte_personalizado_' . date('d_m_Y') . '.pdf');
+    }
+
+    /**
+     * Exporta el reporte personalizado a Excel
+     */
+    private function exportPersonalizedExcel(Request $request): StreamedResponse
+    {
+        $data = $this->getPersonalizedReportData($request);
+        
+        $reportData = $data['reportData'] ?? [];
+        $selectedColumns = $data['selectedColumns'] ?? [];
+        $availableColumns = $data['availableColumns'] ?? [];
+        $isGrouped = $data['isGrouped'] ?? false;
+        $groupedData = $data['groupedData'] ?? [];
+        
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Reporte Personalizado');
+        
+        $currentRow = 1;
+        
+        if ($isGrouped && count($groupedData) > 0) {
+            // Exportar datos agrupados
+            foreach ($groupedData as $group) {
+                // Título del grupo
+                $sheet->setCellValue('A' . $currentRow, $group['person_name']);
+                $sheet->mergeCells('A' . $currentRow . ':' . chr(ord('A') + 5) . $currentRow);
+                $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(12);
+                $sheet->getStyle('A' . $currentRow)->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setRGB($group['group_type'] === 'veterinarian' ? '28a745' : 'ffc107');
+                $sheet->getStyle('A' . $currentRow)->getFont()->getColor()->setRGB('FFFFFF');
+                $currentRow++;
+                
+                // Encabezados
+                if ($group['group_type'] === 'veterinarian') {
+                    $headers = ['Animal', 'Diagnóstico', 'Fecha Evaluación', 'Tipo de Tratamiento', 'Especie', 'Estado'];
+                } else {
+                    $headers = ['Animal', 'Centro Destino', 'Fecha Traslado', 'Ubicación Rescate', 'Fecha Rescate'];
+                }
+                
+                $col = 'A';
+                foreach ($headers as $header) {
+                    $sheet->setCellValue($col . $currentRow, $header);
+                    $col++;
+                }
+                $sheet->getStyle('A' . $currentRow . ':' . chr(ord('A') + count($headers) - 1) . $currentRow)
+                    ->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setRGB('4B5563');
+                $sheet->getStyle('A' . $currentRow . ':' . chr(ord('A') + count($headers) - 1) . $currentRow)
+                    ->getFont()->getColor()->setRGB('FFFFFF');
+                $currentRow++;
+                
+                // Datos
+                if ($group['group_type'] === 'veterinarian') {
+                    foreach ($group['evaluations'] as $eval) {
+                        $sheet->setCellValue('A' . $currentRow, $eval['animal_name']);
+                        $sheet->setCellValue('B' . $currentRow, $eval['diagnostico']);
+                        $sheet->setCellValue('C' . $currentRow, $eval['fecha']);
+                        $sheet->setCellValue('D' . $currentRow, $eval['treatment_type']);
+                        $sheet->setCellValue('E' . $currentRow, $eval['species']);
+                        $sheet->setCellValue('F' . $currentRow, $eval['status']);
+                        $currentRow++;
+                    }
+                } else {
+                    foreach ($group['transfers'] as $transfer) {
+                        $sheet->setCellValue('A' . $currentRow, $transfer['animal_name']);
+                        $sheet->setCellValue('B' . $currentRow, $transfer['center_name']);
+                        $sheet->setCellValue('C' . $currentRow, $transfer['fecha_traslado']);
+                        $sheet->setCellValue('D' . $currentRow, $transfer['rescue_location']);
+                        $sheet->setCellValue('E' . $currentRow, $transfer['rescue_date']);
+                        $currentRow++;
+                    }
+                }
+                
+                $currentRow++; // Espacio entre grupos
+            }
+            
+            $highestColumn = 'F';
+        } else {
+            // Exportar datos normales
+            // Encabezados
+            $col = 'A';
+            foreach ($selectedColumns as $column) {
+                $sheet->setCellValue($col . $currentRow, $availableColumns[$column] ?? $column);
+                $col++;
+            }
+            $currentRow++;
+            
+            // Datos
+            foreach ($reportData as $dataRow) {
+                $col = 'A';
+                foreach ($selectedColumns as $column) {
+                    $sheet->setCellValue($col . $currentRow, $dataRow[$column] ?? 'N/A');
+                    $col++;
+                }
+                $currentRow++;
+            }
+            
+            $highestColumn = chr(ord('A') + count($selectedColumns) - 1);
+        }
+        
+        // Aplicar estilos
+        $this->applyExcelStyles($sheet, 1, $highestColumn);
+        
+        $writer = new Xlsx($spreadsheet);
+        
+        return response()->streamDownload(function() use ($writer) {
+            $writer->save('php://output');
+        }, 'reporte_personalizado_' . date('d_m_Y') . '.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 }
 
