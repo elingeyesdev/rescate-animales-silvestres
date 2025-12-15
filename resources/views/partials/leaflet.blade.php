@@ -120,17 +120,27 @@ window.initMapWithGeolocation = function initMapWithGeolocation(opts) {
                 setMarker(lat, lon, true);
             },
             () => {
-                // Fallback to Leaflet locate or default start
+                // Fallback to Leaflet locate or default coordinates
                 map.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true, timeout: 5000 })
                     .on('locationfound', (e) => setMarker(e.latitude.toFixed(6), e.longitude.toFixed(6), true))
-                    .on('locationerror', () => map.setView([start.lat, start.lon], start.zoom));
+                    .on('locationerror', () => {
+                        // Fallback a coordenadas específicas si no se encuentra la ubicación
+                        const fallbackLat = -17.722934202854344;
+                        const fallbackLon = -63.17431917469625;
+                        setMarker(fallbackLat, fallbackLon, true);
+                    });
             },
             { enableHighAccuracy: true, timeout: 7000 }
         );
       } else {
         map.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true, timeout: 5000 })
           .on('locationfound', (e) => setMarker(e.latitude.toFixed(6), e.longitude.toFixed(6), true))
-          .on('locationerror', () => map.setView([start.lat, start.lon], start.zoom));
+          .on('locationerror', () => {
+            // Fallback a coordenadas específicas si no se encuentra la ubicación
+            const fallbackLat = -17.722934202854344;
+            const fallbackLon = -63.17431917469625;
+            setMarker(fallbackLat, fallbackLon, true);
+          });
       }
     }
 

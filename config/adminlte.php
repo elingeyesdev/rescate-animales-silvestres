@@ -480,11 +480,12 @@ return [
             'can'  => 'admin',
         ],
 
-        ['header' => 'SOPORTE'],
+        ['header' => 'SOPORTE','can' => 'admin|encargado|veterinario'],
         [
             'text' => 'Centro de Soporte',
             'url' => 'helpdesk',
             'icon' => 'fas fa-fw fa-headset',
+            'can'  => 'admin|encargado|veterinario',
         ],
         /*[
             'text' => 'Usuarios',
