@@ -103,4 +103,23 @@ class UserApiController extends Controller
     {
         //
     }
+
+    /**
+     * Obtiene todos los CI de los usuarios del sistema.
+     * Endpoint externo público.
+     */
+    public function getAllCis()
+    {
+        $cis = Person::whereNotNull('ci')
+            ->where('ci', '!=', '')
+            ->pluck('ci')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        return response()->json([
+            'lista_ci' => $cis,
+            'total' => count($cis)
+        ]);
+    }
 }
