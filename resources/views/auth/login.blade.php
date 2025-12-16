@@ -233,9 +233,9 @@
     </script>
     
     {{-- Usuarios de prueba --}}
-    <div class="test-users-section">
-        <h6 class="text-center"><i class="fas fa-info-circle"></i> Usuarios de Prueba</h6>
-        <p class="password-info text-center">Contraseña para todos: <strong>rescate123</strong></p>
+    <!--<div class="test-users-section">
+        <h6 class="text-center"><i class="fas fa-info-circle"></i> Usuario Admin</h6>
+        <p class="password-info text-center">Contraseña: <strong>rescate123</strong></p>
         <div class="d-flex flex-column">
             <div class="user-item d-flex justify-content-between align-items-center">
                 <span class="user-email">rescateanimales25@gmail.com</span>
@@ -259,6 +259,7 @@
             </div>
         </div>
     </div>
+-->
 @endsection
 @push('css')
 <style>
