@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withTrustedProxies(at: '*', headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR | \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST | \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT | \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO)
     ->withMiddleware(function (Middleware $middleware): void {
         // Alias de middlewares de Spatie Permission (roles y permisos)
         // OJO: el namespace correcto es Spatie\Permission\Middleware (sin "s")
